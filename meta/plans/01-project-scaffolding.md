@@ -1,23 +1,48 @@
-# Ticket 01: Project Scaffolding & README
+# Ticket 01: Project Scaffolding & Monorepo Setup
 
 ## What do you want to build?
 
-Replace all template placeholders and boilerplate in the repository with Scryglass-specific content. This is the first ticket and establishes the project identity.
+Transform the template repository into the Scryglass monorepo. This is the first ticket and establishes the project identity, package structure, toolchain, and CI configuration.
 
-Update `README.md` with a project description, replace all `{{PROJECT_NAME}}`, `{{GITHUB_OWNER}}`, and `{{PROJECT_URL}}` placeholders throughout the repository, and update `meta/DEVELOPMENT_PHILOSOPHY.md` and `meta/ROBOT_ETHICS.md` with project-specific context.
+Set up npm workspaces with two packages (`@scryglass/core` and `@scryglass/pwa`), install TypeScript and Zod, configure Vitest for testing, and replace all template placeholders with Scryglass-specific content.
 
 ## Acceptance Criteria
 
 - [ ] All `{{PROJECT_NAME}}` placeholders are replaced with `scryglass`
 - [ ] All `{{GITHUB_OWNER}}` placeholders are replaced with `efischer19`
 - [ ] All `{{PROJECT_URL}}` placeholders are replaced with `https://github.com/efischer19/scryglass`
-- [ ] `README.md` is rewritten with a Scryglass project description, overview of the app's purpose, and getting started instructions
-- [ ] `src/index.html` `<title>` is updated to `Scryglass`
-- [ ] `meta/plans/README.md` is updated with `scryglass` project name
+- [ ] `README.md` is rewritten with a Scryglass project description, monorepo structure overview, and getting started instructions
+- [ ] A root `package.json` is created with `"workspaces": ["packages/*"]` and `"private": true`
+- [ ] `packages/core/package.json` defines `@scryglass/core` with TypeScript and Zod as dependencies
+- [ ] `packages/core/tsconfig.json` targets ESM output with `.d.ts` declarations
+- [ ] `packages/pwa/package.json` defines `@scryglass/pwa` with a dependency on `@scryglass/core` (workspace link)
+- [ ] `packages/pwa/tsconfig.json` extends the core config for browser-targeted output
+- [ ] Vitest is configured in both packages for unit testing (`npm test` works from root)
+- [ ] A minimal `packages/core/src/index.ts` barrel export exists (can be empty)
+- [ ] A minimal `packages/pwa/src/main.ts` entry point exists
+- [ ] CI workflow (`ci.yml`) is updated to run `npm ci`, `npm run build`, and `npm test` across both packages
+- [ ] The `.gitignore` is updated to exclude `node_modules/`, `dist/`, and build artifacts
+- [ ] `meta/plans/README.md` and `meta/DEVELOPMENT_PHILOSOPHY.md` have placeholders replaced
 - [ ] No template-specific instructions remain in any committed file
 
 ## Implementation Notes (Optional)
 
-Use `grep -r '{{PROJECT_NAME}}\|{{GITHUB_OWNER}}\|{{PROJECT_URL}}\|{{APP_NAME}}\|{{LIB_NAME}}\|{{CATEGORY_NAME}}'` to find all placeholders. This ticket has no dependencies and can be the first PR merged.
+Root `package.json` structure:
 
-**References:** N/A — this is foundational scaffolding.
+```json
+{
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces"
+  }
+}
+```
+
+The PWA bundler choice depends on [ADR-002](../../meta/adr/ADR-002-ui_framework_choice.md). If Preact + Vite is chosen, Vite scaffolding happens here. If vanilla TS, a simpler `tsc` + copy build works.
+
+For the core package, use `tsc` to compile TypeScript to ESM JavaScript with declaration files. The `exports` field in `package.json` should point to the compiled output.
+
+**References:** [ADR-007: Monorepo Structure](../../meta/adr/ADR-007-monorepo_structure.md), [ADR-008: TypeScript & Zod](../../meta/adr/ADR-008-typescript_and_zod.md)

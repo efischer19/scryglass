@@ -12,7 +12,7 @@ tags:
 ## Context
 
 * **Problem:** Scryglass needs to display card images sourced from the Scryfall API. Scryfall is a free community resource with published [API guidelines](https://scryfall.com/docs/api) that require respectful usage: a maximum of 10 requests per second, a descriptive `User-Agent`, and aggressive caching. Our ROBOT_ETHICS.md policy also mandates rate limiting, caching, and ToS compliance. We need a formal strategy for how the app interacts with Scryfall.
-* **Constraints:** The app is purely client-side (no backend proxy). All API calls originate from the user's browser. We must never overload Scryfall's servers, even if many users run the app simultaneously.
+* **Constraints:** The app is purely client-side (no backend proxy). All API calls originate from the user's browser. We must never overload Scryfall's servers, even if many users run the app simultaneously. Per [ADR-007](./ADR-007-monorepo_structure.md), Scryfall integration lives in `@scryglass/pwa` (not `@scryglass/core`) because it depends on browser APIs (IndexedDB, Web Workers, `fetch` with CORS).
 
 ## Decision
 

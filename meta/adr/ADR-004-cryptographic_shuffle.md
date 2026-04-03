@@ -11,7 +11,7 @@ tags:
 ## Context
 
 * **Problem:** Scryglass replaces the physical act of shuffling a Magic: The Gathering deck. Players must trust that the digital shuffle is truly random and unbiased. Using `Math.random()` is insufficient because it is a PRNG (pseudorandom number generator) with predictable seeding in some browser implementations, and it does not provide uniform distribution guarantees when used naively for shuffling.
-* **Constraints:** The solution must run entirely in the browser with no server-side component. It must be fast enough to shuffle a 100-card deck without perceptible delay.
+* **Constraints:** The solution must be platform-agnostic — it lives in `@scryglass/core` (see [ADR-007](./ADR-007-monorepo_structure.md)) and must work in both browser and Node.js environments. It must be fast enough to shuffle a 100-card deck without perceptible delay. The `crypto` API is available as `globalThis.crypto` in modern browsers and Node.js 19+.
 
 ## Decision
 
@@ -39,4 +39,4 @@ We will implement the **Fisher-Yates (Knuth) shuffle algorithm** using `window.c
 
 * **Positive:** Players can trust the shuffle is fair. The implementation is well-understood and auditable. Performance is excellent (sub-millisecond for 100 cards).
 * **Negative:** None significant. The added complexity over `Math.random()` is minimal (a few extra lines for the crypto-based random index function).
-* **Future Implications:** The shuffle module will be a self-contained utility (`shuffle.js`) that can be unit-tested independently. If the app ever needs other randomness (e.g., coin flips), the same crypto-based utility can be reused.
+* **Future Implications:** The shuffle module will be a self-contained utility in `@scryglass/core` (`packages/core/src/shuffle.ts`) that can be unit-tested independently. Using `globalThis.crypto` (available in Node.js 19+ and all modern browsers) ensures the module works in both the PWA and any future Node.js-based agent consumer. If the app ever needs other randomness (e.g., coin flips), the same crypto-based utility can be reused.
