@@ -23,6 +23,6 @@ Implement the "Fetch Land" action button that allows a player to search their li
 
 The basic land matching logic: a card is a basic land if `cardType.toLowerCase()` includes both `basic` and `land`. The specific subtype is matched against the card name (e.g., card name "Mountain" or card type containing "Mountain").
 
-Wastes (e.g., "Snow-Covered Mountain") should also be findable. Match on the land subtype in the type line or name, not just exact card name equality.
+Variants such as snow-covered basics (e.g., "Snow-Covered Mountain") or Wastes should also be findable. Match on the land subtype in the type line or name, not just exact card name equality.
 
 **References:** Ticket 03 (Shuffle), Ticket 04 (State Manager — `removeCardByName`), Ticket 05 (UI Shell)
