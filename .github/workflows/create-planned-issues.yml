@@ -75,6 +75,14 @@ jobs:
               }
             }
 
+            function tryRunGit(args) {
+              try {
+                return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+              } catch (error) {
+                return '';
+              }
+            }
+
             function validateRef(value, fieldName) {
               if (!/^[A-Za-z0-9._/-]+$/.test(value)) {
                 fail(`Invalid ${fieldName} value. Only letters, numbers, dot, slash, underscore, and dash are allowed.`);
@@ -134,20 +142,31 @@ jobs:
 
               const sections = { what: [], acceptance: [], notes: [] };
               let currentSection = null;
+              let currentSectionHeadingLevel = null;
 
               for (const rawLine of lines) {
-                if (!/^#{1,6}\s+/.test(rawLine.trim())) {
+                const headingMatch = rawLine.trim().match(/^(#{1,6})\s+/);
+                if (!headingMatch) {
                   if (currentSection) {
                     sections[currentSection].push(rawLine);
                   }
                   continue;
                 }
+
+                const headingLevel = headingMatch[1].length;
                 const normalized = normalizeHeading(rawLine);
                 if (headingToSection.has(normalized)) {
                   currentSection = headingToSection.get(normalized);
+                  currentSectionHeadingLevel = headingLevel;
+                  continue;
+                }
+
+                if (currentSection && headingLevel > currentSectionHeadingLevel) {
+                  sections[currentSection].push(rawLine);
                   continue;
                 }
                 currentSection = null;
+                currentSectionHeadingLevel = null;
               }
 
               const what = sections.what.join('\n').trim();
@@ -179,6 +198,29 @@ jobs:
               );
             }
 
+            function resolveRefInput() {
+              if (branch) {
+                const branchCandidates = [
+                  `refs/remotes/origin/${branch}^{commit}`,
+                  `refs/heads/${branch}^{commit}`,
+                  `${branch}^{commit}`,
+                ];
+                for (const candidate of branchCandidates) {
+                  const resolved = tryRunGit(['rev-parse', '--verify', '--quiet', candidate]);
+                  if (resolved) {
+                    return { resolvedRef: resolved, displayRef: branch };
+                  }
+                }
+                fail(`Could not resolve branch '${branch}'.`);
+              }
+
+              const resolvedCommit = tryRunGit(['rev-parse', '--verify', '--quiet', `${commitSha}^{commit}`]);
+              if (!resolvedCommit) {
+                fail(`Could not resolve commit_sha '${commitSha}'.`);
+              }
+              return { resolvedRef: resolvedCommit, displayRef: commitSha };
+            }
+
             if (!humanReviewed) {
               fail('You must confirm: "A human has reviewed these plans and agrees with them".');
             }
@@ -191,8 +233,9 @@ jobs:
               fail('Provide exactly one location input: file_path OR folder_path.');
             }
 
-            const ref = branch || commitSha;
-            validateRef(ref, branch ? 'branch' : 'commit_sha');
+            const refInput = branch || commitSha;
+            validateRef(refInput, branch ? 'branch' : 'commit_sha');
+            const { resolvedRef: ref, displayRef } = resolveRefInput();
 
             if (filePath) {
               validatePath(filePath, 'file_path');
@@ -220,8 +263,21 @@ jobs:
               fail('No markdown plan files found to process.');
             }
 
-            core.info(`Processing ${filesToProcess.length} file(s) from ref '${ref}'...`);
+            const allIssues = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              per_page: 100,
+            });
+            const existingIssueTitles = new Set(
+              allIssues
+                .filter((item) => !item.pull_request)
+                .map((item) => item.title.trim())
+            );
+
+            core.info(`Processing ${filesToProcess.length} file(s) from ref '${displayRef}' (${ref})...`);
             const createdIssues = [];
+            const skippedIssues = [];
 
             for (const path of filesToProcess) {
               validatePath(path, 'resolved file path');
@@ -233,6 +289,11 @@ jobs:
               }
 
               const parsed = parsePlanMarkdown(markdown, path);
+              if (existingIssueTitles.has(parsed.title)) {
+                skippedIssues.push(`${parsed.title} (already exists)`);
+                core.info(`Skipped existing issue: ${parsed.title}`);
+                continue;
+              }
               const issueBody = [
                 '### What do you want to build?',
                 '',
@@ -255,10 +316,13 @@ jobs:
               });
 
               createdIssues.push(issue.data.html_url);
+              existingIssueTitles.add(parsed.title);
               core.info(`Created issue: ${issue.data.html_url}`);
             }
 
             core.summary
               .addHeading('Planned issues created')
-              .addList(createdIssues)
+              .addList(createdIssues.length ? createdIssues : ['None'])
+              .addHeading('Planned issues skipped')
+              .addList(skippedIssues.length ? skippedIssues : ['None'])
               .write();
