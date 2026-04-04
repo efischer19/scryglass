@@ -15,7 +15,7 @@ tags:
 
 ## Decision
 
-**To be decided by the project maintainer.** The recommended option is **Option 1 (Preact + Vite)** given that a build step is already required for TypeScript.
+We will use **Preact + Vite** (Option 1) for the `@scryglass/pwa` frontend application. The maintainer confirmed this choice — a build step is already required for TypeScript, and Preact's 3KB footprint with React-compatible API provides the best balance of developer experience and production performance.
 
 ## Considered Options
 

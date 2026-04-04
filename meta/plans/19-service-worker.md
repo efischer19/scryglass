@@ -21,7 +21,7 @@ Implement a service worker in the `@scryglass/pwa` package (`packages/pwa/src/sw
 
 There are two viable approaches:
 
-**Option A: Manual service worker with Vite**
+Option A — Manual service worker with Vite:
 
 Write `packages/pwa/src/sw.ts` as a TypeScript module. Vite can build it as a separate entry point (using a `build.rollupOptions.input` config or a plugin like `vite-plugin-static-copy`). Use `import.meta.env.VITE_APP_VERSION` or the build hash for cache versioning.
 
@@ -48,7 +48,7 @@ self.addEventListener('fetch', (e) => {
 });
 ```
 
-**Option B: `vite-plugin-pwa` (Workbox)**
+Option B — `vite-plugin-pwa` (Workbox):
 
 Use `vite-plugin-pwa` which integrates Workbox to auto-generate a precache manifest from Vite's build output. This eliminates the need to manually list hashed asset filenames. The plugin handles cache versioning, cleanup, and registration automatically.
 

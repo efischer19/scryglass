@@ -18,7 +18,7 @@ The following ADRs have been proposed as part of this epic and must be accepted 
 
 | ADR | Decision | Status |
 | :--- | :--- | :--- |
-| [ADR-002](../adr/ADR-002-ui_framework_choice.md) | UI Framework Choice for PWA (Preact + Vite recommended) | Proposed — **requires maintainer decision** |
+| [ADR-002](../adr/ADR-002-ui_framework_choice.md) | UI Framework Choice for PWA — Preact + Vite | Proposed |
 | [ADR-003](../adr/ADR-003-scryfall_api_integration.md) | Scryfall API Integration & Compliance Strategy | Proposed |
 | [ADR-004](../adr/ADR-004-cryptographic_shuffle.md) | Fisher-Yates Shuffle with Crypto API | Proposed |
 | [ADR-005](../adr/ADR-005-client_state_management.md) | Action/Reducer State Management — Agent-Ready Game Engine | Proposed |
@@ -26,7 +26,7 @@ The following ADRs have been proposed as part of this epic and must be accepted 
 | [ADR-007](../adr/ADR-007-monorepo_structure.md) | Monorepo Structure — Core/PWA Package Separation | Proposed |
 | [ADR-008](../adr/ADR-008-typescript_and_zod.md) | TypeScript & Zod for Strict Typing and Agent-Ready Schemas | Proposed |
 
-> **Action Required:** ADR-002 presents multiple viable options for the PWA UI framework. The maintainer must choose before UI-dependent tickets can begin. All other ADRs have a clear recommended path.
+> All ADRs have a clear recommended path and are ready for acceptance.
 
 ## Monorepo Package Map
 

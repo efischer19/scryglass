@@ -41,7 +41,7 @@ Root `package.json` structure:
 }
 ```
 
-The PWA bundler choice depends on [ADR-002](../../meta/adr/ADR-002-ui_framework_choice.md). If Preact + Vite is chosen, Vite scaffolding happens here. If vanilla TS, a simpler `tsc` + copy build works.
+The PWA uses Preact + Vite ([ADR-002](../../meta/adr/ADR-002-ui_framework_choice.md)). Vite scaffolding happens here — use `npm create vite@latest` with the `preact-ts` template as a starting point, then adjust to fit the monorepo workspace structure.
 
 For the core package, use `tsc` to compile TypeScript to ESM JavaScript with declaration files. The `exports` field in `package.json` should point to the compiled output.
 

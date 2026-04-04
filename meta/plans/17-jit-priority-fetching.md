@@ -70,7 +70,7 @@ The priority queue can be implemented by extending the fetch wrapper's internal 
 
 This ticket completes the Scryfall image pipeline. After this ticket, drawing and tutoring display actual card images instead of text placeholders:
 
-```
+```text
 Player draws → useCardImage hook → priorityFetch → cache check → fetch wrapper → Scryfall API
                                                   ↓ (hit)
                                               object URL → <img> rendered
