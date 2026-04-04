@@ -75,10 +75,12 @@ jobs:
               }
             }
 
-            function tryRunGit(args) {
+            function tryRunGit(args, contextLabel = '') {
               try {
                 return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
               } catch (error) {
+                const detail = error?.stderr?.toString()?.trim() || error?.message || 'unknown git error';
+                core.debug(`Non-fatal git command failed${contextLabel ? ` (${contextLabel})` : ''}: git ${args.join(' ')} :: ${detail}`);
                 return '';
               }
             }
@@ -161,7 +163,7 @@ jobs:
                   continue;
                 }
 
-                if (currentSection && headingLevel > currentSectionHeadingLevel) {
+                if (currentSection && currentSectionHeadingLevel !== null && headingLevel > currentSectionHeadingLevel) {
                   sections[currentSection].push(rawLine);
                   continue;
                 }
@@ -206,7 +208,7 @@ jobs:
                   `${branch}^{commit}`,
                 ];
                 for (const candidate of branchCandidates) {
-                  const resolved = tryRunGit(['rev-parse', '--verify', '--quiet', candidate]);
+                  const resolved = tryRunGit(['rev-parse', '--verify', '--quiet', candidate], `resolve branch '${branch}'`);
                   if (resolved) {
                     return { resolvedRef: resolved, displayRef: branch };
                   }
@@ -214,7 +216,7 @@ jobs:
                 fail(`Could not resolve branch '${branch}'.`);
               }
 
-              const resolvedCommit = tryRunGit(['rev-parse', '--verify', '--quiet', `${commitSha}^{commit}`]);
+              const resolvedCommit = tryRunGit(['rev-parse', '--verify', '--quiet', `${commitSha}^{commit}`], `resolve commit '${commitSha}'`);
               if (!resolvedCommit) {
                 fail(`Could not resolve commit_sha '${commitSha}'.`);
               }
