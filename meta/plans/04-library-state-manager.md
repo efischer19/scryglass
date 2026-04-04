@@ -17,7 +17,7 @@ The engine accepts Zod-validated action objects and returns an `ActionResult` co
 - [ ] All schemas are exported from `packages/core/src/schemas/` (e.g., `packages/core/src/schemas/state.ts` and `packages/core/src/schemas/action.ts`); the `CardSchema` from Ticket 02 is reused
 - [ ] A `dispatch(state: GameState, action: Action): ActionResult` function is exported and serves as the single entry point for all state mutations
 - [ ] `dispatch` validates the incoming action against `ActionSchema` before processing; invalid actions produce descriptive Zod error messages that agents can parse and self-correct
-- [ ] `LOAD_DECK` action (`{ type: "LOAD_DECK", payload: { player: "A" | "B", cards: Card[] } }`) replaces a player's library with the provided cards and sets their phase to `mulligan`
+- [ ] `LOAD_DECK` action (`{ type: "LOAD_DECK", payload: { player: "A" | "B", cards: Card[] } }`) clears any existing library and replaces it with the provided cards, then sets the player's phase to `mulligan`
 - [ ] `SHUFFLE_LIBRARY` action (`{ type: "SHUFFLE_LIBRARY", payload: { player: "A" | "B" } }`) returns a new state with the player's library shuffled using the `shuffle` function from Ticket 03
 - [ ] `DRAW_CARD` action (`{ type: "DRAW_CARD", payload: { player: "A" | "B" } }`) removes and returns the top card (index 0) from the library via `ActionResult.card`; throws a descriptive error if the library is empty (e.g., `"Cannot draw: Player A's library is empty (0 cards remaining)"`)
 - [ ] `RETURN_TO_LIBRARY` action (`{ type: "RETURN_TO_LIBRARY", payload: { player: "A" | "B", card: Card, position: "top" | "bottom" | "random" } }`) inserts a card at index 0 (`top`), at the end (`bottom`), or at a random index (`random`)
