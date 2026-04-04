@@ -221,6 +221,10 @@ jobs:
               return { resolvedRef: resolvedCommit, displayRef: commitSha };
             }
 
+            function normalizeIssueTitle(value) {
+              return value.trim().replace(/\s+/g, ' ').toLowerCase();
+            }
+
             if (!humanReviewed) {
               fail('You must confirm: "A human has reviewed these plans and agrees with them".');
             }
@@ -272,7 +276,7 @@ jobs:
             const existingIssueTitles = new Set(
               allIssues
                 .filter((item) => !item.pull_request)
-                .map((item) => item.title.trim())
+                .map((item) => normalizeIssueTitle(item.title))
             );
 
             core.info(`Processing ${filesToProcess.length} file(s) from ref '${displayRef}' (${ref})...`);
@@ -289,7 +293,8 @@ jobs:
               }
 
               const parsed = parsePlanMarkdown(markdown, path);
-              if (existingIssueTitles.has(parsed.title)) {
+              const normalizedTitle = normalizeIssueTitle(parsed.title);
+              if (existingIssueTitles.has(normalizedTitle)) {
                 skippedIssues.push(`${parsed.title} (already exists)`);
                 core.info(`Skipped existing issue: ${parsed.title}`);
                 continue;
@@ -316,7 +321,7 @@ jobs:
               });
 
               createdIssues.push(issue.data.html_url);
-              existingIssueTitles.add(parsed.title);
+              existingIssueTitles.add(normalizedTitle);
               core.info(`Created issue: ${issue.data.html_url}`);
             }
 
