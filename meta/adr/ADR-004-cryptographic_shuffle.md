@@ -1,7 +1,7 @@
 ---
 title: "ADR-004: Fisher-Yates Shuffle with Web Crypto API"
-status: "Proposed"
-date: "2026-04-03"
+status: "Accepted"
+date: "2026-04-04"
 tags:
   - "algorithm"
   - "randomness"

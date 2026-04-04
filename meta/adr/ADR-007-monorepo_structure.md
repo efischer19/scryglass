@@ -1,7 +1,7 @@
 ---
 title: "ADR-007: Monorepo Structure — Core/PWA Package Separation"
-status: "Proposed"
-date: "2026-04-03"
+status: "Accepted"
+date: "2026-04-04"
 tags:
   - "architecture"
   - "monorepo"

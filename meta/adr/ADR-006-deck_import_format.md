@@ -1,7 +1,7 @@
 ---
 title: "ADR-006: CSV Deck Import Format"
-status: "Proposed"
-date: "2026-04-03"
+status: "Accepted"
+date: "2026-04-04"
 tags:
   - "data-format"
   - "import"

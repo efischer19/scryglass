@@ -1,7 +1,7 @@
 ---
 title: "ADR-008: TypeScript & Zod for Strict Typing and Agent-Ready Schemas"
-status: "Proposed"
-date: "2026-04-03"
+status: "Accepted"
+date: "2026-04-04"
 tags:
   - "typing"
   - "tooling"
