@@ -1,6 +1,6 @@
-# {{PROJECT_NAME}} — Libraries
+# scryglass — Libraries
 
-This directory contains shared libraries for **{{PROJECT_NAME}}**.
+This directory contains shared libraries for **scryglass**.
 
 ## Structure
 
@@ -8,7 +8,7 @@ Each subdirectory represents a reusable library:
 
 ```text
 libs/
-├── {{LIB_NAME}}/
+├── core/
 │   ├── README.md          # Library-specific documentation
 │   ├── ...                # Library source code
 │   └── tests/             # Library tests
