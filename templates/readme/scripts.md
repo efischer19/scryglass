@@ -1,6 +1,6 @@
-# {{PROJECT_NAME}} — Scripts
+# scryglass — Scripts
 
-This directory contains utility and automation scripts for **{{PROJECT_NAME}}**.
+This directory contains utility and automation scripts for **scryglass**.
 
 ## Structure
 

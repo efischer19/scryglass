@@ -59,7 +59,6 @@ out/
 # Frontend dependencies and package managers
 # =============================================================================
 node_modules/
-package-lock.json
 yarn.lock
 pnpm-lock.yaml
 .pnp/

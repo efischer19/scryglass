@@ -1,6 +1,6 @@
-site_name: "{{PROJECT_NAME}} Documentation"
-site_description: "Documentation for {{PROJECT_NAME}}"
-site_url: "https://{{GITHUB_OWNER}}.github.io/{{PROJECT_NAME}}/"
+site_name: "scryglass Documentation"
+site_description: "Documentation for scryglass"
+site_url: "https://efischer19.github.io/scryglass/"
 docs_dir: docs-src
 
 theme:
@@ -38,4 +38,4 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: "https://github.com/{{GITHUB_OWNER}}/{{PROJECT_NAME}}"
+      link: "https://github.com/efischer19/scryglass"

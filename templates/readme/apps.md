@@ -1,6 +1,6 @@
-# {{PROJECT_NAME}} — Applications
+# scryglass — Applications
 
-This directory contains the applications for **{{PROJECT_NAME}}**.
+This directory contains the applications for **scryglass**.
 
 ## Structure
 
@@ -8,7 +8,7 @@ Each subdirectory represents a standalone application:
 
 ```text
 apps/
-├── {{APP_NAME}}/
+├── pwa/
 │   ├── README.md          # Application-specific documentation
 │   ├── ...                # Application source code
 │   └── tests/             # Application tests

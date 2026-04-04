@@ -19,3 +19,4 @@ config:
 
 ignores:
   - LICENSE.md
+  - node_modules/**

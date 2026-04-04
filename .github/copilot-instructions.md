@@ -1,6 +1,6 @@
 # AI Contributor Guide
 
-This document defines the standard operating procedures for AI contributors to the `{{PROJECT_NAME}}` project. Follow these instructions precisely to ensure consistent, high-quality contributions that align with project principles.
+This document defines the standard operating procedures for AI contributors to the `scryglass` project. Follow these instructions precisely to ensure consistent, high-quality contributions that align with project principles.
 
 ## Role
 
