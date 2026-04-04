@@ -1,45 +1,64 @@
-# Ticket 04: Library State Manager
+# Ticket 04: Action/Reducer Game Engine
 
 ## What do you want to build?
 
-Implement the core state management module (`src/scripts/state.js`) that holds and manipulates the game state for both players. This is the central data model — all UI interactions read from and write to this state.
+Implement the action/reducer game engine in `@scryglass/core` (`packages/core/src/reducer.ts`) that manages all state transitions for both players' card libraries. This is the central state machine — the PWA, tests, and future AI agents all interact with the game exclusively through `dispatch(state, action)`.
 
-The state manager owns the `library` array for each player and provides functions for all mutations: shuffle, draw (pop from top), remove by index, remove by name, insert at top/bottom, and return-to-library.
+The engine accepts Zod-validated action objects and returns an `ActionResult` containing the new immutable state plus any output (e.g., a drawn card). Every mutation follows the pattern defined in [ADR-005](../../meta/adr/ADR-005-client_state_management.md): structured JSON in, structured JSON out, no side effects.
 
 ## Acceptance Criteria
 
-- [ ] A `createGameState()` function returns the initial state object with two player entries
-- [ ] Each player entry contains: `library` (array), `phase` (string: `'loading'`, `'mulligan'`, `'playing'`), `mulliganHand` (array, initially empty)
-- [ ] `loadDeck(state, playerKey, cards)` populates a player's library from a parsed card array and sets phase to `'mulligan'`
-- [ ] `shuffleLibrary(state, playerKey)` shuffles the player's library in place using the shuffle module from Ticket 03
-- [ ] `drawCard(state, playerKey)` removes and returns the top card (index 0) from the library, or returns `null` if the library is empty
-- [ ] `removeCardByIndex(state, playerKey, index)` removes and returns the card at the specified index
-- [ ] `removeCardByName(state, playerKey, name)` finds the first card matching the name (case-insensitive), removes it, and returns it; returns `null` if not found
-- [ ] `insertCard(state, playerKey, card, position)` adds a card to the library at `'top'` (index 0), `'bottom'` (end), or `'random'` (random index after shuffling)
-- [ ] `getLibrarySize(state, playerKey)` returns the number of cards remaining
-- [ ] `peekTop(state, playerKey, n)` returns the top N cards without removing them
-- [ ] All functions are pure (operate on the passed state object) and unit-testable
-- [ ] Unit tests cover all functions including edge cases (empty library, card not found, peek more than available)
+- [ ] A `createInitialState()` function is exported from `packages/core/src/reducer.ts` and returns a `GameState` with two player entries (`A` and `B`), each in the `loading` phase
+- [ ] A `PlayerPhaseSchema` Zod enum defines the valid phases: `loading`, `mulligan`, `playing`
+- [ ] A `GameStateSchema` Zod schema defines the full state shape: `{ players: { A: PlayerState, B: PlayerState } }` where each `PlayerState` contains `library` (array of `Card`), `phase` (`PlayerPhase`), and `mulliganHand` (array of `Card`, initially empty)
+- [ ] An `ActionSchema` Zod discriminated union (keyed on `type`) defines all valid actions: `LOAD_DECK`, `SHUFFLE_LIBRARY`, `DRAW_CARD`, `RETURN_TO_LIBRARY`
+- [ ] An `ActionResultSchema` Zod schema defines the return type: `{ state: GameState, card: Card | null }` where `card` carries the drawn card for `DRAW_CARD` and is `null` for other actions
+- [ ] All TypeScript types (`GameState`, `PlayerState`, `PlayerPhase`, `Action`, `ActionResult`) are derived from their Zod schemas via `z.infer<typeof Schema>`
+- [ ] All schemas are exported from `packages/core/src/schemas/` (e.g., `packages/core/src/schemas/state.ts` and `packages/core/src/schemas/action.ts`); the `CardSchema` from Ticket 02 is reused
+- [ ] A `dispatch(state: GameState, action: Action): ActionResult` function is exported and serves as the single entry point for all state mutations
+- [ ] `dispatch` validates the incoming action against `ActionSchema` before processing; invalid actions produce descriptive Zod error messages that agents can parse and self-correct
+- [ ] `LOAD_DECK` action (`{ type: "LOAD_DECK", payload: { player: "A" | "B", cards: Card[] } }`) replaces a player's library with the provided cards and sets their phase to `mulligan`
+- [ ] `SHUFFLE_LIBRARY` action (`{ type: "SHUFFLE_LIBRARY", payload: { player: "A" | "B" } }`) returns a new state with the player's library shuffled using the `shuffle` function from Ticket 03
+- [ ] `DRAW_CARD` action (`{ type: "DRAW_CARD", payload: { player: "A" | "B" } }`) removes and returns the top card (index 0) from the library via `ActionResult.card`; throws a descriptive error if the library is empty (e.g., `"Cannot draw: Player A's library is empty (0 cards remaining)"`)
+- [ ] `RETURN_TO_LIBRARY` action (`{ type: "RETURN_TO_LIBRARY", payload: { player: "A" | "B", card: Card, position: "top" | "bottom" | "random" } }`) inserts a card at index 0 (`top`), at the end (`bottom`), or at a random index (`random`)
+- [ ] All state transitions are immutable — `dispatch` returns a new `GameState` and never mutates the input state
+- [ ] Logically invalid actions (e.g., drawing from an empty library) throw descriptive `Error` objects with agent-readable messages that include context (player, library size, action type)
+- [ ] Unit tests (Vitest) validate all four action types including edge cases: empty library draw, `LOAD_DECK` phase transition, `RETURN_TO_LIBRARY` at all three positions, `SHUFFLE_LIBRARY` preserves card set, invalid action rejection, input state immutability
 
 ## Implementation Notes (Optional)
 
-The state object is a plain JavaScript object — no classes, no proxies. Functions operate on it directly. This follows the pattern described in [ADR-005](../../meta/adr/ADR-005-client_state_management.md).
+The reducer is a pure function — no classes, no proxies, no side effects. The `dispatch` function is a `switch` on `action.type` that delegates to handler functions for each action. This follows the action/reducer pattern described in [ADR-005](../../meta/adr/ADR-005-client_state_management.md).
 
 Example state shape:
 
-```javascript
+```typescript
 {
-  playerA: {
-    library: [{ name, setCode, cardType, manaCost }, ...],
-    phase: 'loading',
-    mulliganHand: []
-  },
-  playerB: {
-    library: [...],
-    phase: 'loading',
-    mulliganHand: []
+  players: {
+    A: {
+      library: [{ name: "Sol Ring", setCode: "CMD", cardType: "Artifact", manaCost: "{1}" }, ...],
+      phase: "loading",
+      mulliganHand: []
+    },
+    B: {
+      library: [...],
+      phase: "loading",
+      mulliganHand: []
+    }
   }
 }
 ```
 
-**References:** [ADR-005: Client-Side State Management](../../meta/adr/ADR-005-client_state_management.md), Ticket 02 (card objects), Ticket 03 (shuffle)
+Example dispatch call:
+
+```typescript
+const result = dispatch(state, {
+  type: "DRAW_CARD",
+  payload: { player: "A" }
+});
+// result.state  → new GameState with one fewer card in A's library
+// result.card   → the Card that was drawn
+```
+
+The `Card` type and `CardSchema` are defined in Ticket 02 (`packages/core/src/schemas/card.ts`) and reused here — do not redefine them.
+
+**References:** [ADR-005: Action/Reducer State Management](../../meta/adr/ADR-005-client_state_management.md), [ADR-008: TypeScript & Zod](../../meta/adr/ADR-008-typescript_and_zod.md), Ticket 02 (card schema), Ticket 03 (shuffle)
