@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { PlayerZone } from '../PlayerZone.js';
-import type { PlayerState, PlayerPhase, Action, GameState } from '@scryglass/core';
+import type { PlayerState, PlayerPhase, Action, ActionResult, GameState } from '@scryglass/core';
 
 function makePlayerState(overrides: Partial<PlayerState> = {}): PlayerState {
   return {
@@ -16,11 +16,24 @@ function makePlayerState(overrides: Partial<PlayerState> = {}): PlayerState {
 
 const defaultSettings: GameState['settings'] = { allowMulliganWith2or5Lands: false };
 
+function stubDispatch(state?: PlayerState): (action: Action) => ActionResult {
+  return () => ({
+    state: {
+      players: {
+        A: state ?? makePlayerState(),
+        B: state ?? makePlayerState(),
+      },
+      settings: defaultSettings,
+    },
+    card: null,
+  });
+}
+
 function renderPlayerZone(
   playerState: PlayerState,
   otherPlayerPhase: PlayerPhase = 'loading',
   player: 'A' | 'B' = 'A',
-  onDispatch: (action: Action) => void = () => {},
+  onDispatch: (action: Action) => ActionResult = stubDispatch(),
 ) {
   return render(
     <PlayerZone
@@ -59,7 +72,10 @@ describe('<PlayerZone />', () => {
   });
 
   it('enables action buttons when both players are in playing phase', () => {
-    renderPlayerZone(makePlayerState({ phase: 'playing' }), 'playing');
+    const cards = [
+      { name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' as const },
+    ];
+    renderPlayerZone(makePlayerState({ phase: 'playing', library: cards }), 'playing');
 
     const buttons = screen.getAllByRole('button');
     for (const button of buttons) {
@@ -77,12 +93,21 @@ describe('<PlayerZone />', () => {
   });
 
   it('renders Draw, Fetch Land, Tutor, and Scry buttons', () => {
-    renderPlayerZone(makePlayerState());
+    const cards = [
+      { name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' as const },
+    ];
+    renderPlayerZone(makePlayerState({ library: cards }));
 
     expect(screen.getByText('Draw')).toBeTruthy();
     expect(screen.getByText('Fetch Land')).toBeTruthy();
     expect(screen.getByText('Tutor')).toBeTruthy();
     expect(screen.getByText('Scry')).toBeTruthy();
+  });
+
+  it('shows "Library Empty" on the Draw button when library is empty', () => {
+    renderPlayerZone(makePlayerState());
+
+    expect(screen.getByText('Library Empty')).toBeTruthy();
   });
 
   it('labels buttons with appropriate aria-labels', () => {
