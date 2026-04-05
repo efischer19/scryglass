@@ -56,6 +56,10 @@ export async function priorityFetch(
   }
 
   try {
+    // NOTE: fetchCardImage expects a collector number, not a card name.
+    // A future integration layer will resolve card names to collector
+    // numbers before reaching this point — see the same note in
+    // image-cache.ts getImageUrl().
     const blob = await fetchCardImage(
       { setCode, collectorNumber: cardName },
       'jit',
