@@ -17,5 +17,8 @@ export const GameStateSchema = z.object({
     A: PlayerStateSchema,
     B: PlayerStateSchema,
   }),
+  settings: z.object({
+    allowMulliganWith2or5Lands: z.boolean(),
+  }),
 });
 export type GameState = z.infer<typeof GameStateSchema>;

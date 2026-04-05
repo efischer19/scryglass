@@ -12,6 +12,9 @@ export function createInitialState(): GameState {
       A: { library: [], phase: 'loading', mulliganHand: [], mulliganCount: 0 },
       B: { library: [], phase: 'loading', mulliganHand: [], mulliganCount: 0 },
     },
+    settings: {
+      allowMulliganWith2or5Lands: false,
+    },
   };
 }
 
