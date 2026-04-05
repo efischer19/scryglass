@@ -29,8 +29,9 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 function blobResponse(): Response {
-  return new Response(new Blob(['image-data'], { type: 'image/jpeg' }), {
+  return new Response('image-data', {
     status: 200,
+    headers: { 'Content-Type': 'image/jpeg' },
   });
 }
 
