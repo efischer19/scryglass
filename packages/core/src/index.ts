@@ -18,6 +18,9 @@ export type { Action, ActionResult } from './schemas/action.js';
 export { MulliganVerdictSchema } from './schemas/mulligan.js';
 export type { MulliganVerdict } from './schemas/mulligan.js';
 
+export { SavedDeckSchema, SavedDeckListSchema } from './schemas/saved-deck.js';
+export type { SavedDeck, SavedDeckList } from './schemas/saved-deck.js';
+
 export { countLands, getMulliganVerdict } from './mulligan.js';
 
 export { createInitialState, dispatch } from './reducer.js';
