@@ -35,6 +35,11 @@ describe('isBasicLandOfType', () => {
     expect(isBasicLandOfType(makeCard('Mountain Goat'), 'Mountain')).toBe(false);
   });
 
+  it('returns false for a land whose name contains a land type only as a substring', () => {
+    // "Saltplains" contains "plains" but not as a word boundary match for "Plains"
+    expect(isBasicLandOfType(makeLand('Saltplains Crosser'), 'Plains')).toBe(false);
+  });
+
   it('matches each of the five basic land types by name', () => {
     expect(isBasicLandOfType(makeLand('Plains'), 'Plains')).toBe(true);
     expect(isBasicLandOfType(makeLand('Island'), 'Island')).toBe(true);

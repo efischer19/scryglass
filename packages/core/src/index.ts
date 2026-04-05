@@ -28,4 +28,5 @@ export { countLands, getMulliganVerdict } from './mulligan.js';
 export { createInitialState, dispatch } from './reducer.js';
 
 export { peekTop } from './helpers/peek.js';
-export { getBasicLandCounts } from './helpers/lands.js';
+export { getBasicLandCounts, BASIC_LAND_TYPES } from './helpers/lands.js';
+export type { BasicLandType } from './helpers/lands.js';

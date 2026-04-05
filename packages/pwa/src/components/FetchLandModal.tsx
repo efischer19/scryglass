@@ -1,11 +1,8 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
-import type { Action, ActionResult, Card } from '@scryglass/core';
-import { getBasicLandCounts } from '@scryglass/core';
+import type { Action, ActionResult, Card, LandType } from '@scryglass/core';
+import { getBasicLandCounts, BASIC_LAND_TYPES } from '@scryglass/core';
 import { ConfirmationGate } from './ConfirmationGate.js';
 import { CardDisplay } from './CardDisplay.js';
-
-const LAND_TYPES = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'] as const;
-type LandType = typeof LAND_TYPES[number];
 
 const PLAYER_LABELS: Record<'A' | 'B', string> = {
   A: 'Player A',
@@ -28,7 +25,7 @@ export function FetchLandModal({ player, library, onDispatch, onClose }: FetchLa
   const label = PLAYER_LABELS[player];
 
   const counts = getBasicLandCounts(library);
-  const hasAnyLands = LAND_TYPES.some(lt => (counts[lt] ?? 0) > 0);
+  const hasAnyLands = BASIC_LAND_TYPES.some(lt => (counts[lt] ?? 0) > 0);
 
   useEffect(() => {
     modalRef.current?.focus();
@@ -129,7 +126,7 @@ export function FetchLandModal({ player, library, onDispatch, onClose }: FetchLa
             <>
               <p>Choose a basic land type to fetch:</p>
               <div class="fetch-land-modal__land-buttons">
-                {LAND_TYPES.map(landType => {
+                {BASIC_LAND_TYPES.map(landType => {
                   const count = counts[landType] ?? 0;
                   const isDisabled = count === 0;
                   return (

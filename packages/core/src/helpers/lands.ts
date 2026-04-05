@@ -7,13 +7,15 @@ export type BasicLandType = typeof BASIC_LAND_TYPES[number];
  * Returns true if the card is a basic land of the specified subtype.
  *
  * A basic land is identified by `cardType === 'land'` and a name that
- * contains the land subtype (case-sensitive match on subtype).
+ * contains the land subtype as a complete word (using word boundaries).
  * This handles standard basics ("Mountain"), snow-covered variants
  * ("Snow-Covered Mountain"), and any other land whose name contains
- * the requested subtype.
+ * the requested subtype as a distinct word.
  */
 export function isBasicLandOfType(card: Card, landType: string): boolean {
-  return card.cardType === 'land' && card.name.includes(landType);
+  if (card.cardType !== 'land') return false;
+  const wordBoundaryRegex = new RegExp(`\\b${landType}\\b`);
+  return wordBoundaryRegex.test(card.name);
 }
 
 /**
