@@ -1,13 +1,15 @@
-import type { PlayerState, PlayerPhase, Action, GameState } from '@scryglass/core';
+import { useState } from 'preact/hooks';
+import type { PlayerState, PlayerPhase, Action, ActionResult, Card, GameState } from '@scryglass/core';
 import { CardDisplay } from './CardDisplay.js';
 import { MulliganHand } from './MulliganHand.js';
+import { DrawButton } from './DrawButton.js';
 
 interface PlayerZoneProps {
   player: 'A' | 'B';
   playerState: PlayerState;
   otherPlayerPhase: PlayerPhase;
   settings: GameState['settings'];
-  onDispatch: (action: Action) => void;
+  onDispatch: (action: Action) => ActionResult;
 }
 
 const PLAYER_LABELS: Record<'A' | 'B', string> = {
@@ -16,8 +18,14 @@ const PLAYER_LABELS: Record<'A' | 'B', string> = {
 };
 
 export function PlayerZone({ player, playerState, otherPlayerPhase, settings, onDispatch }: PlayerZoneProps) {
+  const [drawnCard, setDrawnCard] = useState<Card | null>(null);
   const label = PLAYER_LABELS[player];
   const disabled = playerState.phase !== 'playing' || otherPlayerPhase !== 'playing';
+
+  const handleCardDrawn = (card: Card | null) => {
+    setDrawnCard(card);
+    // JIT image fetch stub — integration point with Ticket 17
+  };
 
   return (
     <section
@@ -37,17 +45,13 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, on
         />
       )}
       <div class="action-buttons">
-        <button
-          class="action-btn"
-          type="button"
+        <DrawButton
+          player={player}
           disabled={disabled}
-          aria-label={`Draw card from ${label}'s library`}
-          onClick={() =>
-            onDispatch({ type: 'DRAW_CARD', payload: { player } })
-          }
-        >
-          Draw
-        </button>
+          libraryEmpty={playerState.library.length === 0}
+          onDispatch={onDispatch}
+          onCardDrawn={handleCardDrawn}
+        />
         <button
           class="action-btn"
           type="button"
@@ -82,7 +86,11 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, on
           Scry
         </button>
       </div>
-      <CardDisplay player={player} />
+      <CardDisplay
+        player={player}
+        card={drawnCard}
+        onDismiss={() => setDrawnCard(null)}
+      />
     </section>
   );
 }
