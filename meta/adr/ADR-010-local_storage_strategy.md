@@ -1,6 +1,6 @@
 ---
 title: "ADR-010: Local Storage Strategy for Decklists"
-status: "Proposed"
+status: "Accepted"
 date: "2026-04-05"
 tags:
   - "storage"
