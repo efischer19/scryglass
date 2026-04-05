@@ -814,3 +814,125 @@ describe('dispatch — FETCH_BASIC_LAND', () => {
     expect(result.state.players.B).toEqual(playerBBefore);
   });
 });
+
+describe('dispatch — TUTOR_CARD', () => {
+  it('removes the correct card by name and reduces library size by 1', () => {
+    const sol = makeCard('Sol Ring');
+    const counterspell = makeCard('Counterspell');
+    const cards = [sol, counterspell, makeCard('Lightning Bolt')];
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, {
+      type: 'TUTOR_CARD',
+      payload: { player: 'A', cardName: 'Sol Ring' },
+    });
+
+    expect(result.card).toEqual(sol);
+    expect(result.state.players.A.library).toHaveLength(cards.length - 1);
+    expect(result.state.players.A.library.find(c => c.name === 'Sol Ring')).toBeUndefined();
+  });
+
+  it('finds the card case-insensitively', () => {
+    const sol = makeCard('Sol Ring');
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards: [sol] } }).state;
+
+    const result = dispatch(state, {
+      type: 'TUTOR_CARD',
+      payload: { player: 'A', cardName: 'sol ring' },
+    });
+
+    expect(result.card).toEqual(sol);
+  });
+
+  it('removes only the first matching card', () => {
+    const sol1 = makeCard('Sol Ring');
+    const sol2 = makeCard('Sol Ring');
+    const counterspell = makeCard('Counterspell');
+    let state = createInitialState();
+    state = dispatch(state, {
+      type: 'LOAD_DECK',
+      payload: { player: 'A', cards: [sol1, counterspell, sol2] },
+    }).state;
+
+    const result = dispatch(state, {
+      type: 'TUTOR_CARD',
+      payload: { player: 'A', cardName: 'Sol Ring' },
+    });
+
+    expect(result.card).toEqual(sol1);
+    expect(result.state.players.A.library).toHaveLength(2);
+    expect(result.state.players.A.library.filter(c => c.name === 'Sol Ring')).toHaveLength(1);
+  });
+
+  it('shuffles the library after tutor', () => {
+    const cards = makeCards(20);
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, {
+      type: 'TUTOR_CARD',
+      payload: { player: 'A', cardName: 'Card 10' },
+    });
+
+    // The remaining 19 cards should contain all originals except Card 10
+    const remainingNames = result.state.players.A.library.map(c => c.name).sort();
+    const expectedNames = cards.filter(c => c.name !== 'Card 10').map(c => c.name).sort();
+    expect(remainingNames).toEqual(expectedNames);
+    expect(result.state.players.A.library).toHaveLength(19);
+  });
+
+  it('throws a descriptive error when the card is not in the library', () => {
+    const cards = [makeCard('Counterspell'), makeCard('Lightning Bolt')];
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    expect(() =>
+      dispatch(state, {
+        type: 'TUTOR_CARD',
+        payload: { player: 'A', cardName: 'Sol Ring' },
+      }),
+    ).toThrow("Cannot tutor: 'Sol Ring' not found in Player A's library");
+  });
+
+  it('throws with player B context when applicable', () => {
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'B', cards: [] } }).state;
+
+    expect(() =>
+      dispatch(state, {
+        type: 'TUTOR_CARD',
+        payload: { player: 'B', cardName: 'Sol Ring' },
+      }),
+    ).toThrow("Cannot tutor: 'Sol Ring' not found in Player B's library");
+  });
+
+  it('does not mutate the input state', () => {
+    const cards = [makeCard('Sol Ring'), makeCard('Counterspell')];
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+    const original = JSON.parse(JSON.stringify(state));
+
+    dispatch(state, {
+      type: 'TUTOR_CARD',
+      payload: { player: 'A', cardName: 'Sol Ring' },
+    });
+
+    expect(state).toEqual(original);
+  });
+
+  it('does not affect the other player', () => {
+    const cards = [makeCard('Sol Ring')];
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+    const playerBBefore = state.players.B;
+
+    const result = dispatch(state, {
+      type: 'TUTOR_CARD',
+      payload: { player: 'A', cardName: 'Sol Ring' },
+    });
+
+    expect(result.state.players.B).toEqual(playerBBefore);
+  });
+});

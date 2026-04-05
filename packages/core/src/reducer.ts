@@ -281,6 +281,37 @@ function handleFetchBasicLand(state: GameState, action: Extract<Action, { type: 
   };
 }
 
+function handleTutorCard(state: GameState, action: Extract<Action, { type: 'TUTOR_CARD' }>): ActionResult {
+  const { player, cardName } = action.payload;
+  const library = state.players[player].library;
+
+  const cardIndex = library.findIndex(
+    card => card.name.toLowerCase() === cardName.toLowerCase(),
+  );
+
+  if (cardIndex === -1) {
+    throw new Error(`Cannot tutor: '${cardName}' not found in Player ${player}'s library`);
+  }
+
+  const tutoredCard = library[cardIndex];
+  const remaining = library.filter((_, i) => i !== cardIndex);
+  const shuffled = shuffle(remaining);
+
+  return {
+    state: {
+      ...state,
+      players: {
+        ...state.players,
+        [player]: {
+          ...state.players[player],
+          library: shuffled,
+        },
+      },
+    },
+    card: tutoredCard,
+  };
+}
+
 /**
  * Dispatch an action against the current game state, returning a new
  * immutable state and any output (e.g., a drawn card).
@@ -309,5 +340,7 @@ export function dispatch(state: GameState, action: Action): ActionResult {
       return handleScryResolve(state, parsed);
     case 'FETCH_BASIC_LAND':
       return handleFetchBasicLand(state, parsed);
+    case 'TUTOR_CARD':
+      return handleTutorCard(state, parsed);
   }
 }
