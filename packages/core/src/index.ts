@@ -18,12 +18,19 @@ export { cryptoRandomInt, shuffle } from './shuffle.js';
 export { PlayerPhaseSchema, PlayerStateSchema, GameStateSchema } from './schemas/state.js';
 export type { PlayerPhase, PlayerState, GameState } from './schemas/state.js';
 
-export { ActionSchema, ActionResultSchema } from './schemas/action.js';
-export type { Action, ActionResult } from './schemas/action.js';
+export { ActionSchema, ActionResultSchema, ScryDecisionSchema, LandTypeSchema } from './schemas/action.js';
+export type { Action, ActionResult, ScryDecision, LandType } from './schemas/action.js';
 
 export { MulliganVerdictSchema } from './schemas/mulligan.js';
 export type { MulliganVerdict } from './schemas/mulligan.js';
 
+export { SavedDeckSchema, SavedDeckListSchema } from './schemas/saved-deck.js';
+export type { SavedDeck, SavedDeckList } from './schemas/saved-deck.js';
+
 export { countLands, getMulliganVerdict } from './mulligan.js';
 
 export { createInitialState, dispatch } from './reducer.js';
+
+export { peekTop } from './helpers/peek.js';
+export { getBasicLandCounts, BASIC_LAND_TYPES } from './helpers/lands.js';
+export type { BasicLandType } from './helpers/lands.js';

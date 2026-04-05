@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { DeckInput } from '../DeckInput.js';
+import { saveDeck } from '../../storage/deck-storage.js';
 
 const mockLoadDeck = () => {};
 
@@ -23,6 +24,7 @@ const DECK_WITH_COMMANDER = [
 
 beforeEach(() => {
   vi.useFakeTimers();
+  localStorage.clear();
 });
 
 describe('<DeckInput />', () => {
@@ -157,6 +159,233 @@ describe('<DeckInput />', () => {
 
   it('passes vitest-axe a11y assertions', async () => {
     vi.useRealTimers();
+    const { container } = render(<DeckInput onLoadDeck={mockLoadDeck} />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+});
+
+describe('<DeckInput /> — deck storage', () => {
+  it('renders Saved Decklists fieldset', () => {
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+    expect(
+      screen.getByRole('group', { name: /saved decklists/i }),
+    ).toBeTruthy();
+  });
+
+  it('renders a Save Deck button', () => {
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+    expect(
+      screen.getByRole('button', { name: /save deck/i }),
+    ).toBeTruthy();
+  });
+
+  it('renders saved decks dropdown', () => {
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+    const select = screen.getByRole('combobox', { name: /saved decks/i });
+    expect(select).toBeTruthy();
+  });
+
+  it('shows "no saved decks" when storage is empty', () => {
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+    const select = screen.getByRole('combobox', { name: /saved decks/i });
+    expect(select.textContent).toContain('no saved decks');
+  });
+
+  it('lists previously saved decks in dropdown', () => {
+    saveDeck('Test Deck', VALID_DECK, 3);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+    const select = screen.getByRole('combobox', { name: /saved decks/i });
+    expect(select.textContent).toContain('Test Deck');
+    expect(select.textContent).toContain('3 cards');
+  });
+
+  it('Load Saved button is disabled when no deck selected', () => {
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+    const btn = screen.getByRole('button', { name: /load saved/i });
+    expect(btn).toHaveProperty('disabled', true);
+  });
+
+  it('loads a saved deck into textarea when Load Saved is clicked', async () => {
+    saveDeck('My Deck', VALID_DECK, 3);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+
+    const select = screen.getByRole('combobox', { name: /saved decks/i });
+    const options = select.querySelectorAll('option');
+    const deckOption = Array.from(options).find((o) =>
+      o.textContent?.includes('My Deck'),
+    );
+    expect(deckOption).toBeTruthy();
+
+    fireEvent.change(select, { target: { value: deckOption!.value } });
+    fireEvent.click(screen.getByRole('button', { name: /load saved/i }));
+
+    vi.advanceTimersByTime(300);
+    await waitFor(() => {
+      const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
+      expect(textarea.value).toBe(VALID_DECK);
+    });
+  });
+
+  it('re-runs validation when loading a saved deck', async () => {
+    saveDeck('My Deck', VALID_DECK, 3);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+
+    const select = screen.getByRole('combobox', { name: /saved decks/i });
+    const options = select.querySelectorAll('option');
+    const deckOption = Array.from(options).find((o) =>
+      o.textContent?.includes('My Deck'),
+    );
+    fireEvent.change(select, { target: { value: deckOption!.value } });
+    fireEvent.click(screen.getByRole('button', { name: /load saved/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Total cards: 3/)).toBeTruthy();
+    });
+  });
+
+  it('shows delete confirmation dialog when Delete is clicked', () => {
+    saveDeck('My Deck', VALID_DECK, 3);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+
+    const select = screen.getByRole('combobox', { name: /saved decks/i });
+    const options = select.querySelectorAll('option');
+    const deckOption = Array.from(options).find((o) =>
+      o.textContent?.includes('My Deck'),
+    );
+    fireEvent.change(select, { target: { value: deckOption!.value } });
+    fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
+
+    expect(screen.getByText(/cannot be undone/i)).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: /confirm delete/i }),
+    ).toBeTruthy();
+  });
+
+  it('deletes a deck after confirmation', () => {
+    saveDeck('My Deck', VALID_DECK, 3);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+
+    const select = screen.getByRole('combobox', { name: /saved decks/i });
+    const options = select.querySelectorAll('option');
+    const deckOption = Array.from(options).find((o) =>
+      o.textContent?.includes('My Deck'),
+    );
+    fireEvent.change(select, { target: { value: deckOption!.value } });
+    fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /confirm delete/i }));
+
+    expect(screen.getByText(/deleted/i)).toBeTruthy();
+    const updatedSelect = screen.getByRole('combobox', { name: /saved decks/i });
+    expect(updatedSelect.textContent).not.toContain('My Deck');
+  });
+
+  it('shows rename input when Rename is clicked', () => {
+    saveDeck('My Deck', VALID_DECK, 3);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+
+    const select = screen.getByRole('combobox', { name: /saved decks/i });
+    const options = select.querySelectorAll('option');
+    const deckOption = Array.from(options).find((o) =>
+      o.textContent?.includes('My Deck'),
+    );
+    fireEvent.change(select, { target: { value: deckOption!.value } });
+    fireEvent.click(screen.getByRole('button', { name: /^rename$/i }));
+
+    expect(screen.getByLabelText(/new name/i)).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: /confirm rename/i }),
+    ).toBeTruthy();
+  });
+
+  it('renames a deck and updates the list', () => {
+    saveDeck('Old Name', VALID_DECK, 3);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+
+    const select = screen.getByRole('combobox', { name: /saved decks/i });
+    const options = select.querySelectorAll('option');
+    const deckOption = Array.from(options).find((o) =>
+      o.textContent?.includes('Old Name'),
+    );
+    fireEvent.change(select, { target: { value: deckOption!.value } });
+    fireEvent.click(screen.getByRole('button', { name: /^rename$/i }));
+
+    const input = screen.getByLabelText(/new name/i);
+    fireEvent.input(input, { target: { value: 'New Name' } });
+    fireEvent.click(screen.getByRole('button', { name: /confirm rename/i }));
+
+    const updatedSelect = screen.getByRole('combobox', { name: /saved decks/i });
+    expect(updatedSelect.textContent).toContain('New Name');
+    expect(updatedSelect.textContent).not.toContain('Old Name');
+  });
+
+  it('shows overwrite confirmation for duplicate name', () => {
+    saveDeck('Existing Deck', VALID_DECK, 3);
+    vi.spyOn(window, 'prompt').mockReturnValue('Existing Deck');
+
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+    fireEvent.click(screen.getByRole('button', { name: /save deck/i }));
+
+    expect(screen.getByText(/already exists/i)).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: /confirm overwrite/i }),
+    ).toBeTruthy();
+
+    vi.restoreAllMocks();
+  });
+
+  it('saves a new deck with prompt-provided name', () => {
+    vi.spyOn(window, 'prompt').mockReturnValue('Brand New Deck');
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+
+    const textarea = screen.getByRole('textbox');
+    fireEvent.input(textarea, { target: { value: VALID_DECK } });
+    vi.advanceTimersByTime(300);
+
+    fireEvent.click(screen.getByRole('button', { name: /save deck/i }));
+
+    expect(screen.getByText(/Brand New Deck" saved/i)).toBeTruthy();
+    const select = screen.getByRole('combobox', { name: /saved decks/i });
+    expect(select.textContent).toContain('Brand New Deck');
+
+    vi.restoreAllMocks();
+  });
+
+  it('restores autosaved content on mount', async () => {
+    // Pre-populate autosave
+    localStorage.setItem(
+      'scryglass:decklists:__autosave__',
+      JSON.stringify({ rawText: VALID_DECK, updatedAt: new Date().toISOString() }),
+    );
+
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+
+    await waitFor(() => {
+      const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
+      expect(textarea.value).toBe(VALID_DECK);
+    });
+  });
+
+  it('has accessible confirmation dialog with alertdialog role', () => {
+    saveDeck('My Deck', VALID_DECK, 3);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+
+    const select = screen.getByRole('combobox', { name: /saved decks/i });
+    const options = select.querySelectorAll('option');
+    const deckOption = Array.from(options).find((o) =>
+      o.textContent?.includes('My Deck'),
+    );
+    fireEvent.change(select, { target: { value: deckOption!.value } });
+    fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
+
+    expect(
+      screen.getByRole('alertdialog', { name: /confirmation required/i }),
+    ).toBeTruthy();
+  });
+
+  it('passes vitest-axe a11y assertions with saved decks', async () => {
+    vi.useRealTimers();
+    saveDeck('My Deck', VALID_DECK, 3);
     const { container } = render(<DeckInput onLoadDeck={mockLoadDeck} />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();

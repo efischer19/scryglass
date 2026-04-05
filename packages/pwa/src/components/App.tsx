@@ -47,6 +47,7 @@ export function App() {
           playerState={state.players.A}
           otherPlayerPhase={state.players.B.phase}
           settings={state.settings}
+          gameState={state}
           onDispatch={handleDispatch}
         />
         <PlayerZone
@@ -54,6 +55,7 @@ export function App() {
           playerState={state.players.B}
           otherPlayerPhase={state.players.A.phase}
           settings={state.settings}
+          gameState={state}
           onDispatch={handleDispatch}
         />
       </div>

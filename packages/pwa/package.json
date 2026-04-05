@@ -17,6 +17,7 @@
   "devDependencies": {
     "@preact/preset-vite": "^2.10.5",
     "@testing-library/preact": "^3.2.4",
+    "fake-indexeddb": "^6.2.5",
     "jsdom": "^29.0.1",
     "typescript": "^6.0.2",
     "vite": "^8.0.3",
