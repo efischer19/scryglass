@@ -14,6 +14,7 @@ export function parseCsvRows(input: string): string[][] {
   let i = 0;
   const len = input.length;
 
+  // <= len (not < len) so the last row is processed when input lacks a trailing newline
   while (i <= len) {
     const { row, nextIndex } = parseRow(input, i, len);
     // Only add non-empty rows (skip trailing blank lines)
@@ -34,6 +35,7 @@ function parseRow(
   const fields: string[] = [];
   let i = start;
 
+  // <= len (not < len) so trailing commas produce an empty final field per RFC 4180
   while (i <= len) {
     // End of input
     if (i === len) {
