@@ -65,7 +65,8 @@ describe('fetchCardImage', () => {
     await vi.runAllTimersAsync();
     const result = await promise;
 
-    expect(result).toBeInstanceOf(Blob);
+    expect(result).not.toBeNull();
+    expect(result).toMatchObject({ size: 10, type: 'image/jpeg' });
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0]![0]).toContain(
       'api.scryfall.com/cards/',
@@ -103,7 +104,8 @@ describe('fetchCardImage', () => {
     await vi.runAllTimersAsync();
     const result = await promise;
 
-    expect(result).toBeInstanceOf(Blob);
+    expect(result).not.toBeNull();
+    expect(result).toMatchObject({ size: 10, type: 'image/jpeg' });
     // 429 → card json → image blob
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
@@ -120,7 +122,8 @@ describe('fetchCardImage', () => {
     await vi.runAllTimersAsync();
     const result = await promise;
 
-    expect(result).toBeInstanceOf(Blob);
+    expect(result).not.toBeNull();
+    expect(result).toMatchObject({ size: 10, type: 'image/jpeg' });
     // 500 → 503 → card json → image blob
     expect(fetchMock).toHaveBeenCalledTimes(4);
   });
