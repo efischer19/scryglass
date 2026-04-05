@@ -23,6 +23,7 @@ describe('createInitialState', () => {
     expect(state.players.B.mulliganHand).toEqual([]);
     expect(state.players.A.mulliganCount).toBe(0);
     expect(state.players.B.mulliganCount).toBe(0);
+    expect(state.settings.allowMulliganWith2or5Lands).toBe(false);
   });
 });
 
