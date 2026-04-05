@@ -76,6 +76,29 @@ pre-commit install
 ./scripts/local-ci-check.sh
 ```
 
+## Deployment (AWS S3 + CloudFront)
+
+The repository includes a GitHub Actions workflow (`.github/workflows/deploy-aws.yml`) that builds the PWA and deploys it to AWS S3, fronted by CloudFront.
+
+**Required AWS resources:**
+
+- S3 bucket (static site hosting)
+- CloudFront distribution (CDN, HTTPS, custom error pages for SPA routing)
+- GitHub OIDC identity provider in IAM
+- IAM role with S3 put/delete and CloudFront invalidation permissions
+
+**Required GitHub repository variables** (Settings → Secrets and variables → Actions → Variables):
+
+| Variable                     | Description                                    |
+| :--------------------------- | :--------------------------------------------- |
+| `AWS_ROLE_ARN`               | ARN of the IAM deploy role                     |
+| `AWS_REGION`                 | AWS region of the S3 bucket                    |
+| `S3_BUCKET_NAME`             | Name of the S3 bucket                          |
+| `CLOUDFRONT_DISTRIBUTION_ID` | CloudFront distribution ID                     |
+| `CLOUDFRONT_DOMAIN`          | *(optional)* Domain for post-deploy smoke test |
+
+The workflow runs automatically on push to `main` and can be triggered manually via `workflow_dispatch`. See [docs-src/deployment.md](./docs-src/deployment.md) for the full step-by-step setup guide, including the IAM policy JSON and CloudFront configuration.
+
 ## Architecture Decisions
 
 All significant decisions are documented as [Architecture Decision Records](./meta/adr/):

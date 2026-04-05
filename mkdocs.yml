@@ -23,6 +23,8 @@ nav:
       - Contributing: CONTRIBUTING.md
       - Development Philosophy: DEVELOPMENT_PHILOSOPHY.md
       - Feature Request Automation: feature-request-automation.md
+  - Deployment:
+      - AWS (S3 + CloudFront): deployment.md
 
 markdown_extensions:
   - admonition
