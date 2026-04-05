@@ -205,6 +205,83 @@ body {
 }
 
 /* ===================================================================
+   Mulligan Hand
+   =================================================================== */
+
+.mulligan-hand {
+  margin-bottom: var(--space-md);
+  padding: var(--space-md);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.mulligan-hand__title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  margin-bottom: var(--space-xs);
+}
+
+.mulligan-hand__verdict,
+.mulligan-hand__mulligan-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-xs);
+}
+
+.mulligan-hand__gate {
+  display: block;
+  width: 100%;
+  padding: var(--space-md);
+  margin: var(--space-sm) 0;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background-color: var(--color-surface);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: center;
+}
+
+.mulligan-hand__gate:hover,
+.mulligan-hand__gate:focus {
+  border-color: var(--color-text-muted);
+  outline: 2px solid var(--player-a-accent);
+  outline-offset: 2px;
+}
+
+.mulligan-hand__revealed {
+  margin: var(--space-sm) 0;
+}
+
+.mulligan-hand__card-list {
+  list-style: none;
+  margin-bottom: var(--space-sm);
+}
+
+.mulligan-hand__card-item {
+  padding: var(--space-xs) 0;
+  font-size: var(--font-size-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mulligan-hand__card-item:last-child {
+  border-bottom: none;
+}
+
+.mulligan-hand__hide-btn {
+  margin-top: var(--space-sm);
+}
+
+.mulligan-hand__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+/* ===================================================================
    Deck Input
    =================================================================== */
 
