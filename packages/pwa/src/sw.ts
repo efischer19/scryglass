@@ -26,7 +26,8 @@ self.addEventListener('activate', (event: ExtendableEvent) => {
 
 self.addEventListener('fetch', (event: FetchEvent) => {
   // Don't intercept Scryfall requests — card images are handled by IndexedDB (Ticket 15)
-  if (event.request.url.includes('api.scryfall.com')) return;
+  const url = new URL(event.request.url);
+  if (url.hostname === 'api.scryfall.com') return;
 
   event.respondWith(
     caches.match(event.request).then((cached) => cached ?? fetch(event.request))

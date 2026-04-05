@@ -26,7 +26,7 @@ function serviceWorkerPlugin(): Plugin {
         }
       }
 
-      const version = Date.now().toString(36);
+      const cacheVersion = Date.now().toString(36);
       const swPath = fileURLToPath(new URL('./src/sw.ts', import.meta.url));
       let swSource = readFileSync(swPath, 'utf-8');
 
@@ -35,7 +35,7 @@ function serviceWorkerPlugin(): Plugin {
       swSource = swSource.replace(/^declare\s+const\b.*$/gm, '');
 
       // Inject build-time constants before TypeScript compilation
-      swSource = swSource.replace(/__APP_VERSION__/g, JSON.stringify(version));
+      swSource = swSource.replace(/__APP_VERSION__/g, JSON.stringify(cacheVersion));
       swSource = swSource.replace(
         /__PRECACHE_ENTRIES__/g,
         JSON.stringify(precacheUrls)
