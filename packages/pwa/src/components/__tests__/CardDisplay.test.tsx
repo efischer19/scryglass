@@ -88,4 +88,3 @@ describe('<CardDisplay />', () => {
     expect(screen.queryByRole('img')).toBeNull();
   });
 });
-
