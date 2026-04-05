@@ -11,11 +11,13 @@ describe('<Router />', () => {
     render(
       <Router
         inputView={<p>Input View</p>}
+        editorView={<p>Editor View</p>}
         appView={<p>App View</p>}
       />,
     );
     expect(screen.getByText('Input View')).toBeTruthy();
     expect(screen.queryByText('App View')).toBeNull();
+    expect(screen.queryByText('Editor View')).toBeNull();
   });
 
   it('renders the app view when hash is #/app', () => {
@@ -23,11 +25,27 @@ describe('<Router />', () => {
     render(
       <Router
         inputView={<p>Input View</p>}
+        editorView={<p>Editor View</p>}
         appView={<p>App View</p>}
       />,
     );
     expect(screen.getByText('App View')).toBeTruthy();
     expect(screen.queryByText('Input View')).toBeNull();
+    expect(screen.queryByText('Editor View')).toBeNull();
+  });
+
+  it('renders the editor view when hash is #/editor', () => {
+    window.location.hash = '#/editor';
+    render(
+      <Router
+        inputView={<p>Input View</p>}
+        editorView={<p>Editor View</p>}
+        appView={<p>App View</p>}
+      />,
+    );
+    expect(screen.getByText('Editor View')).toBeTruthy();
+    expect(screen.queryByText('Input View')).toBeNull();
+    expect(screen.queryByText('App View')).toBeNull();
   });
 
   it('defaults to input view for invalid hashes', () => {
@@ -35,6 +53,7 @@ describe('<Router />', () => {
     render(
       <Router
         inputView={<p>Input View</p>}
+        editorView={<p>Editor View</p>}
         appView={<p>App View</p>}
       />,
     );
@@ -45,6 +64,7 @@ describe('<Router />', () => {
     const { container } = render(
       <Router
         inputView={<p>Input View</p>}
+        editorView={<p>Editor View</p>}
         appView={<p>App View</p>}
       />,
     );
@@ -63,5 +83,10 @@ describe('navigate()', () => {
     navigate('#/app');
     navigate('#/input');
     expect(window.location.hash).toBe('#/input');
+  });
+
+  it('navigates to editor view', () => {
+    navigate('#/editor');
+    expect(window.location.hash).toBe('#/editor');
   });
 });

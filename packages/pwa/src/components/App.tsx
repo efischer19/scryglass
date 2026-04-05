@@ -1,14 +1,16 @@
 import { useState } from 'preact/hooks';
 import { createInitialState, dispatch } from '@scryglass/core';
-import type { Action, Card } from '@scryglass/core';
+import type { Action, Card, ConvertResult } from '@scryglass/core';
 import { Header } from './Header.js';
 import { PlayerZone } from './PlayerZone.js';
 import { Router, navigate } from './Router.js';
 import { DeckInput } from './DeckInput.js';
+import { DeckEditor } from './DeckEditor.js';
 import { ExportDropdown } from './ExportDropdown.js';
 
 export function App() {
   const [state, setState] = useState(createInitialState);
+  const [editorResult, setEditorResult] = useState<ConvertResult | null>(null);
 
   const handleDispatch = (action: Action) => {
     const result = dispatch(state, action);
@@ -27,13 +29,39 @@ export function App() {
     const r4 = dispatch(currentState, { type: 'DEAL_OPENING_HAND', payload: { player: 'B' } });
     currentState = r4.state;
     setState(currentState);
+    setEditorResult(null);
     navigate('#/app');
+  };
+
+  const handleOpenEditor = (result: ConvertResult) => {
+    setEditorResult(result);
+    navigate('#/editor');
+  };
+
+  const handleCancelEditor = () => {
+    setEditorResult(null);
+    navigate('#/input');
   };
 
   const inputView = (
     <main>
       <Header onLoadDecks={() => { /* Ticket 06 */ }} />
-      <DeckInput onLoadDeck={handleLoadDeck} />
+      <DeckInput onLoadDeck={handleLoadDeck} onOpenEditor={handleOpenEditor} />
+    </main>
+  );
+
+  const editorView = (
+    <main>
+      <Header onLoadDecks={() => navigate('#/input')} />
+      {editorResult ? (
+        <DeckEditor
+          convertResult={editorResult}
+          onLoadDeck={handleLoadDeck}
+          onCancel={handleCancelEditor}
+        />
+      ) : (
+        <p>No deck to edit. Return to the input page.</p>
+      )}
     </main>
   );
 
@@ -62,5 +90,5 @@ export function App() {
     </main>
   );
 
-  return <Router inputView={inputView} appView={appView} />;
+  return <Router inputView={inputView} editorView={editorView} appView={appView} />;
 }
