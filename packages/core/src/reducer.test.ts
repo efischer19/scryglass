@@ -21,6 +21,8 @@ describe('createInitialState', () => {
     expect(state.players.B.library).toEqual([]);
     expect(state.players.A.mulliganHand).toEqual([]);
     expect(state.players.B.mulliganHand).toEqual([]);
+    expect(state.players.A.mulliganCount).toBe(0);
+    expect(state.players.B.mulliganCount).toBe(0);
   });
 });
 
@@ -287,6 +289,364 @@ describe('dispatch — RETURN_TO_LIBRARY', () => {
     });
 
     expect(state).toEqual(original);
+  });
+});
+
+/** Helper: load a deck for a player and return updated state in mulligan phase */
+function loadDeckForPlayer(player: 'A' | 'B', count: number): GameState {
+  return dispatch(createInitialState(), {
+    type: 'LOAD_DECK',
+    payload: { player, cards: makeCards(count) },
+  }).state;
+}
+
+describe('dispatch — DEAL_OPENING_HAND', () => {
+  it('moves exactly 7 cards from library to mulliganHand', () => {
+    const state = loadDeckForPlayer('A', 20);
+    const result = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    });
+
+    expect(result.state.players.A.mulliganHand).toHaveLength(7);
+    expect(result.state.players.A.library).toHaveLength(13);
+    expect(result.card).toBeNull();
+  });
+
+  it('moves the top 7 cards (first 7 in order)', () => {
+    const state = loadDeckForPlayer('A', 20);
+    const originalLibrary = state.players.A.library;
+    const result = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    });
+
+    expect(result.state.players.A.mulliganHand).toEqual(originalLibrary.slice(0, 7));
+    expect(result.state.players.A.library).toEqual(originalLibrary.slice(7));
+  });
+
+  it('moves all available cards when library has fewer than 7', () => {
+    const state = loadDeckForPlayer('A', 3);
+    const result = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    });
+
+    expect(result.state.players.A.mulliganHand).toHaveLength(3);
+    expect(result.state.players.A.library).toHaveLength(0);
+  });
+
+  it('moves zero cards when library is empty', () => {
+    const state = loadDeckForPlayer('A', 0);
+    const result = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    });
+
+    expect(result.state.players.A.mulliganHand).toHaveLength(0);
+    expect(result.state.players.A.library).toHaveLength(0);
+  });
+
+  it('does not mutate the input state', () => {
+    const state = loadDeckForPlayer('A', 20);
+    const original = JSON.parse(JSON.stringify(state));
+    dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    });
+
+    expect(state).toEqual(original);
+  });
+
+  it('does not affect the other player', () => {
+    const state = loadDeckForPlayer('A', 20);
+    const result = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    });
+
+    expect(result.state.players.B).toEqual(state.players.B);
+  });
+
+  it('throws when player is not in mulligan phase', () => {
+    const state = createInitialState(); // phase is 'loading'
+    expect(() =>
+      dispatch(state, {
+        type: 'DEAL_OPENING_HAND',
+        payload: { player: 'A' },
+      }),
+    ).toThrow("Cannot DEAL_OPENING_HAND: Player A is in 'loading' phase, but must be in 'mulligan' phase");
+  });
+
+  it('throws when player is in playing phase', () => {
+    let state = loadDeckForPlayer('A', 20);
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+    state = dispatch(state, {
+      type: 'KEEP_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    expect(() =>
+      dispatch(state, {
+        type: 'DEAL_OPENING_HAND',
+        payload: { player: 'A' },
+      }),
+    ).toThrow("Cannot DEAL_OPENING_HAND: Player A is in 'playing' phase, but must be in 'mulligan' phase");
+  });
+});
+
+describe('dispatch — MULLIGAN', () => {
+  it('returns cards to library, shuffles, and re-deals 7', () => {
+    let state = loadDeckForPlayer('A', 20);
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    const result = dispatch(state, {
+      type: 'MULLIGAN',
+      payload: { player: 'A' },
+    });
+
+    expect(result.state.players.A.mulliganHand).toHaveLength(7);
+    expect(result.state.players.A.library).toHaveLength(13);
+    expect(result.card).toBeNull();
+  });
+
+  it('preserves the total number of cards', () => {
+    let state = loadDeckForPlayer('A', 20);
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    const totalBefore = state.players.A.mulliganHand.length + state.players.A.library.length;
+    const result = dispatch(state, {
+      type: 'MULLIGAN',
+      payload: { player: 'A' },
+    });
+    const totalAfter = result.state.players.A.mulliganHand.length + result.state.players.A.library.length;
+
+    expect(totalAfter).toBe(totalBefore);
+  });
+
+  it('preserves the same set of cards (by name)', () => {
+    let state = loadDeckForPlayer('A', 20);
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    const allCardsBefore = [...state.players.A.mulliganHand, ...state.players.A.library]
+      .map(c => c.name).sort();
+
+    const result = dispatch(state, {
+      type: 'MULLIGAN',
+      payload: { player: 'A' },
+    });
+    const allCardsAfter = [...result.state.players.A.mulliganHand, ...result.state.players.A.library]
+      .map(c => c.name).sort();
+
+    expect(allCardsAfter).toEqual(allCardsBefore);
+  });
+
+  it('increments the mulliganCount', () => {
+    let state = loadDeckForPlayer('A', 20);
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    expect(state.players.A.mulliganCount).toBe(0);
+
+    const r1 = dispatch(state, {
+      type: 'MULLIGAN',
+      payload: { player: 'A' },
+    });
+    expect(r1.state.players.A.mulliganCount).toBe(1);
+
+    const r2 = dispatch(r1.state, {
+      type: 'MULLIGAN',
+      payload: { player: 'A' },
+    });
+    expect(r2.state.players.A.mulliganCount).toBe(2);
+  });
+
+  it('allows unlimited mulligans (casual rules)', () => {
+    let state = loadDeckForPlayer('A', 20);
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    for (let i = 0; i < 10; i++) {
+      state = dispatch(state, {
+        type: 'MULLIGAN',
+        payload: { player: 'A' },
+      }).state;
+    }
+
+    expect(state.players.A.mulliganCount).toBe(10);
+    expect(state.players.A.mulliganHand).toHaveLength(7);
+    expect(state.players.A.library).toHaveLength(13);
+  });
+
+  it('does not mutate the input state', () => {
+    let state = loadDeckForPlayer('A', 20);
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+    const original = JSON.parse(JSON.stringify(state));
+
+    dispatch(state, {
+      type: 'MULLIGAN',
+      payload: { player: 'A' },
+    });
+
+    expect(state).toEqual(original);
+  });
+
+  it('does not affect the other player', () => {
+    let state = loadDeckForPlayer('A', 20);
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    const result = dispatch(state, {
+      type: 'MULLIGAN',
+      payload: { player: 'A' },
+    });
+
+    expect(result.state.players.B).toEqual(state.players.B);
+  });
+
+  it('throws when player is not in mulligan phase', () => {
+    const state = createInitialState(); // phase is 'loading'
+    expect(() =>
+      dispatch(state, {
+        type: 'MULLIGAN',
+        payload: { player: 'A' },
+      }),
+    ).toThrow("Cannot MULLIGAN: Player A is in 'loading' phase, but must be in 'mulligan' phase");
+  });
+});
+
+describe('dispatch — KEEP_HAND', () => {
+  it('clears mulliganHand and transitions phase to playing', () => {
+    let state = loadDeckForPlayer('A', 20);
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    const result = dispatch(state, {
+      type: 'KEEP_HAND',
+      payload: { player: 'A' },
+    });
+
+    expect(result.state.players.A.mulliganHand).toEqual([]);
+    expect(result.state.players.A.phase).toBe('playing');
+    expect(result.card).toBeNull();
+  });
+
+  it('preserves the library unchanged', () => {
+    let state = loadDeckForPlayer('A', 20);
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+    const libraryBefore = [...state.players.A.library];
+
+    const result = dispatch(state, {
+      type: 'KEEP_HAND',
+      payload: { player: 'A' },
+    });
+
+    expect(result.state.players.A.library).toEqual(libraryBefore);
+  });
+
+  it('preserves mulliganCount after keeping', () => {
+    let state = loadDeckForPlayer('A', 20);
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+    state = dispatch(state, {
+      type: 'MULLIGAN',
+      payload: { player: 'A' },
+    }).state;
+
+    const result = dispatch(state, {
+      type: 'KEEP_HAND',
+      payload: { player: 'A' },
+    });
+
+    expect(result.state.players.A.mulliganCount).toBe(1);
+  });
+
+  it('does not mutate the input state', () => {
+    let state = loadDeckForPlayer('A', 20);
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+    const original = JSON.parse(JSON.stringify(state));
+
+    dispatch(state, {
+      type: 'KEEP_HAND',
+      payload: { player: 'A' },
+    });
+
+    expect(state).toEqual(original);
+  });
+
+  it('does not affect the other player', () => {
+    let state = loadDeckForPlayer('A', 20);
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    const result = dispatch(state, {
+      type: 'KEEP_HAND',
+      payload: { player: 'A' },
+    });
+
+    expect(result.state.players.B).toEqual(state.players.B);
+  });
+
+  it('throws when player is not in mulligan phase', () => {
+    const state = createInitialState(); // phase is 'loading'
+    expect(() =>
+      dispatch(state, {
+        type: 'KEEP_HAND',
+        payload: { player: 'B' },
+      }),
+    ).toThrow("Cannot KEEP_HAND: Player B is in 'loading' phase, but must be in 'mulligan' phase");
+  });
+
+  it('throws when player is already in playing phase', () => {
+    let state = loadDeckForPlayer('A', 20);
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+    state = dispatch(state, {
+      type: 'KEEP_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    expect(() =>
+      dispatch(state, {
+        type: 'KEEP_HAND',
+        payload: { player: 'A' },
+      }),
+    ).toThrow("Cannot KEEP_HAND: Player A is in 'playing' phase, but must be in 'mulligan' phase");
   });
 });
 
