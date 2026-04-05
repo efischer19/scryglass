@@ -160,7 +160,7 @@ describe('fetchCardImage', () => {
     const fetchMock = vi.mocked(fetch);
 
     // Deferred promise to hold the first fetch in-flight
-    let resolveFirst!: (value: Response) => void;
+    let resolveFirst: (value: Response) => void = () => {};
     const firstPromise = new Promise<Response>((r) => {
       resolveFirst = r;
     });

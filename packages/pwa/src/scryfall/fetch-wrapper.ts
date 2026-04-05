@@ -43,7 +43,7 @@ async function fetchWithBackoff(url: string): Promise<Response> {
     const response = await rateLimitedFetch(url);
 
     if (response.status === 429 || response.status >= 500) {
-      if (backoff > MAX_BACKOFF_MS) {
+      if (backoff >= MAX_BACKOFF_MS) {
         return response;
       }
       await sleep(backoff);
@@ -97,7 +97,7 @@ async function executeFetch(
     throw new Error('No image_uris.normal in Scryfall response');
   }
 
-  const imageResponse = await rateLimitedFetch(imageUrl);
+  const imageResponse = await fetchWithBackoff(imageUrl);
   if (!imageResponse.ok) {
     throw new Error(`Image fetch error: ${String(imageResponse.status)}`);
   }
