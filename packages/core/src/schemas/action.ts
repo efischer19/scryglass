@@ -56,6 +56,20 @@ const KeepHandActionSchema = z.object({
   }),
 });
 
+export const ScryDecisionSchema = z.object({
+  cardIndex: z.number(),
+  destination: z.enum(['top', 'bottom', 'remove']),
+});
+export type ScryDecision = z.infer<typeof ScryDecisionSchema>;
+
+const ScryResolveActionSchema = z.object({
+  type: z.literal('SCRY_RESOLVE'),
+  payload: z.object({
+    player: PlayerIdSchema,
+    decisions: z.array(ScryDecisionSchema),
+  }),
+});
+
 export const ActionSchema = z.discriminatedUnion('type', [
   LoadDeckActionSchema,
   ShuffleLibraryActionSchema,
@@ -64,11 +78,13 @@ export const ActionSchema = z.discriminatedUnion('type', [
   DealOpeningHandActionSchema,
   MulliganActionSchema,
   KeepHandActionSchema,
+  ScryResolveActionSchema,
 ]);
 export type Action = z.infer<typeof ActionSchema>;
 
 export const ActionResultSchema = z.object({
   state: GameStateSchema,
   card: CardSchema.nullable(),
+  cards: z.array(CardSchema).optional(),
 });
 export type ActionResult = z.infer<typeof ActionResultSchema>;
