@@ -1,44 +1,49 @@
 import { z } from 'zod';
-import { CardSchema } from './schemas/card.js';
+import { CardSchema, CardTypeEnum } from './schemas/card.js';
+import type { CardType } from './schemas/card.js';
 
-export { CardSchema } from './schemas/card.js';
-export type { Card } from './schemas/card.js';
+export { CardSchema, CardTypeEnum } from './schemas/card.js';
+export type { Card, CardType } from './schemas/card.js';
 
 export const ParseResultSchema = z.object({
   cards: z.array(CardSchema),
+  warnings: z.array(z.string()),
   errors: z.array(z.string()),
 });
 
 export type ParseResult = z.infer<typeof ParseResultSchema>;
 
-export function parseCSV(csvString: string): ParseResult {
+const VALID_CARD_TYPES = new Set<string>(CardTypeEnum.options);
+
+export function parseDeck(input: string): ParseResult {
   const cards: z.infer<typeof CardSchema>[] = [];
+  const warnings: string[] = [];
   const errors: string[] = [];
 
-  const lines = csvString.split('\n');
+  const lines = input.split('\n');
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
+    const rowNum = i + 1;
 
     // Skip empty lines
     if (line === '') continue;
 
-    const columns = line.split(',');
-    const rowNum = i + 1;
+    const columns = line.split(';');
 
-    // Skip header row (starts with 'card_name')
-    if (columns[0].trim() === 'card_name') continue;
+    // Skip header row (starts with 'card_name', case-insensitive)
+    if (columns[0].trim().toLowerCase() === 'card_name') continue;
 
-    // Reject rows with fewer than 3 columns
-    if (columns.length < 3) {
-      errors.push(`Row ${rowNum}: fewer than 3 columns`);
+    // Reject rows with fewer than 4 columns
+    if (columns.length < 4) {
+      errors.push(`Row ${rowNum}: expected 4 semicolon-separated columns, found ${columns.length}`);
       continue;
     }
 
     const name = columns[0].trim();
-    const setCode = columns[1].trim();
-    const cardType = columns[2].trim();
-    const manaCost = columns[3]?.trim() ?? '';
+    const setCode = columns[1].trim().toLowerCase();
+    const collectorNumber = columns[2].trim();
+    const rawCardType = columns[3].trim().toLowerCase();
 
     // Validate required fields
     if (!name) {
@@ -51,8 +56,27 @@ export function parseCSV(csvString: string): ParseResult {
       continue;
     }
 
-    cards.push({ name, setCode, cardType, manaCost });
+    if (!collectorNumber) {
+      errors.push(`Row ${rowNum}: empty collector_number`);
+      continue;
+    }
+
+    // Validate card_type enum
+    if (!VALID_CARD_TYPES.has(rawCardType)) {
+      errors.push(`Row ${rowNum}: invalid card_type "${columns[3].trim()}" (must be land, nonland, or commander)`);
+      continue;
+    }
+
+    const cardType = rawCardType as CardType;
+
+    // Commander cards are recognized but excluded from shuffleable deck
+    if (cardType === 'commander') {
+      warnings.push(`Row ${rowNum}: commander "${name}" recognized but excluded from shuffleable deck`);
+      continue;
+    }
+
+    cards.push({ name, setCode, collectorNumber, cardType });
   }
 
-  return { cards, errors };
+  return { cards, warnings, errors };
 }
