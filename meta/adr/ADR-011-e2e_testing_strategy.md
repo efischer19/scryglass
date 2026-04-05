@@ -1,6 +1,6 @@
 ---
 title: "ADR-011: End-to-End Testing Strategy"
-status: "Proposed"
+status: "Accepted"
 date: "2026-04-05"
 tags:
   - "testing"
