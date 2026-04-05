@@ -1,8 +1,8 @@
 /** Rate-limited Scryfall API fetch wrapper per ADR-003. */
 
 export interface FetchCardImageParams {
-  cardName: string;
   setCode: string;
+  collectorNumber: string;
 }
 
 export type FetchCardImageResult = Blob | null;
@@ -77,7 +77,7 @@ async function processQueue(): Promise<void> {
 async function executeFetch(
   params: FetchCardImageParams,
 ): Promise<FetchCardImageResult> {
-  const cardUrl = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(params.cardName)}&set=${encodeURIComponent(params.setCode)}`;
+  const cardUrl = `https://api.scryfall.com/cards/${encodeURIComponent(params.setCode)}/${encodeURIComponent(params.collectorNumber)}/en`;
   const cardResponse = await fetchWithBackoff(cardUrl);
 
   if (cardResponse.status === 404) {

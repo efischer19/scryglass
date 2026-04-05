@@ -11,8 +11,8 @@ import type { FetchCardImageParams } from '../fetch-wrapper';
 /* ------------------------------------------------------------------ */
 
 const DEFAULT_PARAMS: FetchCardImageParams = {
-  cardName: 'Lightning Bolt',
   setCode: 'lea',
+  collectorNumber: '141',
 };
 
 function mockCardJson(imageUrl = 'https://cards.scryfall.io/normal/test.jpg') {
@@ -67,7 +67,7 @@ describe('fetchCardImage', () => {
     expect(result).toBeInstanceOf(Blob);
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0]![0]).toContain(
-      'api.scryfall.com/cards/named',
+      'api.scryfall.com/cards/',
     );
     expect(fetchMock.mock.calls[0]![1]).toEqual(
       expect.objectContaining({
@@ -139,8 +139,8 @@ describe('fetchCardImage', () => {
       return blobResponse();
     });
 
-    const p1 = fetchCardImage({ cardName: 'Card A', setCode: 'set1' });
-    const p2 = fetchCardImage({ cardName: 'Card B', setCode: 'set2' });
+    const p1 = fetchCardImage({ setCode: 'set1', collectorNumber: '1' });
+    const p2 = fetchCardImage({ setCode: 'set2', collectorNumber: '2' });
 
     await vi.runAllTimersAsync();
     await Promise.all([p1, p2]);
@@ -172,8 +172,8 @@ describe('fetchCardImage', () => {
       .mockResolvedValueOnce(errorResponse(404));
 
     // Queue two requests
-    const p1 = fetchCardImage({ cardName: 'Card A', setCode: 'set1' });
-    const p2 = fetchCardImage({ cardName: 'Card B', setCode: 'set2' });
+    const p1 = fetchCardImage({ setCode: 'set1', collectorNumber: '1' });
+    const p2 = fetchCardImage({ setCode: 'set2', collectorNumber: '2' });
 
     // Advance past rate-limit delay so the first fetch starts
     await vi.advanceTimersByTimeAsync(150);
