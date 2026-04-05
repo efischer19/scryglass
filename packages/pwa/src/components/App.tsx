@@ -16,8 +16,16 @@ export function App() {
   };
 
   const handleLoadDeck = (cards: Card[]) => {
-    handleDispatch({ type: 'LOAD_DECK', payload: { player: 'A', cards } });
-    handleDispatch({ type: 'LOAD_DECK', payload: { player: 'B', cards } });
+    let currentState = state;
+    const r1 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: 'A', cards } });
+    currentState = r1.state;
+    const r2 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: 'B', cards } });
+    currentState = r2.state;
+    const r3 = dispatch(currentState, { type: 'DEAL_OPENING_HAND', payload: { player: 'A' } });
+    currentState = r3.state;
+    const r4 = dispatch(currentState, { type: 'DEAL_OPENING_HAND', payload: { player: 'B' } });
+    currentState = r4.state;
+    setState(currentState);
     navigate('#/app');
   };
 
@@ -35,11 +43,15 @@ export function App() {
         <PlayerZone
           player="A"
           playerState={state.players.A}
+          otherPlayerPhase={state.players.B.phase}
+          settings={state.settings}
           onDispatch={handleDispatch}
         />
         <PlayerZone
           player="B"
           playerState={state.players.B}
+          otherPlayerPhase={state.players.A.phase}
+          settings={state.settings}
           onDispatch={handleDispatch}
         />
       </div>

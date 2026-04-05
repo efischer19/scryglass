@@ -2,7 +2,7 @@ import type { Card } from './schemas/card.js';
 import type { MulliganVerdict } from './schemas/mulligan.js';
 
 export function countLands(hand: Card[]): number {
-  return hand.filter((card) => card.cardType.toLowerCase().includes('land')).length;
+  return hand.filter((card) => /\bland\b/i.test(card.cardType)).length;
 }
 
 export function getMulliganVerdict(

@@ -1,9 +1,12 @@
-import type { PlayerState, Action } from '@scryglass/core';
+import type { PlayerState, PlayerPhase, Action, GameState } from '@scryglass/core';
 import { CardDisplay } from './CardDisplay.js';
+import { MulliganHand } from './MulliganHand.js';
 
 interface PlayerZoneProps {
   player: 'A' | 'B';
   playerState: PlayerState;
+  otherPlayerPhase: PlayerPhase;
+  settings: GameState['settings'];
   onDispatch: (action: Action) => void;
 }
 
@@ -12,9 +15,9 @@ const PLAYER_LABELS: Record<'A' | 'B', string> = {
   B: 'Player B',
 };
 
-export function PlayerZone({ player, playerState, onDispatch }: PlayerZoneProps) {
+export function PlayerZone({ player, playerState, otherPlayerPhase, settings, onDispatch }: PlayerZoneProps) {
   const label = PLAYER_LABELS[player];
-  const disabled = playerState.phase !== 'playing';
+  const disabled = playerState.phase !== 'playing' || otherPlayerPhase !== 'playing';
 
   return (
     <section
@@ -25,6 +28,14 @@ export function PlayerZone({ player, playerState, onDispatch }: PlayerZoneProps)
       <p class="player-zone__card-count">
         Cards: {playerState.library.length}
       </p>
+      {playerState.phase === 'mulligan' && (
+        <MulliganHand
+          player={player}
+          playerState={playerState}
+          settings={settings}
+          onDispatch={onDispatch}
+        />
+      )}
       <div class="action-buttons">
         <button
           class="action-btn"
