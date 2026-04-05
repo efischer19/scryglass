@@ -128,7 +128,7 @@ describe('<PlayerZone />', () => {
       screen.getByRole('button', { name: "Draw card from Player A's library" }),
     ).toBeTruthy();
     expect(
-      screen.getByRole('button', { name: "Fetch land from Player A's library" }),
+      screen.getByRole('button', { name: "Fetch basic land from Player A's library" }),
     ).toBeTruthy();
     expect(
       screen.getByRole('button', { name: "Tutor card from Player A's library" }),
