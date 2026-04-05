@@ -1,15 +1,55 @@
-# Scryglass
+# 🔮 Scryglass
 
-> A static PWA for Magic: The Gathering deck library management — scry, shuffle, and goldfish your decks offline.
+[![CI](https://github.com/efischer19/scryglass/actions/workflows/ci.yml/badge.svg)](https://github.com/efischer19/scryglass/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](./packages/core/tsconfig.json)
+[![PWA Ready](https://img.shields.io/badge/PWA-ready-brightgreen)]()
 
-## What Is This?
+> **Scry, shuffle, and goldfish your Magic: The Gathering decks — offline, at the table, no account required.**
 
-Scryglass is a **Progressive Web App (PWA)** for managing and goldfishing Magic: The Gathering decks. It runs entirely in the browser, works offline, and is designed for use at the game store on spotty WiFi.
+Scryglass is a **free, open-source Progressive Web App (PWA)** that replaces physical deck manipulation for MTG goldfishing and casual play. It runs entirely in your browser, works offline after first load, and is designed for use on a phone lying flat on a game store table.
 
-Built as a monorepo with two packages:
+## ✨ Features
 
-- **`@scryglass/core`** — Pure game logic: deck parsing, cryptographic shuffle, state management, mulligan rules, and library manipulation (draw, tutor, fetch, scry)
-- **`@scryglass/pwa`** — Preact + Vite frontend: UI rendering, Scryfall API integration, IndexedDB caching, Service Worker, and accessibility
+- **🔒 Cryptographically fair shuffle** — Fisher-Yates algorithm with `crypto.getRandomValues()` and rejection sampling ([ADR-004](./meta/adr/ADR-004-cryptographic_shuffle.md))
+- **📱 Offline-first PWA** — Install to your home screen, play without WiFi after first load
+- **🃏 Full library manipulation** — Draw, scry, tutor, fetch basic lands, return to library
+- **🔄 Strict mulligan engine** — Auto-mull on 0/1/6/7 lands, hard keep on 3/4, optional choice on 2/5
+- **🖼️ Card images via Scryfall** — Background prefetch with IndexedDB caching and JIT priority loading
+- **📥 Multi-format import** — Supports Moxfield, Archidekt, and MTGO/Arena deck formats
+- **📤 Multi-format export** — Export your deck to any supported format
+- **👥 Two-player support** — Dual-deck UI with player isolation (no peeking!)
+
+## 🚀 Quick Start (Play Tonight!)
+
+**No installation. No account. Just open and play.**
+
+1. Visit the app at your deployment URL (or run locally — see below)
+2. Paste your deck list (Scryglass CSV format, or import from Moxfield/Archidekt/MTGO)
+3. Both players load their decks → automatic shuffle → opening hands dealt
+4. Play! Draw, scry, tutor, and fetch — Scryglass handles the library for you
+
+### Run Locally
+
+```bash
+git clone https://github.com/efischer19/scryglass.git
+cd scryglass
+npm install
+npm run build
+npm run dev --workspace=packages/pwa
+# Open http://localhost:5173 in your browser
+```
+
+## Architecture
+
+Built as a monorepo with strict separation of concerns:
+
+| Package | Purpose | Browser Dependencies |
+| :------ | :------ | :------------------- |
+| **`@scryglass/core`** | Pure game logic: deck parsing, cryptographic shuffle, state management, mulligan rules, library manipulation | ❌ None — runs in Node.js and browsers |
+| **`@scryglass/pwa`** | Preact + Vite frontend: UI rendering, Scryfall API integration, IndexedDB caching, Service Worker | ✅ Browser APIs required |
+
+The `@scryglass/core` module uses a strict **JSON-in/JSON-out action-reducer pattern** with Zod schema validation, making it suitable for consumption by AI agents, CLI tools, or any TypeScript/JavaScript consumer.
 
 ## Monorepo Structure
 
@@ -103,10 +143,21 @@ The workflow runs automatically on push to `main` and can be triggered manually 
 
 All significant decisions are documented as [Architecture Decision Records](./meta/adr/):
 
-- [ADR-002](./meta/adr/ADR-002-ui_framework_choice.md) — Preact + Vite for the PWA
-- [ADR-003](./meta/adr/ADR-003-scryfall_api_integration.md) — Scryfall API integration
-- [ADR-007](./meta/adr/ADR-007-monorepo_structure.md) — Monorepo structure (core/PWA separation)
-- [ADR-008](./meta/adr/ADR-008-typescript_and_zod.md) — TypeScript & Zod for strict typing
+| ADR | Title |
+| :-- | :---- |
+| [ADR-002](./meta/adr/ADR-002-ui_framework_choice.md) | Preact + Vite for the PWA |
+| [ADR-003](./meta/adr/ADR-003-scryfall_api_integration.md) | Scryfall API integration & compliance |
+| [ADR-004](./meta/adr/ADR-004-cryptographic_shuffle.md) | Fisher-Yates shuffle with Web Crypto API |
+| [ADR-007](./meta/adr/ADR-007-monorepo_structure.md) | Monorepo structure (core/PWA separation) |
+| [ADR-008](./meta/adr/ADR-008-typescript_and_zod.md) | TypeScript & Zod for strict typing |
+
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+
+## Scryfall Attribution
+
+Card images and data are provided by [Scryfall](https://scryfall.com/). Scryglass respects Scryfall's API guidelines by rate-limiting requests, caching aggressively, and including a descriptive User-Agent header. See our [ROBOT_ETHICS.md](./meta/ROBOT_ETHICS.md) policy.
 
 ## License
 
