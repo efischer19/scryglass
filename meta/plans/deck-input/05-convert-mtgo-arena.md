@@ -49,6 +49,13 @@ or the minimal variant:
   - `needsResolution: UnresolvedCard[]` — cards missing set/collector/type data
   - `warnings: string[]` — non-fatal issues (e.g., sideboard cards skipped)
   - `errors: string[]` — fatal parse failures
+- The `UnresolvedCard` type captures what was parsed and what is missing:
+  - `name: string` — card name as parsed from the input
+  - `setCode?: string` — set code, if present in the input
+  - `collectorNumber?: string` — collector number, if present
+  - `cardType?: CardType` — card type, if inferrable from section headers
+  - `quantity: number` — original quantity from the input line
+  - `sourceLine: number` — row number for error reporting
 - Scryfall lookups are **not** performed inside this function. The PWA layer
   (or deck editor UI in ticket 08) handles resolution, respecting ADR-003 rate
   limits.

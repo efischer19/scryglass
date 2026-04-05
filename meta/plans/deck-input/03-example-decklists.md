@@ -1,4 +1,4 @@
-# feat: example decklists (deck\_A and deck\_B)
+# feat: example decklists (deck_A and deck_B)
 
 ## What do you want to build?
 
