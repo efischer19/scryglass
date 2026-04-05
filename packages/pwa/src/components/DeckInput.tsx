@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'preact/hooks';
 import { parseDeck } from '@scryglass/core';
-import type { ParseResult, Card, SavedDeck } from '@scryglass/core';
-import type { ConvertResult } from '@scryglass/core';
+import type { ParseResult, Card, ConvertResult, SavedDeck } from '@scryglass/core';
+import { ExportDropdown } from './ExportDropdown.js';
+import { parseCommandersFromScryglassText } from '../utils/deck-parse.js';
 import {
   loadAllDecks,
   saveDeck,
@@ -113,6 +114,7 @@ export function DeckInput({ onLoadDeck, onOpenEditor }: DeckInputProps) {
   const hasCards = result.cards.length > 0;
   const hasErrors = result.errors.length > 0;
   const canLoad = hasCards && !hasErrors;
+  const commanders = parseCommandersFromScryglassText(text);
 
   const handleLoadDeck = () => {
     if (!canLoad) return;
@@ -464,6 +466,7 @@ export function DeckInput({ onLoadDeck, onOpenEditor }: DeckInputProps) {
           {hasCards && hasErrors && 'Fix all errors before loading the deck.'}
         </span>
       </div>
+      <ExportDropdown cards={result.cards} commanders={commanders} />
     </section>
   );
 }

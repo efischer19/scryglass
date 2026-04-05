@@ -56,6 +56,31 @@ const KeepHandActionSchema = z.object({
   }),
 });
 
+export const LandTypeSchema = z.enum(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest']);
+export type LandType = z.infer<typeof LandTypeSchema>;
+
+export const ScryDecisionSchema = z.object({
+  cardIndex: z.number(),
+  destination: z.enum(['top', 'bottom', 'remove']),
+});
+export type ScryDecision = z.infer<typeof ScryDecisionSchema>;
+
+const ScryResolveActionSchema = z.object({
+  type: z.literal('SCRY_RESOLVE'),
+  payload: z.object({
+    player: PlayerIdSchema,
+    decisions: z.array(ScryDecisionSchema),
+  }),
+});
+
+const FetchBasicLandActionSchema = z.object({
+  type: z.literal('FETCH_BASIC_LAND'),
+  payload: z.object({
+    player: PlayerIdSchema,
+    landType: LandTypeSchema,
+  }),
+});
+
 export const ActionSchema = z.discriminatedUnion('type', [
   LoadDeckActionSchema,
   ShuffleLibraryActionSchema,
@@ -64,11 +89,14 @@ export const ActionSchema = z.discriminatedUnion('type', [
   DealOpeningHandActionSchema,
   MulliganActionSchema,
   KeepHandActionSchema,
+  ScryResolveActionSchema,
+  FetchBasicLandActionSchema,
 ]);
 export type Action = z.infer<typeof ActionSchema>;
 
 export const ActionResultSchema = z.object({
   state: GameStateSchema,
   card: CardSchema.nullable(),
+  cards: z.array(CardSchema).optional(),
 });
 export type ActionResult = z.infer<typeof ActionResultSchema>;

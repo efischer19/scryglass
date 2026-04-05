@@ -111,7 +111,6 @@ export function convertMoxfield(input: string): ConvertResult {
         quantity: count,
         sourceLine: rowNum,
       });
-      continue;
     }
 
     // Determine card_type

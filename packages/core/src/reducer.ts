@@ -2,6 +2,7 @@ import { ActionSchema } from './schemas/action.js';
 import type { Action, ActionResult } from './schemas/action.js';
 import type { GameState } from './schemas/state.js';
 import { shuffle, cryptoRandomInt } from './shuffle.js';
+import { isBasicLandOfType } from './helpers/lands.js';
 
 /**
  * Create the initial game state with two players in the `loading` phase.
@@ -188,6 +189,98 @@ function handleKeepHand(state: GameState, action: Extract<Action, { type: 'KEEP_
   };
 }
 
+function handleScryResolve(state: GameState, action: Extract<Action, { type: 'SCRY_RESOLVE' }>): ActionResult {
+  const { player, decisions } = action.payload;
+  const library = state.players[player].library;
+
+  if (decisions.length === 0) {
+    throw new Error('SCRY_RESOLVE: decisions array must not be empty');
+  }
+
+  // Validate indices — no duplicates, all in range
+  const indices = decisions.map(d => d.cardIndex);
+  const uniqueIndices = new Set(indices);
+  if (uniqueIndices.size !== indices.length) {
+    throw new Error('SCRY_RESOLVE: decisions contain duplicate cardIndex values');
+  }
+  for (const idx of indices) {
+    if (idx < 0 || idx >= library.length) {
+      throw new Error(
+        `SCRY_RESOLVE: cardIndex ${idx} is out of range (library has ${library.length} cards)`,
+      );
+    }
+  }
+
+  // Partition decisions by destination
+  const removeDecisions = decisions.filter(d => d.destination === 'remove');
+  const bottomDecisions = decisions.filter(d => d.destination === 'bottom');
+  const topDecisions = decisions.filter(d => d.destination === 'top');
+
+  // Collect removed cards
+  const removedCards = removeDecisions.map(d => library[d.cardIndex]);
+
+  // Build bottom cards in original relative order (sorted by cardIndex ascending)
+  const bottomCards = [...bottomDecisions]
+    .sort((a, b) => a.cardIndex - b.cardIndex)
+    .map(d => library[d.cardIndex]);
+
+  // Build top cards in the order specified by the decisions array
+  const topCards = topDecisions.map(d => library[d.cardIndex]);
+
+  // All affected indices
+  const affectedIndices = new Set(indices);
+
+  // Remaining library cards (those not affected by scry)
+  const remainingLibrary = library.filter((_, i) => !affectedIndices.has(i));
+
+  // New library: top cards first, then remaining, then bottom cards
+  const newLibrary = [...topCards, ...remainingLibrary, ...bottomCards];
+
+  return {
+    state: {
+      ...state,
+      players: {
+        ...state.players,
+        [player]: {
+          ...state.players[player],
+          library: newLibrary,
+        },
+      },
+    },
+    card: removedCards.length > 0 ? removedCards[0] : null,
+    cards: removedCards,
+  };
+}
+
+function handleFetchBasicLand(state: GameState, action: Extract<Action, { type: 'FETCH_BASIC_LAND' }>): ActionResult {
+  const { player, landType } = action.payload;
+  const library = state.players[player].library;
+
+  const landIndex = library.findIndex(card => isBasicLandOfType(card, landType));
+
+  if (landIndex === -1) {
+    throw new Error(`Cannot fetch: no ${landType} found in Player ${player}'s library`);
+  }
+
+  const fetchedCard = library[landIndex];
+  const remaining = library.filter((_, i) => i !== landIndex);
+  const shuffled = shuffle(remaining);
+
+  return {
+    state: {
+      ...state,
+      players: {
+        ...state.players,
+        [player]: {
+          ...state.players[player],
+          library: shuffled,
+        },
+      },
+    },
+    card: fetchedCard,
+  };
+}
+
 /**
  * Dispatch an action against the current game state, returning a new
  * immutable state and any output (e.g., a drawn card).
@@ -212,5 +305,9 @@ export function dispatch(state: GameState, action: Action): ActionResult {
       return handleMulligan(state, parsed);
     case 'KEEP_HAND':
       return handleKeepHand(state, parsed);
+    case 'SCRY_RESOLVE':
+      return handleScryResolve(state, parsed);
+    case 'FETCH_BASIC_LAND':
+      return handleFetchBasicLand(state, parsed);
   }
 }

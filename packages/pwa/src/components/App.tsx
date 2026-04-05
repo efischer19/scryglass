@@ -5,8 +5,8 @@ import { Header } from './Header.js';
 import { PlayerZone } from './PlayerZone.js';
 import { Router, navigate } from './Router.js';
 import { DeckInput } from './DeckInput.js';
+import { ExportDropdown } from './ExportDropdown.js';
 import { DeckEditor } from './DeckEditor.js';
-import type { ScryfallLookupFn } from './DeckEditor.js';
 
 export function App() {
   const [state, setState] = useState(createInitialState);
@@ -66,12 +66,14 @@ export function App() {
   const appView = (
     <main>
       <Header onLoadDecks={() => navigate('#/input')} />
+      <ExportDropdown cards={state.players.A.library} />
       <div class="pod-layout">
         <PlayerZone
           player="A"
           playerState={state.players.A}
           otherPlayerPhase={state.players.B.phase}
           settings={state.settings}
+          gameState={state}
           onDispatch={handleDispatch}
         />
         <PlayerZone
@@ -79,6 +81,7 @@ export function App() {
           playerState={state.players.B}
           otherPlayerPhase={state.players.A.phase}
           settings={state.settings}
+          gameState={state}
           onDispatch={handleDispatch}
         />
       </div>
