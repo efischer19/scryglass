@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { DeckInput } from '../DeckInput.js';
 
-const noop = () => {};
+const mockLoadDeck = () => {};
 
 const VALID_DECK = [
   'Island;ltr;715;land',
@@ -27,27 +27,27 @@ beforeEach(() => {
 
 describe('<DeckInput />', () => {
   it('renders a labeled textarea with at least 20 rows', () => {
-    render(<DeckInput onLoadDeck={noop} />);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
     const textarea = screen.getByRole('textbox');
     expect(textarea).toBeTruthy();
     expect(Number(textarea.getAttribute('rows'))).toBeGreaterThanOrEqual(20);
   });
 
   it('renders a placeholder with example format', () => {
-    render(<DeckInput onLoadDeck={noop} />);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
     const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
     expect(textarea.placeholder).toContain('card_name;set_code');
   });
 
   it('renders a Load Deck button that is initially disabled', () => {
-    render(<DeckInput onLoadDeck={noop} />);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
     const btn = screen.getByRole('button', { name: /load deck/i });
     expect(btn).toBeTruthy();
     expect(btn).toHaveProperty('disabled', true);
   });
 
   it('shows card counts after entering valid cards', async () => {
-    render(<DeckInput onLoadDeck={noop} />);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
     const textarea = screen.getByRole('textbox');
     fireEvent.input(textarea, { target: { value: VALID_DECK } });
     vi.advanceTimersByTime(300);
@@ -60,7 +60,7 @@ describe('<DeckInput />', () => {
   });
 
   it('enables the Load Deck button when cards are valid', async () => {
-    render(<DeckInput onLoadDeck={noop} />);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
     const textarea = screen.getByRole('textbox');
     fireEvent.input(textarea, { target: { value: VALID_DECK } });
     vi.advanceTimersByTime(300);
@@ -72,7 +72,7 @@ describe('<DeckInput />', () => {
   });
 
   it('displays errors for malformed rows', async () => {
-    render(<DeckInput onLoadDeck={noop} />);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
     const textarea = screen.getByRole('textbox');
     fireEvent.input(textarea, { target: { value: DECK_WITH_ERRORS } });
     vi.advanceTimersByTime(300);
@@ -85,7 +85,7 @@ describe('<DeckInput />', () => {
   });
 
   it('keeps Load Deck disabled when errors are present', async () => {
-    render(<DeckInput onLoadDeck={noop} />);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
     const textarea = screen.getByRole('textbox');
     fireEvent.input(textarea, { target: { value: DECK_WITH_ERRORS } });
     vi.advanceTimersByTime(300);
@@ -97,7 +97,7 @@ describe('<DeckInput />', () => {
   });
 
   it('shows warnings for commander cards', async () => {
-    render(<DeckInput onLoadDeck={noop} />);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
     const textarea = screen.getByRole('textbox');
     fireEvent.input(textarea, { target: { value: DECK_WITH_COMMANDER } });
     vi.advanceTimersByTime(300);
@@ -132,26 +132,26 @@ describe('<DeckInput />', () => {
   });
 
   it('uses a semantic section element with aria-label', () => {
-    const { container } = render(<DeckInput onLoadDeck={noop} />);
+    const { container } = render(<DeckInput onLoadDeck={mockLoadDeck} />);
     const section = container.querySelector('section[aria-label]');
     expect(section).toBeTruthy();
   });
 
   it('has an aria-live validation summary region', () => {
-    const { container } = render(<DeckInput onLoadDeck={noop} />);
+    const { container } = render(<DeckInput onLoadDeck={mockLoadDeck} />);
     const liveRegion = container.querySelector('[aria-live="polite"]');
     expect(liveRegion).toBeTruthy();
   });
 
   it('has aria-describedby on the Load Deck button', () => {
-    render(<DeckInput onLoadDeck={noop} />);
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
     const btn = screen.getByRole('button', { name: /load deck/i });
     expect(btn.getAttribute('aria-describedby')).toBe('load-btn-hint');
   });
 
   it('passes vitest-axe a11y assertions', async () => {
     vi.useRealTimers();
-    const { container } = render(<DeckInput onLoadDeck={noop} />);
+    const { container } = render(<DeckInput onLoadDeck={mockLoadDeck} />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });

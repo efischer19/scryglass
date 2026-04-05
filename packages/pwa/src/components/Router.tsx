@@ -24,7 +24,7 @@ export function Router({ inputView, appView }: RouterProps) {
   }, []);
 
   return (
-    <div aria-live="polite">
+    <div aria-live="polite" aria-label="Application view">
       {route === '#/input' ? inputView : appView}
     </div>
   );

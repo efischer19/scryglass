@@ -31,6 +31,12 @@
   /* Borders & Radius */
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
+
+  /* Feedback colors */
+  --color-warning-bg: #fef3c7;
+  --color-warning-text: #92400e;
+  --color-error-bg: #fee2e2;
+  --color-error-text: #991b1b;
 }
 
 /* ===================================================================
@@ -262,13 +268,13 @@ body {
 }
 
 .deck-input__warnings {
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .deck-input__errors {
-  background-color: #fee2e2;
-  color: #991b1b;
+  background-color: var(--color-error-bg);
+  color: var(--color-error-text);
 }
 
 .deck-input__warnings li,

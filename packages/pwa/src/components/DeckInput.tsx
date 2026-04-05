@@ -12,6 +12,7 @@ Island;ltr;715;land
 Andúril, Flame of the West;ltr;687;nonland`;
 
 const EMPTY_RESULT: ParseResult = { cards: [], warnings: [], errors: [] };
+const DEBOUNCE_DELAY_MS = 250;
 
 export function DeckInput({ onLoadDeck }: DeckInputProps) {
   const [text, setText] = useState('');
@@ -28,7 +29,7 @@ export function DeckInput({ onLoadDeck }: DeckInputProps) {
       } else {
         setResult(parseDeck(value));
       }
-    }, 250);
+    }, DEBOUNCE_DELAY_MS);
   }, []);
 
   useEffect(() => {
