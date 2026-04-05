@@ -1,5 +1,5 @@
 import { parseCsvRows } from './csv-rfc4180.js';
-import type { ConvertResult } from './convert-result.js';
+import type { ConvertResult, UnresolvedCard } from './convert-result.js';
 
 /** Known Moxfield Board values that map to scryglass card_type. */
 const BOARD_TO_CARD_TYPE: Record<string, string> = {
@@ -24,17 +24,18 @@ const BOARD_TO_CARD_TYPE: Record<string, string> = {
  * - Missing collector numbers (produces a warning, flags for resolution)
  */
 export function convertMoxfield(input: string): ConvertResult {
+  const needsResolution: UnresolvedCard[] = [];
   const warnings: string[] = [];
   const errors: string[] = [];
 
   const trimmed = input.trim();
   if (trimmed === '') {
-    return { output: '', warnings, errors };
+    return { output: '', needsResolution, warnings, errors };
   }
 
   const rows = parseCsvRows(trimmed);
   if (rows.length === 0) {
-    return { output: '', warnings, errors };
+    return { output: '', needsResolution, warnings, errors };
   }
 
   // --- Locate columns by header name ---
@@ -52,11 +53,11 @@ export function convertMoxfield(input: string): ConvertResult {
 
   if (nameIdx === undefined) {
     errors.push('Missing required CSV header: "Name"');
-    return { output: '', warnings, errors };
+    return { output: '', needsResolution, warnings, errors };
   }
   if (editionIdx === undefined) {
     errors.push('Missing required CSV header: "Edition"');
-    return { output: '', warnings, errors };
+    return { output: '', needsResolution, warnings, errors };
   }
 
   // Optional columns
@@ -126,5 +127,5 @@ export function convertMoxfield(input: string): ConvertResult {
     }
   }
 
-  return { output: outputLines.join('\n'), warnings, errors };
+  return { output: outputLines.join('\n'), needsResolution, warnings, errors };
 }
