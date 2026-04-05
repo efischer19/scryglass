@@ -6,7 +6,8 @@ export type CardGroup = {
 };
 
 function cardKey(card: Card): string {
-  return `${card.name}\u0000${card.setCode}\u0000${card.collectorNumber}\u0000${card.cardType}`;
+  const encode = (value: string) => `${value.length}:${value}`;
+  return `${encode(card.name)}${encode(card.setCode)}${encode(card.collectorNumber)}${encode(card.cardType)}`;
 }
 
 export function collapseCards(cards: Card[]): CardGroup[] {

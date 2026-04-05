@@ -2,27 +2,19 @@ import {
   exportArchidekt,
   exportMoxfield,
   exportMtgoArena,
+  exportScryglass,
 } from '@scryglass/core';
 import type { Card } from '@scryglass/core';
 import { useState } from 'preact/hooks';
+import { copyToClipboard } from '../utils/clipboard.js';
 
 type ExportFormat = 'scryglass' | 'mtgo-arena' | 'moxfield' | 'archidekt';
 type ExportMode = 'copy' | 'download';
+const EXPORT_FORMATS: ExportFormat[] = ['scryglass', 'mtgo-arena', 'moxfield', 'archidekt'];
 
 interface ExportDropdownProps {
   cards: Card[];
   commanders?: Card[];
-}
-
-function exportScryglass(cards: Card[], commanders: Card[]): string {
-  const all = [
-    ...commanders.map((card) => ({ ...card, cardType: 'commander' as const })),
-    ...cards.filter((card) => card.cardType === 'nonland'),
-    ...cards.filter((card) => card.cardType === 'land'),
-  ];
-  return all
-    .map((card) => `${card.name};${card.setCode};${card.collectorNumber};${card.cardType}`)
-    .join('\n');
 }
 
 function toExportText(format: ExportFormat, cards: Card[], commanders: Card[]): string {
@@ -56,26 +48,8 @@ function mimeTypeFor(format: ExportFormat): string {
   return 'text/plain;charset=utf-8';
 }
 
-async function copyToClipboard(value: string): Promise<boolean> {
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(value);
-      return true;
-    }
-  } catch {
-    // fall through to legacy copy API
-  }
-
-  const textarea = document.createElement('textarea');
-  textarea.value = value;
-  textarea.setAttribute('readonly', 'true');
-  textarea.style.position = 'absolute';
-  textarea.style.left = '-9999px';
-  document.body.appendChild(textarea);
-  textarea.select();
-  const copied = document.execCommand('copy');
-  document.body.removeChild(textarea);
-  return copied;
+function isExportFormat(value: string): value is ExportFormat {
+  return EXPORT_FORMATS.includes(value as ExportFormat);
 }
 
 function downloadText(content: string, fileName: string, mimeType: string): void {
@@ -101,7 +75,11 @@ export function ExportDropdown({ cards, commanders = [] }: ExportDropdownProps) 
     const text = toExportText(format, cards, commanders);
     if (mode === 'copy') {
       const copied = await copyToClipboard(text);
-      setMessage(copied ? 'Export copied to clipboard.' : 'Copy failed.');
+      setMessage(
+        copied
+          ? 'Export copied to clipboard.'
+          : 'Failed to copy (browser blocked clipboard access). Please use Download instead.',
+      );
       return;
     }
 
@@ -118,7 +96,10 @@ export function ExportDropdown({ cards, commanders = [] }: ExportDropdownProps) 
         id="export-format"
         class="export-dropdown__select"
         value={format}
-        onChange={(event) => setFormat((event.target as HTMLSelectElement).value as ExportFormat)}
+        onChange={(event) => {
+          const value = (event.target as HTMLSelectElement).value;
+          if (isExportFormat(value)) setFormat(value);
+        }}
         disabled={!canExport}
       >
         <option value="scryglass">scryglass format</option>
@@ -132,9 +113,11 @@ export function ExportDropdown({ cards, commanders = [] }: ExportDropdownProps) 
       <button class="export-dropdown__btn" type="button" disabled={!canExport} onClick={() => handleExport('download')}>
         Download
       </button>
-      <p class="export-dropdown__message" role="status" aria-live="polite">
-        {message}
-      </p>
+      {message && (
+        <p class="export-dropdown__message" role="status" aria-live="polite">
+          {message}
+        </p>
+      )}
     </div>
   );
 }
