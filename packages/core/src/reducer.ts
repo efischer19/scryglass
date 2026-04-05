@@ -9,8 +9,8 @@ import { shuffle, cryptoRandomInt } from './shuffle.js';
 export function createInitialState(): GameState {
   return {
     players: {
-      A: { library: [], phase: 'loading', mulliganHand: [] },
-      B: { library: [], phase: 'loading', mulliganHand: [] },
+      A: { library: [], phase: 'loading', mulliganHand: [], mulliganCount: 0 },
+      B: { library: [], phase: 'loading', mulliganHand: [], mulliganCount: 0 },
     },
   };
 }
@@ -109,6 +109,82 @@ function handleReturnToLibrary(state: GameState, action: Extract<Action, { type:
   };
 }
 
+function requireMulliganPhase(state: GameState, player: 'A' | 'B', actionType: string): void {
+  if (state.players[player].phase !== 'mulligan') {
+    throw new Error(
+      `Cannot ${actionType}: Player ${player} is in '${state.players[player].phase}' phase, but must be in 'mulligan' phase`,
+    );
+  }
+}
+
+function handleDealOpeningHand(state: GameState, action: Extract<Action, { type: 'DEAL_OPENING_HAND' }>): ActionResult {
+  const { player } = action.payload;
+  requireMulliganPhase(state, player, 'DEAL_OPENING_HAND');
+
+  const library = state.players[player].library;
+  const dealCount = Math.min(7, library.length);
+
+  return {
+    state: {
+      ...state,
+      players: {
+        ...state.players,
+        [player]: {
+          ...state.players[player],
+          mulliganHand: library.slice(0, dealCount),
+          library: library.slice(dealCount),
+        },
+      },
+    },
+    card: null,
+  };
+}
+
+function handleMulligan(state: GameState, action: Extract<Action, { type: 'MULLIGAN' }>): ActionResult {
+  const { player } = action.payload;
+  requireMulliganPhase(state, player, 'MULLIGAN');
+
+  const combined = [...state.players[player].mulliganHand, ...state.players[player].library];
+  const shuffled = shuffle(combined);
+  const dealCount = Math.min(7, shuffled.length);
+
+  return {
+    state: {
+      ...state,
+      players: {
+        ...state.players,
+        [player]: {
+          ...state.players[player],
+          library: shuffled.slice(dealCount),
+          mulliganHand: shuffled.slice(0, dealCount),
+          mulliganCount: state.players[player].mulliganCount + 1,
+        },
+      },
+    },
+    card: null,
+  };
+}
+
+function handleKeepHand(state: GameState, action: Extract<Action, { type: 'KEEP_HAND' }>): ActionResult {
+  const { player } = action.payload;
+  requireMulliganPhase(state, player, 'KEEP_HAND');
+
+  return {
+    state: {
+      ...state,
+      players: {
+        ...state.players,
+        [player]: {
+          ...state.players[player],
+          mulliganHand: [],
+          phase: 'playing' as const,
+        },
+      },
+    },
+    card: null,
+  };
+}
+
 /**
  * Dispatch an action against the current game state, returning a new
  * immutable state and any output (e.g., a drawn card).
@@ -127,5 +203,11 @@ export function dispatch(state: GameState, action: Action): ActionResult {
       return handleDrawCard(state, parsed);
     case 'RETURN_TO_LIBRARY':
       return handleReturnToLibrary(state, parsed);
+    case 'DEAL_OPENING_HAND':
+      return handleDealOpeningHand(state, parsed);
+    case 'MULLIGAN':
+      return handleMulligan(state, parsed);
+    case 'KEEP_HAND':
+      return handleKeepHand(state, parsed);
   }
 }

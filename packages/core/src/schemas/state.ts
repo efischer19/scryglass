@@ -8,6 +8,7 @@ export const PlayerStateSchema = z.object({
   library: z.array(CardSchema),
   phase: PlayerPhaseSchema,
   mulliganHand: z.array(CardSchema),
+  mulliganCount: z.number(),
 });
 export type PlayerState = z.infer<typeof PlayerStateSchema>;
 

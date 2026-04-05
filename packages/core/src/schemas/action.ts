@@ -35,11 +35,35 @@ const ReturnToLibraryActionSchema = z.object({
   }),
 });
 
+const DealOpeningHandActionSchema = z.object({
+  type: z.literal('DEAL_OPENING_HAND'),
+  payload: z.object({
+    player: PlayerIdSchema,
+  }),
+});
+
+const MulliganActionSchema = z.object({
+  type: z.literal('MULLIGAN'),
+  payload: z.object({
+    player: PlayerIdSchema,
+  }),
+});
+
+const KeepHandActionSchema = z.object({
+  type: z.literal('KEEP_HAND'),
+  payload: z.object({
+    player: PlayerIdSchema,
+  }),
+});
+
 export const ActionSchema = z.discriminatedUnion('type', [
   LoadDeckActionSchema,
   ShuffleLibraryActionSchema,
   DrawCardActionSchema,
   ReturnToLibraryActionSchema,
+  DealOpeningHandActionSchema,
+  MulliganActionSchema,
+  KeepHandActionSchema,
 ]);
 export type Action = z.infer<typeof ActionSchema>;
 
