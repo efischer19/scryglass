@@ -100,8 +100,9 @@ Playwright infrastructure.
 
 ### New dependencies to add
 
-- `@axe-core/playwright` (dev dependency in root or packages/pwa)
-- `@lhci/cli` (dev dependency in root, for CI only)
+- `@axe-core/playwright` (dev dependency in root — E2E tests live at the
+  repo root per ADR-011)
+- `@lhci/cli` (dev dependency in root — CI-only tool)
 
 Files to create/modify:
 

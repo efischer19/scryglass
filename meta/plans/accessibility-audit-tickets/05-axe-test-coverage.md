@@ -6,9 +6,9 @@
 
 ## What do you want to build?
 
-Currently only 5 of 14 PWA components have vitest-axe accessibility regression
-tests. Add `axe()` assertions to the remaining 9 components to prevent
-accessibility regressions.
+Currently only 5 of the 14 PWA components have vitest-axe accessibility
+regression tests. Add `axe()` assertions to the remaining 9 components to
+prevent accessibility regressions (5 existing + 9 new = all 14 covered).
 
 ### Components WITH axe tests (keep as-is)
 
