@@ -2,10 +2,12 @@
 export { CardSchema, CardTypeEnum, ParseResultSchema, parseDeck } from './csv-parser.js';
 export type { Card, CardType, ParseResult } from './csv-parser.js';
 
-export { ConvertResultSchema, NeedsResolutionEntrySchema } from './convert-result.js';
-export type { ConvertResult, NeedsResolutionEntry } from './convert-result.js';
+export { ConvertResultSchema, UnresolvedCardSchema } from './convert-result.js';
+export type { ConvertResult, UnresolvedCard } from './convert-result.js';
 
 export { convertMoxfield } from './convert-moxfield.js';
+export { convertArchidekt } from './convert-archidekt.js';
+export { convertMtgoArena } from './convert-mtgo-arena.js';
 
 export { cryptoRandomInt, shuffle } from './shuffle.js';
 
@@ -17,6 +19,9 @@ export type { Action, ActionResult } from './schemas/action.js';
 
 export { MulliganVerdictSchema } from './schemas/mulligan.js';
 export type { MulliganVerdict } from './schemas/mulligan.js';
+
+export { SavedDeckSchema, SavedDeckListSchema } from './schemas/saved-deck.js';
+export type { SavedDeck, SavedDeckList } from './schemas/saved-deck.js';
 
 export { countLands, getMulliganVerdict } from './mulligan.js';
 

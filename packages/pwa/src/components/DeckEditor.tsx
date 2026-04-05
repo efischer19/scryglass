@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'preact/hooks';
 import { parseDeck } from '@scryglass/core';
-import type { ConvertResult, Card, ParseResult, NeedsResolutionEntry } from '@scryglass/core';
+import type { ConvertResult, Card, ParseResult } from '@scryglass/core';
 
 /**
  * Represents a single card row in the editor.
