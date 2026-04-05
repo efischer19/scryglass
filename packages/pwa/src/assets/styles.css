@@ -615,6 +615,13 @@ body {
   padding: 0 var(--space-sm) var(--space-xs);
 }
 
+.deck-editor__resolve-error {
+  grid-column: 1 / -1;
+  font-size: var(--font-size-sm);
+  color: var(--color-error-text);
+  padding: 0 var(--space-sm) var(--space-xs);
+}
+
 .deck-editor__warnings,
 .deck-editor__errors {
   list-style: none;

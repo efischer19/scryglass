@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'preact/hooks';
-import { parseDeck, convertMoxfield } from '@scryglass/core';
+import { parseDeck } from '@scryglass/core';
 import type { ParseResult, Action, Card, ConvertResult } from '@scryglass/core';
 
 interface DeckInputProps {
@@ -114,7 +114,7 @@ export function DeckInput({ onLoadDeck, onOpenEditor }: DeckInputProps) {
           <button
             class="deck-input__edit-btn"
             type="button"
-            disabled={!hasCards && text.trim() === ''}
+            disabled={text.trim() === ''}
             onClick={() => {
               if (text.trim() === '') return;
               const convertResult: ConvertResult = {

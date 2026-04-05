@@ -429,6 +429,40 @@ describe('<DeckEditor />', () => {
         expect(screen.getByText('All cards resolved')).toBeTruthy();
       });
     });
+
+    it('shows error feedback when Scryfall lookup returns null', async () => {
+      const lookup: ScryfallLookupFn = vi.fn().mockResolvedValue(null);
+      render(
+        <DeckEditor
+          initialResult={makeResult({ output: UNRESOLVED_OUTPUT })}
+          onLoadDeck={mockLoadDeck}
+          onCancel={mockCancel}
+          scryfallLookup={lookup}
+        />,
+      );
+      const resolveBtn = screen.getByRole('button', { name: /resolve lightning bolt/i });
+      fireEvent.click(resolveBtn);
+      await waitFor(() => {
+        expect(screen.getByText(/No match found/)).toBeTruthy();
+      });
+    });
+
+    it('shows error feedback when Scryfall lookup throws', async () => {
+      const lookup: ScryfallLookupFn = vi.fn().mockRejectedValue(new Error('Network error'));
+      render(
+        <DeckEditor
+          initialResult={makeResult({ output: UNRESOLVED_OUTPUT })}
+          onLoadDeck={mockLoadDeck}
+          onCancel={mockCancel}
+          scryfallLookup={lookup}
+        />,
+      );
+      const resolveBtn = screen.getByRole('button', { name: /resolve lightning bolt/i });
+      fireEvent.click(resolveBtn);
+      await waitFor(() => {
+        expect(screen.getByText(/lookup failed/)).toBeTruthy();
+      });
+    });
   });
 
   describe('accessibility', () => {

@@ -74,6 +74,10 @@ export function DeckEditor({
     total: number;
   } | null>(null);
 
+  const [resolveErrors, setResolveErrors] = useState<Map<number, string>>(
+    () => new Map(),
+  );
+
   // Validate current rows through parseDeck()
   const parseResult = useMemo<ParseResult>(() => {
     if (rows.length === 0) return EMPTY_PARSE;
@@ -130,16 +134,35 @@ export function DeckEditor({
     async (index: number) => {
       if (!scryfallLookup) return;
       const row = rows[index];
-      const result = await scryfallLookup(row.name);
-      if (result) {
-        setRows((prev) => {
-          const next = [...prev];
-          next[index] = {
-            ...next[index],
-            setCode: next[index].setCode || result.setCode,
-            collectorNumber:
-              next[index].collectorNumber || result.collectorNumber,
-          };
+      try {
+        const result = await scryfallLookup(row.name);
+        if (result) {
+          setResolveErrors((prev) => {
+            const next = new Map(prev);
+            next.delete(index);
+            return next;
+          });
+          setRows((prev) => {
+            const next = [...prev];
+            next[index] = {
+              ...next[index],
+              setCode: next[index].setCode || result.setCode,
+              collectorNumber:
+                next[index].collectorNumber || result.collectorNumber,
+            };
+            return next;
+          });
+        } else {
+          setResolveErrors((prev) => {
+            const next = new Map(prev);
+            next.set(index, 'No match found on Scryfall');
+            return next;
+          });
+        }
+      } catch {
+        setResolveErrors((prev) => {
+          const next = new Map(prev);
+          next.set(index, 'Scryfall lookup failed');
           return next;
         });
       }
@@ -160,6 +183,11 @@ export function DeckEditor({
       try {
         const result = await scryfallLookup(row.name);
         if (result) {
+          setResolveErrors((prev) => {
+            const next = new Map(prev);
+            next.delete(idx);
+            return next;
+          });
           setRows((prev) => {
             const next = [...prev];
             next[idx] = {
@@ -170,9 +198,19 @@ export function DeckEditor({
             };
             return next;
           });
+        } else {
+          setResolveErrors((prev) => {
+            const next = new Map(prev);
+            next.set(idx, 'No match found on Scryfall');
+            return next;
+          });
         }
       } catch {
-        // Skip failed lookups silently — user can retry or fill in manually
+        setResolveErrors((prev) => {
+          const next = new Map(prev);
+          next.set(idx, 'Scryfall lookup failed');
+          return next;
+        });
       }
       setResolveProgress({ current: i + 1, total: toResolve.length });
 
@@ -441,6 +479,11 @@ export function DeckEditor({
               {isUnresolved && (
                 <span id={missingId} class="deck-editor__missing-hint">
                   Missing: {missing.join(', ')}
+                </span>
+              )}
+              {resolveErrors.has(idx) && (
+                <span class="deck-editor__resolve-error" role="alert">
+                  {resolveErrors.get(idx)}
                 </span>
               )}
             </div>
