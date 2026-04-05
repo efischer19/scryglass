@@ -286,7 +286,7 @@ describe('<DeckInput /> — deck storage', () => {
     fireEvent.change(select, { target: { value: deckOption!.value } });
     fireEvent.click(screen.getByRole('button', { name: /^rename$/i }));
 
-    expect(screen.getByLabelText(/new deck name/i)).toBeTruthy();
+    expect(screen.getByLabelText(/new name/i)).toBeTruthy();
     expect(
       screen.getByRole('button', { name: /confirm rename/i }),
     ).toBeTruthy();
@@ -304,7 +304,7 @@ describe('<DeckInput /> — deck storage', () => {
     fireEvent.change(select, { target: { value: deckOption!.value } });
     fireEvent.click(screen.getByRole('button', { name: /^rename$/i }));
 
-    const input = screen.getByLabelText(/new deck name/i);
+    const input = screen.getByLabelText(/new name/i);
     fireEvent.input(input, { target: { value: 'New Name' } });
     fireEvent.click(screen.getByRole('button', { name: /confirm rename/i }));
 

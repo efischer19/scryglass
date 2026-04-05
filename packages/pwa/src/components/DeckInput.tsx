@@ -58,11 +58,7 @@ export function DeckInput({ onLoadDeck }: DeckInputProps) {
     const autosave = loadAutosave();
     if (autosave && autosave.rawText.trim() !== '') {
       setText(autosave.rawText);
-      const parsed =
-        autosave.rawText.trim() === ''
-          ? EMPTY_RESULT
-          : parseDeck(autosave.rawText);
-      setResult(parsed);
+      setResult(parseDeck(autosave.rawText));
     }
   }, [refreshDecks]);
 
@@ -332,7 +328,6 @@ export function DeckInput({ onLoadDeck }: DeckInputProps) {
                 if (e.key === 'Enter') handleConfirmRename();
                 if (e.key === 'Escape') handleCancelRename();
               }}
-              aria-label="New deck name"
             />
             <button
               class="deck-input__storage-btn"
