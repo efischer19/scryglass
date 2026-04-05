@@ -1,8 +1,10 @@
 import { useState } from 'preact/hooks';
 import { createInitialState, dispatch } from '@scryglass/core';
-import type { Action } from '@scryglass/core';
+import type { Action, Card } from '@scryglass/core';
 import { Header } from './Header.js';
 import { PlayerZone } from './PlayerZone.js';
+import { Router, navigate } from './Router.js';
+import { DeckInput } from './DeckInput.js';
 
 export function App() {
   const [state, setState] = useState(createInitialState);
@@ -13,9 +15,22 @@ export function App() {
     return result;
   };
 
-  return (
+  const handleLoadDeck = (cards: Card[]) => {
+    handleDispatch({ type: 'LOAD_DECK', payload: { player: 'A', cards } });
+    handleDispatch({ type: 'LOAD_DECK', payload: { player: 'B', cards } });
+    navigate('#/app');
+  };
+
+  const inputView = (
     <main>
       <Header onLoadDecks={() => { /* Ticket 06 */ }} />
+      <DeckInput onLoadDeck={handleLoadDeck} />
+    </main>
+  );
+
+  const appView = (
+    <main>
+      <Header onLoadDecks={() => navigate('#/input')} />
       <div class="pod-layout">
         <PlayerZone
           player="A"
@@ -30,4 +45,6 @@ export function App() {
       </div>
     </main>
   );
+
+  return <Router inputView={inputView} appView={appView} />;
 }
