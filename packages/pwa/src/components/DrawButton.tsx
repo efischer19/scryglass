@@ -27,8 +27,9 @@ export function DrawButton({ player, disabled, libraryEmpty, onDispatch, onCardD
       const result = onDispatch({ type: 'DRAW_CARD', payload: { player } });
       onCardDrawn(result.card);
     } catch {
-      // The core throws if library is empty — the button should be disabled
-      // to prevent this, but handle it gracefully if it occurs.
+      // The core reducer throws if the library is empty. The button should
+      // already be disabled (via libraryEmpty) to prevent reaching this path.
+      // Silently swallow — the UI state remains unchanged.
     }
     buttonRef.current?.focus();
   };
