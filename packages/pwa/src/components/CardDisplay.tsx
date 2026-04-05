@@ -1,4 +1,5 @@
 import type { Card } from '@scryglass/core';
+import { useCardImage } from '../scryfall/useCardImage';
 
 interface CardDisplayProps {
   player: 'A' | 'B';
@@ -11,6 +12,32 @@ const PLAYER_LABELS: Record<'A' | 'B', string> = {
   B: 'Player B',
 };
 
+function CardImage({ card }: { card: Card }) {
+  const { status, imageUrl } = useCardImage(card.name, card.setCode);
+
+  if (status === 'loading') {
+    return (
+      <div class="card-display__loading" role="status">
+        <span class="sr-only">Loading image for {card.name}</span>
+        <span class="card-display__spinner" aria-hidden="true" />
+        <p class="card-display__name">{card.name}</p>
+      </div>
+    );
+  }
+
+  if (status === 'error' || !imageUrl) {
+    return <p class="card-display__name">{card.name}</p>;
+  }
+
+  return (
+    <img
+      class="card-display__image"
+      src={imageUrl}
+      alt={card.name}
+    />
+  );
+}
+
 export function CardDisplay({ player, card, onDismiss }: CardDisplayProps) {
   return (
     <div
@@ -20,7 +47,7 @@ export function CardDisplay({ player, card, onDismiss }: CardDisplayProps) {
     >
       {card ? (
         <div class="card-display__content">
-          <p class="card-display__name">{card.name}</p>
+          <CardImage card={card} />
           {onDismiss && (
             <button
               class="action-btn card-display__dismiss"
