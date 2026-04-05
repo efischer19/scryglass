@@ -5,6 +5,7 @@ import { MulliganHand } from './MulliganHand.js';
 import { DrawButton } from './DrawButton.js';
 import { ScryModal } from './ScryModal.js';
 import { FetchLandModal } from './FetchLandModal.js';
+import { TutorModal } from './TutorModal.js';
 
 interface PlayerZoneProps {
   player: 'A' | 'B';
@@ -24,6 +25,7 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, ga
   const [drawnCard, setDrawnCard] = useState<Card | null>(null);
   const [showScry, setShowScry] = useState(false);
   const [showFetchLand, setShowFetchLand] = useState(false);
+  const [showTutor, setShowTutor] = useState(false);
   const label = PLAYER_LABELS[player];
   const disabled = playerState.phase !== 'playing' || otherPlayerPhase !== 'playing';
 
@@ -71,9 +73,7 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, ga
           type="button"
           disabled={disabled}
           aria-label={`Tutor card from ${label}'s library`}
-          onClick={() => {
-            /* Requires card selection UI — wired in a later ticket */
-          }}
+          onClick={() => setShowTutor(true)}
         >
           Tutor
         </button>
@@ -102,6 +102,14 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, ga
           library={playerState.library}
           onDispatch={onDispatch}
           onClose={() => setShowFetchLand(false)}
+        />
+      )}
+      {showTutor && (
+        <TutorModal
+          player={player}
+          library={playerState.library}
+          onDispatch={onDispatch}
+          onClose={() => setShowTutor(false)}
         />
       )}
       <CardDisplay

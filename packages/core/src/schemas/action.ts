@@ -81,6 +81,14 @@ const FetchBasicLandActionSchema = z.object({
   }),
 });
 
+const TutorCardActionSchema = z.object({
+  type: z.literal('TUTOR_CARD'),
+  payload: z.object({
+    player: PlayerIdSchema,
+    cardName: z.string(),
+  }),
+});
+
 export const ActionSchema = z.discriminatedUnion('type', [
   LoadDeckActionSchema,
   ShuffleLibraryActionSchema,
@@ -91,6 +99,7 @@ export const ActionSchema = z.discriminatedUnion('type', [
   KeepHandActionSchema,
   ScryResolveActionSchema,
   FetchBasicLandActionSchema,
+  TutorCardActionSchema,
 ]);
 export type Action = z.infer<typeof ActionSchema>;
 
