@@ -2,8 +2,8 @@
 export { CardSchema, CardTypeEnum, ParseResultSchema, parseDeck } from './csv-parser.js';
 export type { Card, CardType, ParseResult } from './csv-parser.js';
 
-export { ConvertResultSchema } from './convert-result.js';
-export type { ConvertResult } from './convert-result.js';
+export { ConvertResultSchema, NeedsResolutionEntrySchema } from './convert-result.js';
+export type { ConvertResult, NeedsResolutionEntry } from './convert-result.js';
 
 export { convertMoxfield } from './convert-moxfield.js';
 

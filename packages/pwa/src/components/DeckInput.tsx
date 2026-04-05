@@ -1,9 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'preact/hooks';
-import { parseDeck } from '@scryglass/core';
-import type { ParseResult, Action, Card } from '@scryglass/core';
+import { parseDeck, convertMoxfield } from '@scryglass/core';
+import type { ParseResult, Action, Card, ConvertResult } from '@scryglass/core';
 
 interface DeckInputProps {
   onLoadDeck: (cards: Card[]) => void;
+  onOpenEditor?: (result: ConvertResult) => void;
 }
 
 const PLACEHOLDER = `card_name;set_code;collector_number;card_type
@@ -14,7 +15,7 @@ Andúril, Flame of the West;ltr;687;nonland`;
 const EMPTY_RESULT: ParseResult = { cards: [], warnings: [], errors: [] };
 const DEBOUNCE_DELAY_MS = 250;
 
-export function DeckInput({ onLoadDeck }: DeckInputProps) {
+export function DeckInput({ onLoadDeck, onOpenEditor }: DeckInputProps) {
   const [text, setText] = useState('');
   const [result, setResult] = useState<ParseResult>(EMPTY_RESULT);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -109,6 +110,26 @@ export function DeckInput({ onLoadDeck }: DeckInputProps) {
         >
           Load Deck
         </button>
+        {onOpenEditor && (
+          <button
+            class="deck-input__edit-btn"
+            type="button"
+            disabled={!hasCards && text.trim() === ''}
+            onClick={() => {
+              if (text.trim() === '') return;
+              const convertResult: ConvertResult = {
+                output: text,
+                warnings: result.warnings,
+                errors: result.errors,
+                needsResolution: [],
+              };
+              onOpenEditor(convertResult);
+            }}
+            aria-label="Edit deck in structured editor"
+          >
+            Edit Deck
+          </button>
+        )}
         <span id="load-btn-hint" class="deck-input__hint">
           {!hasCards && 'Enter at least one valid card to load the deck.'}
           {hasCards && hasErrors && 'Fix all errors before loading the deck.'}
