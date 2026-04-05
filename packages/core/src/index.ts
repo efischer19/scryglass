@@ -6,6 +6,7 @@ export { ConvertResultSchema } from './convert-result.js';
 export type { ConvertResult } from './convert-result.js';
 
 export { convertMoxfield } from './convert-moxfield.js';
+export { convertArchidekt } from './convert-archidekt.js';
 
 export { cryptoRandomInt, shuffle } from './shuffle.js';
 
