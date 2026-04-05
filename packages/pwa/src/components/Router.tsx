@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'preact/hooks';
 
-type Route = '#/input' | '#/app';
+type Route = '#/input' | '#/editor' | '#/app';
 
-const VALID_ROUTES = new Set<string>(['#/input', '#/app']);
+const VALID_ROUTES = new Set<string>(['#/input', '#/editor', '#/app']);
 
 function getRoute(): Route {
   const hash = window.location.hash;
@@ -11,10 +11,11 @@ function getRoute(): Route {
 
 interface RouterProps {
   inputView: preact.ComponentChild;
+  editorView: preact.ComponentChild;
   appView: preact.ComponentChild;
 }
 
-export function Router({ inputView, appView }: RouterProps) {
+export function Router({ inputView, editorView, appView }: RouterProps) {
   const [route, setRoute] = useState<Route>(getRoute);
 
   useEffect(() => {
@@ -23,9 +24,18 @@ export function Router({ inputView, appView }: RouterProps) {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
+  let view: preact.ComponentChild;
+  if (route === '#/editor') {
+    view = editorView;
+  } else if (route === '#/app') {
+    view = appView;
+  } else {
+    view = inputView;
+  }
+
   return (
     <div aria-live="polite" aria-label="Application view">
-      {route === '#/input' ? inputView : appView}
+      {view}
     </div>
   );
 }
