@@ -141,7 +141,7 @@ describe('convertArchidekt', () => {
 
       const parseResult = parseDeck(convertResult.output);
       expect(parseResult.errors).toHaveLength(0);
-      expect(parseResult.cards).toHaveLength(6); // commander excluded
+      expect(parseResult.cards).toHaveLength(6); // parseDeck excludes commander: 6 non-commander cards from 7 converted rows
       expect(parseResult.warnings).toHaveLength(1); // commander warning
     });
   });
