@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/preact';
+import { axe } from 'vitest-axe';
 import { ExportDropdown } from '../ExportDropdown.js';
 import type { Card } from '@scryglass/core';
 
@@ -59,5 +60,17 @@ describe('<ExportDropdown />', () => {
     expect(revokeObjectURL).toHaveBeenCalledTimes(1);
     expect(clickSpy).toHaveBeenCalledTimes(1);
     expect(screen.getByText('Export downloaded.')).toBeTruthy();
+  });
+
+  it('passes vitest-axe a11y assertions (with cards)', async () => {
+    const { container } = render(<ExportDropdown cards={CARDS} commanders={COMMANDERS} />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it('passes vitest-axe a11y assertions (no cards, buttons disabled)', async () => {
+    const { container } = render(<ExportDropdown cards={[]} commanders={[]} />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 });
