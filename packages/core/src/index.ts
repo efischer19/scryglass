@@ -2,6 +2,11 @@
 export { CardSchema, CardTypeEnum, ParseResultSchema, parseDeck } from './csv-parser.js';
 export type { Card, CardType, ParseResult } from './csv-parser.js';
 
+export { ConvertResultSchema } from './convert-result.js';
+export type { ConvertResult } from './convert-result.js';
+
+export { convertMoxfield } from './convert-moxfield.js';
+
 export { cryptoRandomInt, shuffle } from './shuffle.js';
 
 export { PlayerPhaseSchema, PlayerStateSchema, GameStateSchema } from './schemas/state.js';
