@@ -7,8 +7,11 @@ export interface FetchCardImageParams {
 
 export type FetchCardImageResult = Blob | null;
 
+export type PriorityLevel = 'jit' | 'background';
+
 interface QueueEntry {
   params: FetchCardImageParams;
+  priority: PriorityLevel;
   resolve: (value: FetchCardImageResult) => void;
   reject: (reason: unknown) => void;
 }
@@ -55,18 +58,24 @@ async function fetchWithBackoff(url: string): Promise<Response> {
   }
 }
 
+function findNextEntryIndex(): number {
+  const jitIndex = queue.findIndex((e) => e.priority === 'jit');
+  return jitIndex !== -1 ? jitIndex : 0;
+}
+
 async function processQueue(): Promise<void> {
   if (processing) return;
   processing = true;
 
   while (queue.length > 0) {
-    const entry = queue[0]!;
+    const idx = findNextEntryIndex();
+    const entry = queue[idx]!;
     try {
       const result = await executeFetch(entry.params);
-      queue.shift();
+      queue.splice(idx, 1);
       entry.resolve(result);
     } catch (error: unknown) {
-      queue.shift();
+      queue.splice(idx, 1);
       entry.reject(error);
     }
   }
@@ -107,9 +116,10 @@ async function executeFetch(
 
 export function fetchCardImage(
   params: FetchCardImageParams,
+  priority: PriorityLevel = 'background',
 ): Promise<FetchCardImageResult> {
   return new Promise<FetchCardImageResult>((resolve, reject) => {
-    queue.push({ params, resolve, reject });
+    queue.push({ params, priority, resolve, reject });
     void processQueue();
   });
 }
