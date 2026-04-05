@@ -1,6 +1,6 @@
 ---
 title: "ADR-006: Semicolon-Delimited Deck Import Format"
-status: "Proposed"
+status: "Accepted"
 date: "2026-04-05"
 tags:
   - "data-format"
