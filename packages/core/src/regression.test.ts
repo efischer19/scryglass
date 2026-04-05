@@ -103,7 +103,7 @@ function stripCardType(cards: Card[]): NormalizedCard[] {
 // ---------------------------------------------------------------------------
 
 describe('regression: import/export round-trips', () => {
-  const DECK_FILES = ['deck_A.txt', 'deck_B.txt'];
+  const DECK_FILES = ['good.txt', 'evil.txt'];
 
   for (const deckFile of DECK_FILES) {
     describe(`deck: ${deckFile}`, () => {
@@ -307,7 +307,7 @@ describe('regression: import/export round-trips', () => {
     });
 
     it('multiple printings of the same-named card (Nazgûl) round-trip independently via Archidekt', () => {
-      const raw = readFileSync(resolve(DECKLISTS_DIR, 'deck_B.txt'), 'utf-8');
+      const raw = readFileSync(resolve(DECKLISTS_DIR, 'evil.txt'), 'utf-8');
       const original = parseDeck(raw);
       const commanders = extractCommanders(raw);
 
