@@ -125,6 +125,11 @@ export async function getImageUrl(
   }
 
   try {
+    // NOTE: fetchCardImage expects a collector number, not a card name.
+    // A future integration layer will resolve card names to collector
+    // numbers before reaching this point. For now, callers who need the
+    // fetch fallback should ensure the cardName value is the collector
+    // number or provide their own fetch-then-cache logic.
     const blob = await fetchCardImage({
       setCode,
       collectorNumber: cardName,
