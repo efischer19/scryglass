@@ -1,4 +1,4 @@
-import type { ConvertResult } from './convert-result.js';
+import type { ConvertResult, UnresolvedCard } from './convert-result.js';
 
 const TAG_TO_CARD_TYPE: Record<string, 'land' | 'nonland' | 'commander'> = {
   commander: 'commander',
@@ -103,12 +103,13 @@ function parseArchidektLine(line: string): ParsedLine | null {
  *   1 Galadriel, Light of Valinor (LTC) 498 *F* [Commander]
  */
 export function convertArchidekt(input: string): ConvertResult {
+  const needsResolution: UnresolvedCard[] = [];
   const warnings: string[] = [];
   const errors: string[] = [];
 
   const trimmed = input.trim();
   if (trimmed === '') {
-    return { output: '', warnings, errors };
+    return { output: '', needsResolution, warnings, errors };
   }
 
   const outputLines: string[] = [];
@@ -144,8 +145,16 @@ export function convertArchidekt(input: string): ConvertResult {
       }
     } else {
       warnings.push(
-        `Row ${rowNum}: missing category tag for "${name}" — defaulting to nonland (card_type may need manual resolution)`,
+        `Row ${rowNum}: missing category tag for "${name}" — defaulting to nonland and flagged for card_type resolution`,
       );
+      needsResolution.push({
+        name,
+        setCode,
+        collectorNumber,
+        cardType,
+        quantity,
+        sourceLine: rowNum,
+      });
     }
 
     const outputLine = `${name};${setCode};${collectorNumber};${cardType}`;
@@ -154,5 +163,5 @@ export function convertArchidekt(input: string): ConvertResult {
     }
   }
 
-  return { output: outputLines.join('\n'), warnings, errors };
+  return { output: outputLines.join('\n'), needsResolution, warnings, errors };
 }

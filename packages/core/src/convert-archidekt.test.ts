@@ -80,6 +80,16 @@ describe('convertArchidekt', () => {
       expect(result.errors).toHaveLength(0);
       expect(result.warnings).toHaveLength(1);
       expect(result.warnings[0]).toMatch(/Row 1: missing category tag/);
+      expect(result.needsResolution).toEqual([
+        {
+          name: 'Sol Ring',
+          setCode: 'cmr',
+          collectorNumber: '472',
+          cardType: 'nonland',
+          quantity: 1,
+          sourceLine: 1,
+        },
+      ]);
       expect(result.output).toBe('Sol Ring;cmr;472;nonland');
     });
   });
@@ -97,12 +107,12 @@ describe('convertArchidekt', () => {
   describe('empty input', () => {
     it('returns empty output and no diagnostics for empty string', () => {
       const result = convertArchidekt('');
-      expect(result).toEqual({ output: '', warnings: [], errors: [] });
+      expect(result).toEqual({ output: '', needsResolution: [], warnings: [], errors: [] });
     });
 
     it('returns empty output and no diagnostics for whitespace-only input', () => {
       const result = convertArchidekt('   \n   ');
-      expect(result).toEqual({ output: '', warnings: [], errors: [] });
+      expect(result).toEqual({ output: '', needsResolution: [], warnings: [], errors: [] });
     });
   });
 
