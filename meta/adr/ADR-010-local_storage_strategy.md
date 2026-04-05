@@ -120,7 +120,7 @@ The save function wraps `localStorage.setItem()` in a `try/catch` and returns a 
 
 3. **Option 3: `idb-keyval` Library (~600 bytes)**
 
-    Use the [`idb-keyval`](https://github.com/nicferrier/idb-keyval) library, which wraps IndexedDB in a simple `get(key)` / `set(key, value)` API, similar to `localStorage` but async and backed by IndexedDB.
+    Use the [`idb-keyval`](https://github.com/jakearchibald/idb-keyval) library, which wraps IndexedDB in a simple `get(key)` / `set(key, value)` API, similar to `localStorage` but async and backed by IndexedDB.
 
     * *Pros:*
       * Tiny bundle size (~600 bytes gzipped). Minimal dependency footprint.
