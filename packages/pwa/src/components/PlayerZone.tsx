@@ -42,12 +42,9 @@ export function PlayerZone({ player, playerState, onDispatch }: PlayerZoneProps)
           type="button"
           disabled={disabled}
           aria-label={`Fetch land from ${label}'s library`}
-          onClick={() =>
-            onDispatch({
-              type: 'FETCH_BASIC_LAND',
-              payload: { player, landType: '' },
-            })
-          }
+          onClick={() => {
+            /* Requires land selection UI — wired in a later ticket */
+          }}
         >
           Fetch Land
         </button>
@@ -56,12 +53,9 @@ export function PlayerZone({ player, playerState, onDispatch }: PlayerZoneProps)
           type="button"
           disabled={disabled}
           aria-label={`Tutor card from ${label}'s library`}
-          onClick={() =>
-            onDispatch({
-              type: 'TUTOR_CARD',
-              payload: { player, cardName: '' },
-            })
-          }
+          onClick={() => {
+            /* Requires card selection UI — wired in a later ticket */
+          }}
         >
           Tutor
         </button>
@@ -70,12 +64,9 @@ export function PlayerZone({ player, playerState, onDispatch }: PlayerZoneProps)
           type="button"
           disabled={disabled}
           aria-label={`Scry ${label}'s library`}
-          onClick={() =>
-            onDispatch({
-              type: 'SCRY_RESOLVE',
-              payload: { player, decisions: [] },
-            })
-          }
+          onClick={() => {
+            /* Requires scry decision UI — wired in a later ticket */
+          }}
         >
           Scry
         </button>
