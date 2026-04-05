@@ -5,6 +5,7 @@ import { Header } from './Header.js';
 import { PlayerZone } from './PlayerZone.js';
 import { Router, navigate } from './Router.js';
 import { DeckInput } from './DeckInput.js';
+import { ExportDropdown } from './ExportDropdown.js';
 
 export function App() {
   const [state, setState] = useState(createInitialState);
@@ -39,6 +40,7 @@ export function App() {
   const appView = (
     <main>
       <Header onLoadDecks={() => navigate('#/input')} />
+      <ExportDropdown cards={state.players.A.library} />
       <div class="pod-layout">
         <PlayerZone
           player="A"

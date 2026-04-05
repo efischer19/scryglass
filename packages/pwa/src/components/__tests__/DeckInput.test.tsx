@@ -46,6 +46,12 @@ describe('<DeckInput />', () => {
     expect(btn).toHaveProperty('disabled', true);
   });
 
+  it('renders export controls with native scryglass option', () => {
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+    expect(screen.getByLabelText('Export')).toBeTruthy();
+    expect(screen.getByRole('option', { name: 'scryglass format' })).toBeTruthy();
+  });
+
   it('shows card counts after entering valid cards', async () => {
     render(<DeckInput onLoadDeck={mockLoadDeck} />);
     const textarea = screen.getByRole('textbox');

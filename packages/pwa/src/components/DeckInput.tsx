@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'preact/hooks';
 import { parseDeck } from '@scryglass/core';
 import type { ParseResult, Action, Card } from '@scryglass/core';
+import { ExportDropdown } from './ExportDropdown.js';
 
 interface DeckInputProps {
   onLoadDeck: (cards: Card[]) => void;
@@ -13,6 +14,27 @@ Andúril, Flame of the West;ltr;687;nonland`;
 
 const EMPTY_RESULT: ParseResult = { cards: [], warnings: [], errors: [] };
 const DEBOUNCE_DELAY_MS = 250;
+
+function parseCommanders(input: string): Card[] {
+  const commanders: Card[] = [];
+  const lines = input.split('\n');
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (line === '') continue;
+    const columns = line.split(';');
+    if (columns[0].trim().toLowerCase() === 'card_name') continue;
+    if (columns.length < 4) continue;
+
+    const name = columns[0].trim();
+    const setCode = columns[1].trim().toLowerCase();
+    const collectorNumber = columns[2].trim();
+    const cardType = columns[3].trim().toLowerCase();
+
+    if (!name || !setCode || !collectorNumber || cardType !== 'commander') continue;
+    commanders.push({ name, setCode, collectorNumber, cardType: 'commander' });
+  }
+  return commanders;
+}
 
 export function DeckInput({ onLoadDeck }: DeckInputProps) {
   const [text, setText] = useState('');
@@ -53,6 +75,7 @@ export function DeckInput({ onLoadDeck }: DeckInputProps) {
   const hasCards = result.cards.length > 0;
   const hasErrors = result.errors.length > 0;
   const canLoad = hasCards && !hasErrors;
+  const commanders = parseCommanders(text);
 
   const handleLoadDeck = () => {
     if (!canLoad) return;
@@ -114,6 +137,7 @@ export function DeckInput({ onLoadDeck }: DeckInputProps) {
           {hasCards && hasErrors && 'Fix all errors before loading the deck.'}
         </span>
       </div>
+      <ExportDropdown cards={result.cards} commanders={commanders} />
     </section>
   );
 }

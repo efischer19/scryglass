@@ -8,6 +8,9 @@ export type { ConvertResult, UnresolvedCard } from './convert-result.js';
 export { convertMoxfield } from './convert-moxfield.js';
 export { convertArchidekt } from './convert-archidekt.js';
 export { convertMtgoArena } from './convert-mtgo-arena.js';
+export { exportMoxfield } from './export-moxfield.js';
+export { exportArchidekt } from './export-archidekt.js';
+export { exportMtgoArena } from './export-mtgo-arena.js';
 
 export { cryptoRandomInt, shuffle } from './shuffle.js';
 
