@@ -10,7 +10,7 @@ describe('convertMtgoArena', () => {
       const result = convertMtgoArena(input);
 
       expect(result.errors).toHaveLength(0);
-      expect(result.output).toBe('');
+      expect(result.output).toBe('Lightning Bolt;m21;219;nonland');
       expect(result.needsResolution).toEqual([
         {
           name: 'Lightning Bolt',
@@ -45,6 +45,9 @@ describe('convertMtgoArena', () => {
       expect(lines).toHaveLength(6);
       expect(lines[0]).toBe('Galadriel, Light of Valinor;ltc;498;commander');
       expect(lines[1]).toBe('Island;ltr;715;nonland');
+      expect(lines[2]).toBe('Island;ltr;715;nonland');
+      expect(lines[3]).toBe('Island;ltr;715;nonland');
+      expect(lines[4]).toBe('Island;ltr;715;nonland');
       expect(lines[5]).toBe('Andúril, Flame of the West;ltr;687;nonland');
     });
 

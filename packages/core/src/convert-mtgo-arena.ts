@@ -1,6 +1,7 @@
 import type { CardType } from './schemas/card.js';
 import type { ConvertResult, UnresolvedCard } from './convert-result.js';
 
+/** MTGO/Arena section headers mapped to scryglass card_type values. */
 const HEADER_TO_CARD_TYPE: Record<string, CardType> = {
   commander: 'commander',
   companion: 'nonland',
@@ -8,41 +9,73 @@ const HEADER_TO_CARD_TYPE: Record<string, CardType> = {
   sideboard: 'nonland',
 };
 
+/**
+ * Parses an MTGO/Arena quantity line:
+ * `quantity name (SET) collector_number`
+ * with optional `(SET)` and collector number suffixes.
+ * Returns null when quantity or name cannot be parsed.
+ */
 function parseQuantityLine(rawLine: string): {
   quantity: number;
   name: string;
   setCode?: string;
   collectorNumber?: string;
 } | null {
-  const qtyMatch = rawLine.match(/^(\d+)\s+(.+)$/);
-  if (!qtyMatch) {
+  const line = rawLine.trim();
+  let splitIndex = -1;
+  for (let i = 0; i < line.length; i++) {
+    if (line[i] === ' ' || line[i] === '\t') {
+      splitIndex = i;
+      break;
+    }
+  }
+
+  if (splitIndex <= 0) {
     return null;
   }
 
-  const quantity = parseInt(qtyMatch[1], 10);
-  if (isNaN(quantity) || quantity < 1) {
+  const quantityToken = line.slice(0, splitIndex);
+  for (const ch of quantityToken) {
+    if (ch < '0' || ch > '9') {
+      return null;
+    }
+  }
+
+  const quantity = parseInt(quantityToken, 10);
+  if (quantity < 1) {
     return null;
   }
 
-  const remainder = qtyMatch[2].trim();
-
-  const withSetAndCollector = remainder.match(/^(.*)\s+\(([^)]+)\)\s+([^\s]+)\s*$/);
-  if (withSetAndCollector) {
-    return {
-      quantity,
-      name: withSetAndCollector[1].trim(),
-      setCode: withSetAndCollector[2].trim().toLowerCase(),
-      collectorNumber: withSetAndCollector[3].trim(),
-    };
+  const remainder = line.slice(splitIndex + 1).trim();
+  if (remainder === '') {
+    return null;
   }
 
-  const withSetOnly = remainder.match(/^(.*)\s+\(([^)]+)\)\s*$/);
-  if (withSetOnly) {
-    return {
-      quantity,
-      name: withSetOnly[1].trim(),
-      setCode: withSetOnly[2].trim().toLowerCase(),
-    };
+  const closeParen = remainder.lastIndexOf(')');
+  if (closeParen !== -1) {
+    const openParen = remainder.lastIndexOf('(', closeParen);
+    if (openParen !== -1 && openParen < closeParen) {
+      const name = remainder.slice(0, openParen).trim();
+      const setCode = remainder.slice(openParen + 1, closeParen).trim().toLowerCase();
+      const collectorNumber = remainder.slice(closeParen + 1).trim();
+
+      if (name && setCode) {
+        if (collectorNumber) {
+          return {
+            quantity,
+            name,
+            setCode,
+            collectorNumber,
+          };
+        }
+
+        return {
+          quantity,
+          name,
+          setCode,
+        };
+      }
+    }
   }
 
   return {
@@ -51,6 +84,11 @@ function parseQuantityLine(rawLine: string): {
   };
 }
 
+/**
+ * Converts MTGO/Arena plain-text deck lists into scryglass semicolon format.
+ * Fully resolved rows are emitted to `output`; incomplete or review-needed rows
+ * are added to `needsResolution`, with non-fatal details in `warnings`.
+ */
 export function convertMtgoArena(input: string): ConvertResult {
   const needsResolution: UnresolvedCard[] = [];
   const warnings: string[] = [];
@@ -113,14 +151,19 @@ export function convertMtgoArena(input: string): ConvertResult {
       continue;
     }
 
+    const setCode = parsed.setCode;
+    const collectorNumber = parsed.collectorNumber;
+    if (!setCode || !collectorNumber) {
+      continue;
+    }
+
     if (needsCardTypeReview) {
       warnings.push(
         `Row ${rowNum}: "${parsed.name}" has no section header; defaulted card_type to nonland and flagged for review`,
       );
-      continue;
     }
 
-    const lineOut = `${parsed.name};${parsed.setCode};${parsed.collectorNumber};${currentCardType}`;
+    const lineOut = `${parsed.name};${setCode};${collectorNumber};${currentCardType}`;
     for (let copy = 0; copy < parsed.quantity; copy++) {
       outputLines.push(lineOut);
     }
