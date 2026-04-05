@@ -156,12 +156,13 @@ describe('priorityFetch', () => {
     const p1 = priorityFetch('Card A', 'set1');
     const p2 = priorityFetch('Card B', 'set2');
 
-    // Let the cache checks (async) settle so pausePrefetch is called
-    await new Promise((r) => setTimeout(r, 0));
+    // Wait until the first in-flight JIT request pauses background prefetch.
+    await vi.waitFor(() => {
+      expect(pausePrefetch).toHaveBeenCalledTimes(1);
+    });
 
     // After both start, pause should have been called once (first JIT)
     // but not yet resumed
-    expect(pausePrefetch).toHaveBeenCalledTimes(1);
     expect(resumePrefetch).not.toHaveBeenCalled();
 
     resolveA(makeBlob());
