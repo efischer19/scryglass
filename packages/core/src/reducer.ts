@@ -2,6 +2,7 @@ import { ActionSchema } from './schemas/action.js';
 import type { Action, ActionResult } from './schemas/action.js';
 import type { GameState } from './schemas/state.js';
 import { shuffle, cryptoRandomInt } from './shuffle.js';
+import { isBasicLandOfType } from './helpers/lands.js';
 
 /**
  * Create the initial game state with two players in the `loading` phase.
@@ -251,6 +252,35 @@ function handleScryResolve(state: GameState, action: Extract<Action, { type: 'SC
   };
 }
 
+function handleFetchBasicLand(state: GameState, action: Extract<Action, { type: 'FETCH_BASIC_LAND' }>): ActionResult {
+  const { player, landType } = action.payload;
+  const library = state.players[player].library;
+
+  const landIndex = library.findIndex(card => isBasicLandOfType(card, landType));
+
+  if (landIndex === -1) {
+    throw new Error(`Cannot fetch: no ${landType} found in Player ${player}'s library`);
+  }
+
+  const fetchedCard = library[landIndex];
+  const remaining = library.filter((_, i) => i !== landIndex);
+  const shuffled = shuffle(remaining);
+
+  return {
+    state: {
+      ...state,
+      players: {
+        ...state.players,
+        [player]: {
+          ...state.players[player],
+          library: shuffled,
+        },
+      },
+    },
+    card: fetchedCard,
+  };
+}
+
 /**
  * Dispatch an action against the current game state, returning a new
  * immutable state and any output (e.g., a drawn card).
@@ -277,5 +307,7 @@ export function dispatch(state: GameState, action: Action): ActionResult {
       return handleKeepHand(state, parsed);
     case 'SCRY_RESOLVE':
       return handleScryResolve(state, parsed);
+    case 'FETCH_BASIC_LAND':
+      return handleFetchBasicLand(state, parsed);
   }
 }

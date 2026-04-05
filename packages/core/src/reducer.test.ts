@@ -673,3 +673,144 @@ describe('dispatch — validation', () => {
     ).toThrow();
   });
 });
+
+function makeBasicLand(name: string): Card {
+  return { name, setCode: 'TST', collectorNumber: '1', cardType: 'land' };
+}
+
+describe('dispatch — FETCH_BASIC_LAND', () => {
+  it('removes the correct basic land from the library', () => {
+    const mountain = makeBasicLand('Mountain');
+    const island = makeBasicLand('Island');
+    const sol = makeCard('Sol Ring');
+    const cards = [sol, mountain, island];
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, {
+      type: 'FETCH_BASIC_LAND',
+      payload: { player: 'A', landType: 'Mountain' },
+    });
+
+    expect(result.card).toEqual(mountain);
+    expect(result.state.players.A.library).toHaveLength(2);
+    expect(result.state.players.A.library).not.toContainEqual(mountain);
+  });
+
+  it('reduces library size by 1', () => {
+    const mountain = makeBasicLand('Mountain');
+    const cards = [mountain, makeCard('Card 1'), makeCard('Card 2')];
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, {
+      type: 'FETCH_BASIC_LAND',
+      payload: { player: 'A', landType: 'Mountain' },
+    });
+
+    expect(result.state.players.A.library).toHaveLength(2);
+  });
+
+  it('shuffles the library after fetching', () => {
+    // Use a large library so the odds of no shuffle occurring are negligible
+    const mountain = makeBasicLand('Mountain');
+    const others = Array.from({ length: 20 }, (_, i) => makeCard(`Card ${i + 1}`));
+    const cards = [mountain, ...others];
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, {
+      type: 'FETCH_BASIC_LAND',
+      payload: { player: 'A', landType: 'Mountain' },
+    });
+
+    // Library length decreases by 1 (the fetched mountain is gone)
+    expect(result.state.players.A.library).toHaveLength(20);
+    // The remaining cards should be the same set as the others array
+    const resultNames = result.state.players.A.library.map(c => c.name).sort();
+    const expectedNames = others.map(c => c.name).sort();
+    expect(resultNames).toEqual(expectedNames);
+  });
+
+  it('fetches the first matching basic land (by index)', () => {
+    const mountain1 = { ...makeBasicLand('Mountain'), collectorNumber: '1' };
+    const mountain2 = { ...makeBasicLand('Mountain'), collectorNumber: '2' };
+    const cards = [mountain1, mountain2];
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, {
+      type: 'FETCH_BASIC_LAND',
+      payload: { player: 'A', landType: 'Mountain' },
+    });
+
+    expect(result.card).toEqual(mountain1);
+    expect(result.state.players.A.library).toHaveLength(1);
+  });
+
+  it('matches snow-covered basics', () => {
+    const snowCard = makeBasicLand('Snow-Covered Mountain');
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards: [snowCard] } }).state;
+
+    const result = dispatch(state, {
+      type: 'FETCH_BASIC_LAND',
+      payload: { player: 'A', landType: 'Mountain' },
+    });
+
+    expect(result.card).toEqual(snowCard);
+  });
+
+  it('throws a descriptive error when the land type is not in the library', () => {
+    const cards = [makeBasicLand('Island'), makeCard('Sol Ring')];
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    expect(() =>
+      dispatch(state, {
+        type: 'FETCH_BASIC_LAND',
+        payload: { player: 'A', landType: 'Mountain' },
+      }),
+    ).toThrow("Cannot fetch: no Mountain found in Player A's library");
+  });
+
+  it('throws with player B context when applicable', () => {
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'B', cards: [] } }).state;
+
+    expect(() =>
+      dispatch(state, {
+        type: 'FETCH_BASIC_LAND',
+        payload: { player: 'B', landType: 'Forest' },
+      }),
+    ).toThrow("Cannot fetch: no Forest found in Player B's library");
+  });
+
+  it('does not mutate the input state', () => {
+    const mountain = makeBasicLand('Mountain');
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards: [mountain] } }).state;
+    const original = JSON.parse(JSON.stringify(state));
+
+    dispatch(state, {
+      type: 'FETCH_BASIC_LAND',
+      payload: { player: 'A', landType: 'Mountain' },
+    });
+
+    expect(state).toEqual(original);
+  });
+
+  it('does not affect the other player', () => {
+    const mountain = makeBasicLand('Mountain');
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards: [mountain] } }).state;
+    const playerBBefore = state.players.B;
+
+    const result = dispatch(state, {
+      type: 'FETCH_BASIC_LAND',
+      payload: { player: 'A', landType: 'Mountain' },
+    });
+
+    expect(result.state.players.B).toEqual(playerBBefore);
+  });
+});
