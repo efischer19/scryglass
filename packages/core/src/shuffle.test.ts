@@ -55,10 +55,10 @@ describe('cryptoRandomInt', () => {
 
   it('exercises rejection sampling for modulo bias elimination', () => {
     // For max values that don't evenly divide 2^32, the rejection sampling
-    // branch must activate. max=3 divides 2^32 = 4294967296 with remainder,
-    // so some values in [0, 2^32) would be rejected.
-    // limit = floor(4294967296 / 3) * 3 = 4294967295
-    // Only values >= 4294967295 are rejected (just one: 4294967295 itself)
+    // branch must activate. max=3 divides 2^32 = 4294967296 with remainder:
+    //   floor(4294967296 / 3) = 1431655765
+    //   limit = 1431655765 * 3 = 4294967295
+    // Only value 4294967295 (one out of 2^32) gets rejected.
     // We verify the function still works correctly with a range that triggers rejection.
     const results = new Set<number>();
     for (let i = 0; i < 1000; i++) {
