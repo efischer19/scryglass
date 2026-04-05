@@ -3,12 +3,14 @@ import type { PlayerState, PlayerPhase, Action, ActionResult, Card, GameState } 
 import { CardDisplay } from './CardDisplay.js';
 import { MulliganHand } from './MulliganHand.js';
 import { DrawButton } from './DrawButton.js';
+import { ScryModal } from './ScryModal.js';
 
 interface PlayerZoneProps {
   player: 'A' | 'B';
   playerState: PlayerState;
   otherPlayerPhase: PlayerPhase;
   settings: GameState['settings'];
+  gameState: GameState;
   onDispatch: (action: Action) => ActionResult;
 }
 
@@ -17,8 +19,9 @@ const PLAYER_LABELS: Record<'A' | 'B', string> = {
   B: 'Player B',
 };
 
-export function PlayerZone({ player, playerState, otherPlayerPhase, settings, onDispatch }: PlayerZoneProps) {
+export function PlayerZone({ player, playerState, otherPlayerPhase, settings, gameState, onDispatch }: PlayerZoneProps) {
   const [drawnCard, setDrawnCard] = useState<Card | null>(null);
+  const [showScry, setShowScry] = useState(false);
   const label = PLAYER_LABELS[player];
   const disabled = playerState.phase !== 'playing' || otherPlayerPhase !== 'playing';
 
@@ -79,13 +82,20 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, on
           type="button"
           disabled={disabled}
           aria-label={`Scry ${label}'s library`}
-          onClick={() => {
-            /* Requires scry decision UI — wired in a later ticket */
-          }}
+          onClick={() => setShowScry(true)}
         >
           Scry
         </button>
       </div>
+      {showScry && (
+        <ScryModal
+          player={player}
+          libraryLength={playerState.library.length}
+          gameState={gameState}
+          onDispatch={onDispatch}
+          onClose={() => setShowScry(false)}
+        />
+      )}
       <CardDisplay
         player={player}
         card={drawnCard}

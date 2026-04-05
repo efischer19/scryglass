@@ -188,6 +188,69 @@ function handleKeepHand(state: GameState, action: Extract<Action, { type: 'KEEP_
   };
 }
 
+function handleScryResolve(state: GameState, action: Extract<Action, { type: 'SCRY_RESOLVE' }>): ActionResult {
+  const { player, decisions } = action.payload;
+  const library = state.players[player].library;
+
+  if (decisions.length === 0) {
+    throw new Error('SCRY_RESOLVE: decisions array must not be empty');
+  }
+
+  // Validate indices — no duplicates, all in range
+  const indices = decisions.map(d => d.cardIndex);
+  const uniqueIndices = new Set(indices);
+  if (uniqueIndices.size !== indices.length) {
+    throw new Error('SCRY_RESOLVE: decisions contain duplicate cardIndex values');
+  }
+  for (const idx of indices) {
+    if (idx < 0 || idx >= library.length) {
+      throw new Error(
+        `SCRY_RESOLVE: cardIndex ${idx} is out of range (library has ${library.length} cards)`,
+      );
+    }
+  }
+
+  // Partition decisions by destination
+  const removeDecisions = decisions.filter(d => d.destination === 'remove');
+  const bottomDecisions = decisions.filter(d => d.destination === 'bottom');
+  const topDecisions = decisions.filter(d => d.destination === 'top');
+
+  // Collect removed cards
+  const removedCards = removeDecisions.map(d => library[d.cardIndex]);
+
+  // Build bottom cards in original relative order (sorted by cardIndex ascending)
+  const bottomCards = [...bottomDecisions]
+    .sort((a, b) => a.cardIndex - b.cardIndex)
+    .map(d => library[d.cardIndex]);
+
+  // Build top cards in the order specified by the decisions array
+  const topCards = topDecisions.map(d => library[d.cardIndex]);
+
+  // All affected indices
+  const affectedIndices = new Set(indices);
+
+  // Remaining library cards (those not affected by scry)
+  const remainingLibrary = library.filter((_, i) => !affectedIndices.has(i));
+
+  // New library: top cards first, then remaining, then bottom cards
+  const newLibrary = [...topCards, ...remainingLibrary, ...bottomCards];
+
+  return {
+    state: {
+      ...state,
+      players: {
+        ...state.players,
+        [player]: {
+          ...state.players[player],
+          library: newLibrary,
+        },
+      },
+    },
+    card: removedCards.length > 0 ? removedCards[0] : null,
+    cards: removedCards,
+  };
+}
+
 /**
  * Dispatch an action against the current game state, returning a new
  * immutable state and any output (e.g., a drawn card).
@@ -212,5 +275,7 @@ export function dispatch(state: GameState, action: Action): ActionResult {
       return handleMulligan(state, parsed);
     case 'KEEP_HAND':
       return handleKeepHand(state, parsed);
+    case 'SCRY_RESOLVE':
+      return handleScryResolve(state, parsed);
   }
 }
