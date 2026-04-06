@@ -158,4 +158,29 @@ describe('<PlayerZone />', () => {
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
+
+  it('passes vitest-axe a11y assertions in mulligan phase', async () => {
+    const mulliganHand = [
+      { name: 'Forest', setCode: 'c21', collectorNumber: '300', cardType: 'land' as const },
+      { name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' as const },
+    ];
+    const { container } = renderPlayerZone(
+      makePlayerState({ phase: 'mulligan', mulliganHand }),
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it('passes vitest-axe a11y assertions in playing phase', async () => {
+    const cards = [
+      { name: 'Forest', setCode: 'c21', collectorNumber: '300', cardType: 'land' as const },
+      { name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' as const },
+    ];
+    const { container } = renderPlayerZone(
+      makePlayerState({ phase: 'playing', library: cards }),
+      'playing',
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
 });
