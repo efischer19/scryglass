@@ -34,6 +34,15 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, ga
     // JIT image fetch stub — integration point with Ticket 17
   };
 
+  const handleReturnToLibrary = () => {
+    if (!drawnCard) return;
+    onDispatch({
+      type: 'RETURN_TO_LIBRARY',
+      payload: { player, card: drawnCard, position: 'top' },
+    });
+    setDrawnCard(null);
+  };
+
   return (
     <section
       class={`player-zone player-zone--${player.toLowerCase()}`}
@@ -116,6 +125,7 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, ga
         player={player}
         card={drawnCard}
         onDismiss={() => setDrawnCard(null)}
+        onReturnToLibrary={handleReturnToLibrary}
       />
     </section>
   );
