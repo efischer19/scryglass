@@ -1,4 +1,4 @@
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,7 +8,7 @@ const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
 const evilDeck = readFileSync(resolve(__dirname, 'fixtures/evil.txt'), 'utf-8');
 
 /** Helper: load both decks and navigate to #/app */
-async function loadBothDecks(page: import('@playwright/test').Page) {
+async function loadBothDecks(page: Page) {
   await page.goto('/');
 
   // Player A
@@ -52,8 +52,9 @@ test.describe('mulligan phase', () => {
 
     // Reveal Player B's hand to capture the card names for later comparison
     await page.getByRole('button', { name: "Tap to reveal Player B's hand" }).click();
-    await expect(page.locator('ul[aria-label="Player B\'s hand cards"] li')).toHaveCount(7);
-    const playerBHandBefore = await page.locator('ul[aria-label="Player B\'s hand cards"] li').allTextContents();
+    const playerBHandLocator = page.locator('ul[aria-label="Player B\'s hand cards"] li');
+    await expect(playerBHandLocator).toHaveCount(7);
+    const playerBHandBefore = await playerBHandLocator.allTextContents();
 
     // Perform mulligan for Player A
     await page.getByRole('button', { name: "Mulligan Player A's hand" }).click();
@@ -73,7 +74,7 @@ test.describe('mulligan phase', () => {
     await expect(playerBZone.locator('.mulligan-hand__mulligan-count')).toContainText('Mulligans taken: 0');
 
     // Player B's hand cards should be identical to before Player A mulliganed
-    const playerBHandAfter = await page.locator('ul[aria-label="Player B\'s hand cards"] li').allTextContents();
+    const playerBHandAfter = await playerBHandLocator.allTextContents();
     expect(playerBHandAfter).toEqual(playerBHandBefore);
   });
 
