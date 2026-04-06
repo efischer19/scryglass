@@ -1,6 +1,6 @@
-import { useState } from 'preact/hooks';
+import { useState, useLayoutEffect } from 'preact/hooks';
 import { createInitialState, dispatch } from '@scryglass/core';
-import type { Action, Card, ConvertResult } from '@scryglass/core';
+import type { Action, Card, ConvertResult, GameState } from '@scryglass/core';
 import { Header } from './Header.js';
 import { PlayerZone } from './PlayerZone.js';
 import { Router, navigate } from './Router.js';
@@ -19,6 +19,13 @@ export function App() {
     setState(result.state);
     return result;
   };
+
+  // Expose game state for E2E test introspection via window.__SCRYGLASS_STATE__.
+  // useLayoutEffect runs synchronously after React commits the render so that
+  // Playwright can read the updated state as soon as the DOM reflects it.
+  useLayoutEffect(() => {
+    (window as Window & { __SCRYGLASS_STATE__?: GameState }).__SCRYGLASS_STATE__ = state;
+  }, [state]);
 
   const resetToInput = () => {
     setPlayerLoadingPhase('A');
