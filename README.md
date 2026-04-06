@@ -161,4 +161,4 @@ Card images and data are provided by [Scryfall](https://scryfall.com/). Scryglas
 
 ## License
 
-This project is licensed under the [MIT License](./LICENSE.md).
+This project is licensed under a [GPL License](./LICENSE.md).
