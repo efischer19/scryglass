@@ -186,7 +186,16 @@ describe('<DeckInput /> — deck storage', () => {
     expect(select).toBeTruthy();
   });
 
-  it('shows "no saved decks" when storage is empty', () => {
+  it('shows example decks in dropdown on first use', () => {
+    render(<DeckInput onLoadDeck={mockLoadDeck} />);
+    const select = screen.getByRole('combobox', { name: /saved decks/i });
+    expect(select.textContent).toContain('Good');
+    expect(select.textContent).toContain('Evil');
+  });
+
+  it('shows "no saved decks" when all decks have been removed after seeding', () => {
+    // Mark as already seeded so no examples are injected
+    localStorage.setItem('scryglass:seeded', '1');
     render(<DeckInput onLoadDeck={mockLoadDeck} />);
     const select = screen.getByRole('combobox', { name: /saved decks/i });
     expect(select.textContent).toContain('no saved decks');

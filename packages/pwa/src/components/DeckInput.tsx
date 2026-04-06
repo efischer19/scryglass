@@ -13,8 +13,10 @@ import {
   saveAutosave,
   loadAutosave,
   clearAutosave,
+  seedExampleDecks,
   StorageQuotaError,
 } from '../storage/deck-storage.js';
+import { GOOD_DECK_NAME, GOOD_DECK_TEXT, GOOD_DECK_CARD_COUNT, EVIL_DECK_NAME, EVIL_DECK_TEXT, EVIL_DECK_CARD_COUNT } from '../data/example-decks.js';
 
 interface DeckInputProps {
   player?: 'A' | 'B';
@@ -58,6 +60,10 @@ export function DeckInput({ player = 'A', onLoadDeck, onOpenEditor }: DeckInputP
 
   // Load saved decks and autosave on mount
   useEffect(() => {
+    seedExampleDecks([
+      { name: GOOD_DECK_NAME, rawText: GOOD_DECK_TEXT, cardCount: GOOD_DECK_CARD_COUNT },
+      { name: EVIL_DECK_NAME, rawText: EVIL_DECK_TEXT, cardCount: EVIL_DECK_CARD_COUNT },
+    ]);
     refreshDecks();
     const autosave = loadAutosave();
     if (autosave && autosave.rawText.trim() !== '') {

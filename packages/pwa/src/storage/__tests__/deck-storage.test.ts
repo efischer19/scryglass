@@ -9,6 +9,7 @@ import {
   saveAutosave,
   loadAutosave,
   clearAutosave,
+  seedExampleDecks,
   StorageQuotaError,
 } from '../deck-storage.js';
 
@@ -201,5 +202,47 @@ describe('autosave', () => {
       'not json',
     );
     expect(loadAutosave()).toBeNull();
+  });
+});
+
+describe('seedExampleDecks', () => {
+  const EXAMPLES = [
+    { name: 'Good', rawText: 'Island;ltr;715;land', cardCount: 1 },
+    { name: 'Evil', rawText: 'Swamp;ltr;717;land', cardCount: 1 },
+  ];
+
+  it('seeds example decks when no seed flag exists', () => {
+    seedExampleDecks(EXAMPLES);
+    const decks = loadAllDecks();
+    expect(decks).toHaveLength(2);
+    expect(decks[0].name).toBe('Good');
+    expect(decks[1].name).toBe('Evil');
+  });
+
+  it('does not seed when seed flag is already set', () => {
+    localStorage.setItem('scryglass:seeded', '1');
+    seedExampleDecks(EXAMPLES);
+    expect(loadAllDecks()).toHaveLength(0);
+  });
+
+  it('does not duplicate seeds on repeated calls', () => {
+    seedExampleDecks(EXAMPLES);
+    seedExampleDecks(EXAMPLES);
+    expect(loadAllDecks()).toHaveLength(2);
+  });
+
+  it('prepends example decks before any existing decks', () => {
+    saveDeck('Existing', 'Forest;m21;313;land', 1);
+    seedExampleDecks(EXAMPLES);
+    const decks = loadAllDecks();
+    expect(decks).toHaveLength(3);
+    expect(decks[0].name).toBe('Good');
+    expect(decks[1].name).toBe('Evil');
+    expect(decks[2].name).toBe('Existing');
+  });
+
+  it('sets the seed flag so later calls are no-ops', () => {
+    seedExampleDecks(EXAMPLES);
+    expect(localStorage.getItem('scryglass:seeded')).toBe('1');
   });
 });
