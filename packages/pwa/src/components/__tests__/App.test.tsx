@@ -111,6 +111,11 @@ describe('<App />', () => {
       render(<App />);
       await loadBothDecks();
 
+      // Both players are in pre-deal state — click "Deal Initial" for each
+      const dealBtns = await screen.findAllByRole('button', { name: /deal initial hand/i });
+      fireEvent.click(dealBtns[0]);
+      fireEvent.click(dealBtns[1]);
+
       // Both players keep hands to enter playing phase
       const keepBtns = await screen.findAllByRole('button', { name: /keep.*opening hand/i });
       fireEvent.click(keepBtns[0]);
@@ -124,7 +129,7 @@ describe('<App />', () => {
       const newGameBtn = screen.getByRole('button', { name: /new game/i });
       fireEvent.click(newGameBtn);
 
-      // Both players should be back in mulligan phase
+      // Both players should be back in mulligan phase (pre-deal: shows Opening Hand + Deal Initial)
       const openingHandHeadings = await screen.findAllByText('Opening Hand');
       expect(openingHandHeadings).toHaveLength(2);
     });
