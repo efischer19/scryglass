@@ -15,6 +15,7 @@ export function App() {
   const [playerLoadingPhase, setPlayerLoadingPhase] = useState<'A' | 'B'>('A');
   const [deckA, setDeckA] = useState<Card[] | null>(null);
   const [drawCounts, setDrawCounts] = useState<{ A: number; B: number }>({ A: 0, B: 0 });
+  const [visiblePlayer, setVisiblePlayer] = useState<'A' | 'B' | null>(null);
 
   const handleDispatch = (action: Action) => {
     const result = dispatch(state, action);
@@ -30,6 +31,7 @@ export function App() {
     setPlayerLoadingPhase('A');
     setDeckA(null);
     setDrawCounts({ A: 0, B: 0 });
+    setVisiblePlayer(null);
   };
 
   const handleLoadDeck = (cards: Card[]) => {
@@ -107,6 +109,8 @@ export function App() {
           settings={state.settings}
           gameState={state}
           onDispatch={handleDispatch}
+          visiblePlayer={visiblePlayer}
+          onVisibilityChange={setVisiblePlayer}
         />
         <PlayerZone
           player="B"
@@ -115,6 +119,8 @@ export function App() {
           settings={state.settings}
           gameState={state}
           onDispatch={handleDispatch}
+          visiblePlayer={visiblePlayer}
+          onVisibilityChange={setVisiblePlayer}
         />
       </div>
     </main>

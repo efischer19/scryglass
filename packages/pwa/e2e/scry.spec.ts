@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { captureScreenshot } from './helpers/screenshot-helper.js';
+import { showPlayerCards } from './helpers/visibility-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -27,11 +28,13 @@ async function loadDecksAndKeepHands(
 
   await page.waitForURL('**/#/app');
 
-  // Keep opening hands for both players
-  await expect(playerAZone.locator('section[aria-label="Player A\'s opening hand"]')).toBeVisible();
+  // Keep opening hands for both players (show cards first due to visibility gate)
+  await expect(playerAZone.locator('section[aria-label="Player A\'s opening hand"]')).not.toBeVisible();
+  await showPlayerCards(page, 'A');
   await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
 
-  await expect(playerBZone.locator('section[aria-label="Player B\'s opening hand"]')).toBeVisible();
+  await expect(playerBZone.locator('section[aria-label="Player B\'s opening hand"]')).not.toBeVisible();
+  await showPlayerCards(page, 'B');
   await playerBZone.getByRole('button', { name: "Keep Player B's opening hand" }).click();
 
   // Wait for mulligan sections to disappear

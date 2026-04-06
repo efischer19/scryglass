@@ -2,6 +2,7 @@ import { test, expect, type Locator, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { showPlayerCards, hideAllCards } from './helpers/visibility-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -30,16 +31,17 @@ test.describe('mulligan phase', () => {
   });
 
   test('both players start in mulligan phase with 7-card opening hands', async ({ page }) => {
-    // Both players' mulligan hand sections should be visible
-    await expect(page.locator('section[aria-label="Player A\'s opening hand"]')).toBeVisible();
-    await expect(page.locator('section[aria-label="Player B\'s opening hand"]')).toBeVisible();
+    // Both players' mulligan hand sections should be visible (but cards hidden behind gate)
+    await expect(page.locator('section[aria-label="Player A\'s opening hand"]')).not.toBeVisible();
+    await expect(page.locator('section[aria-label="Player B\'s opening hand"]')).not.toBeVisible();
 
-    // Reveal Player A's hand and verify exactly 7 cards
-    await page.getByRole('button', { name: "Tap to reveal Player A's hand" }).click();
+    // Show Player A's cards and verify exactly 7 cards
+    await showPlayerCards(page, 'A');
     await expect(page.locator('ul[aria-label="Player A\'s hand cards"] li')).toHaveCount(7);
+    await hideAllCards(page);
 
-    // Reveal Player B's hand and verify exactly 7 cards
-    await page.getByRole('button', { name: "Tap to reveal Player B's hand" }).click();
+    // Show Player B's cards and verify exactly 7 cards
+    await showPlayerCards(page, 'B');
     await expect(page.locator('ul[aria-label="Player B\'s hand cards"] li')).toHaveCount(7);
   });
 
@@ -50,21 +52,23 @@ test.describe('mulligan phase', () => {
     // Record Player B's library size before Player A mulligans
     const playerBLibraryBefore = await getLibrarySize(playerBZone);
 
-    // Reveal Player B's hand to capture the card names for later comparison
-    await page.getByRole('button', { name: "Tap to reveal Player B's hand" }).click();
+    // Show Player B's hand to capture the card names for later comparison
+    await showPlayerCards(page, 'B');
     const playerBHandLocator = page.locator('ul[aria-label="Player B\'s hand cards"] li');
     await expect(playerBHandLocator).toHaveCount(7);
     const playerBHandBefore = await playerBHandLocator.allTextContents();
+    await hideAllCards(page);
 
     // Perform mulligan for Player A
+    await showPlayerCards(page, 'A');
     await page.getByRole('button', { name: "Mulligan Player A's hand" }).click();
 
     // Player A's mulligan count should increment to 1
     await expect(playerAZone.locator('.mulligan-hand__mulligan-count')).toContainText('Mulligans taken: 1');
 
-    // Player A should have a new 7-card hand
-    await page.getByRole('button', { name: "Tap to reveal Player A's hand" }).click();
+    // Player A should have a new 7-card hand (still visible after mulligan)
     await expect(page.locator('ul[aria-label="Player A\'s hand cards"] li')).toHaveCount(7);
+    await hideAllCards(page);
 
     // Player B's library size should be unchanged
     const playerBLibraryAfter = await getLibrarySize(playerBZone);
@@ -74,6 +78,7 @@ test.describe('mulligan phase', () => {
     await expect(playerBZone.locator('.mulligan-hand__mulligan-count')).toContainText('Mulligans taken: 0');
 
     // Player B's hand cards should be identical to before Player A mulliganed
+    await showPlayerCards(page, 'B');
     const playerBHandAfter = await playerBHandLocator.allTextContents();
     expect(playerBHandAfter).toEqual(playerBHandBefore);
   });
@@ -82,9 +87,19 @@ test.describe('mulligan phase', () => {
     const playerAZone = page.locator('section[aria-label="Player A\'s zone"]');
     const playerBZone = page.locator('section[aria-label="Player B\'s zone"]');
 
-    // Keep both players' hands
-    await page.getByRole('button', { name: "Keep Player A's opening hand" }).click();
-    await page.getByRole('button', { name: "Keep Player B's opening hand" }).click();
+    // Keep Player A's hand (requires showing cards first)
+    await showPlayerCards(page, 'A');
+    await playerAZone
+      .getByRole('button', { name: "Keep Player A's opening hand" })
+      .click();
+    // Auto-reset: visiblePlayer becomes null after keeping
+
+    // Keep Player B's hand
+    await showPlayerCards(page, 'B');
+    await playerBZone
+      .getByRole('button', { name: "Keep Player B's opening hand" })
+      .click();
+    // Auto-reset: visiblePlayer becomes null after keeping
 
     // Mulligan hand sections should no longer be visible (phase has transitioned)
     await expect(page.locator('section[aria-label="Player A\'s opening hand"]')).not.toBeVisible();

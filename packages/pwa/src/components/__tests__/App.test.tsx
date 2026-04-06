@@ -68,9 +68,14 @@ describe('<App />', () => {
       // After both decks are loaded, the App deals opening hands and navigates to #/app.
       await loadBothDecks();
 
-      // Both players should now be in mulligan phase showing Opening Hand heading
-      const openingHandHeadings = await screen.findAllByText('Opening Hand');
-      expect(openingHandHeadings).toHaveLength(2);
+      // Both players' "Show cards" buttons should be visible (no cards visible initially)
+      expect(await screen.findByRole('button', { name: "Show Player A's cards" })).toBeTruthy();
+      expect(screen.getByRole('button', { name: "Show Player B's cards" })).toBeTruthy();
+
+      // Show Player A's cards to verify Opening Hand is rendered
+      fireEvent.click(screen.getByRole('button', { name: "Show Player A's cards" }));
+      const openingHandA = await screen.findAllByText('Opening Hand');
+      expect(openingHandA.length).toBeGreaterThanOrEqual(1);
     });
 
     it('transitions to playing phase when both players keep their hands', async () => {
@@ -78,13 +83,15 @@ describe('<App />', () => {
 
       await loadBothDecks();
 
-      // Both players are in mulligan phase — keep both hands
-      // The verdict for 30 lands / 60 cards hand has 3-4 lands, so "must_keep"
-      const keepBtns = await screen.findAllByRole('button', { name: /keep.*opening hand/i });
-      expect(keepBtns).toHaveLength(2);
+      // Show Player A's cards, keep hand (visibility auto-resets after keep)
+      fireEvent.click(await screen.findByRole('button', { name: "Show Player A's cards" }));
+      const keepBtnA = await screen.findByRole('button', { name: /keep player a's opening hand/i });
+      fireEvent.click(keepBtnA);
 
-      fireEvent.click(keepBtns[0]);
-      fireEvent.click(keepBtns[1]);
+      // Show Player B's cards, keep hand
+      fireEvent.click(await screen.findByRole('button', { name: "Show Player B's cards" }));
+      const keepBtnB = await screen.findByRole('button', { name: /keep player b's opening hand/i });
+      fireEvent.click(keepBtnB);
 
       // After both keep, action buttons (Draw) should be enabled
       const drawBtns = await screen.findAllByRole('button', { name: /draw card/i });

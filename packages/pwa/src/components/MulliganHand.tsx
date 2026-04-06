@@ -1,4 +1,3 @@
-import { useState } from 'preact/hooks';
 import { countLands, getMulliganVerdict } from '@scryglass/core';
 import type { PlayerState, Action, GameState, Card } from '@scryglass/core';
 import { CardImage } from './CardDisplay.js';
@@ -22,7 +21,6 @@ const VERDICT_DESCRIPTIONS: Record<string, string> = {
 };
 
 export function MulliganHand({ player, playerState, settings, onDispatch }: MulliganHandProps) {
-  const [revealed, setRevealed] = useState(false);
   const label = PLAYER_LABELS[player];
   const landCount = countLands(playerState.mulliganHand);
   const verdict = getMulliganVerdict(landCount, settings);
@@ -38,34 +36,13 @@ export function MulliganHand({ player, playerState, settings, onDispatch }: Mull
         Mulligans taken: {playerState.mulliganCount}
       </p>
 
-      {revealed ? (
-        <div class="mulligan-hand__revealed">
-          <ul class="mulligan-hand__card-list" aria-label={`${label}'s hand cards`}>
-            {playerState.mulliganHand.map((card: Card, i: number) => (
-              <li key={i} class="mulligan-hand__card-item">
-                <CardImage card={card} />
-              </li>
-            ))}
-          </ul>
-          <button
-            class="action-btn mulligan-hand__hide-btn"
-            type="button"
-            onClick={() => setRevealed(false)}
-            aria-label={`Hide ${label}'s hand`}
-          >
-            Hide
-          </button>
-        </div>
-      ) : (
-        <button
-          class="mulligan-hand__gate"
-          type="button"
-          aria-label={`Tap to reveal ${label}'s hand`}
-          onClick={() => setRevealed(true)}
-        >
-          Tap to reveal {label}'s hand
-        </button>
-      )}
+      <ul class="mulligan-hand__card-list" aria-label={`${label}'s hand cards`}>
+        {playerState.mulliganHand.map((card: Card, i: number) => (
+          <li key={i} class="mulligan-hand__card-item">
+            <CardImage card={card} />
+          </li>
+        ))}
+      </ul>
 
       <div class="mulligan-hand__actions">
         <button

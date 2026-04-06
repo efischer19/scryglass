@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { drawCard } from './helpers/draw-card-helper.js';
 import { GameLogger } from './helpers/game-logger.js';
 import { captureScreenshot } from './helpers/screenshot-helper.js';
+import { showPlayerCards } from './helpers/visibility-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -99,13 +100,14 @@ test('full 2-player, 10-turn game simulation', async ({ page }) => {
   // ── Screenshot 02: Opening hands (both players) ────────────────────────
   await expect(
     playerAZone.locator('section[aria-label="Player A\'s opening hand"]'),
-  ).toBeVisible();
+  ).not.toBeVisible();
   await expect(
     playerBZone.locator('section[aria-label="Player B\'s opening hand"]'),
-  ).toBeVisible();
+  ).not.toBeVisible();
   await captureScreenshot(page, 'full-02-opening-hands.png');
 
-  // Player A mulligans once
+  // Player A mulligans once (show cards first)
+  await showPlayerCards(page, 'A');
   await page
     .getByRole('button', { name: "Mulligan Player A's hand" })
     .click();
@@ -120,7 +122,7 @@ test('full 2-player, 10-turn game simulation', async ({ page }) => {
     result: {},
   });
 
-  // Both players keep
+  // Both players keep (Player A is still visible after mulligan; auto-resets on keep)
   await playerAZone
     .getByRole('button', { name: "Keep Player A's opening hand" })
     .click();
@@ -132,6 +134,7 @@ test('full 2-player, 10-turn game simulation', async ({ page }) => {
     result: { librarySize: await getLibrarySize(playerAZone) },
   });
 
+  await showPlayerCards(page, 'B');
   await playerBZone
     .getByRole('button', { name: "Keep Player B's opening hand" })
     .click();
@@ -358,7 +361,8 @@ test('full 2-player, 10-turn game simulation', async ({ page }) => {
     result: { librarySize: expectedLibA },
   });
 
-  // Return drawn card to top of library
+  // Return drawn card to top of library (show Player A's cards to see the card display)
+  await showPlayerCards(page, 'A');
   await expect(playerAZone.locator('.card-display__content')).toBeVisible();
   await playerAZone
     .getByRole('button', { name: 'Return card to library' })

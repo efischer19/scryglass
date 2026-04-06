@@ -66,8 +66,6 @@ describe('<MulliganHand />', () => {
         onDispatch={() => {}}
       />,
     );
-    // Reveal hand first
-    fireEvent.click(screen.getByRole('button', { name: "Tap to reveal Player A's hand" }));
 
     expect(screen.getByText('Forest 1')).toBeTruthy();
     expect(screen.getByText('Sol Ring 1')).toBeTruthy();
@@ -188,68 +186,6 @@ describe('<MulliganHand />', () => {
     expect(mulliganBtn).toHaveProperty('disabled', false);
   });
 
-  describe('reveal gate', () => {
-    it('hides card names by default (shows reveal button)', () => {
-      const hand = makeHand(3, 4);
-      render(
-        <MulliganHand
-          player="A"
-          playerState={makePlayerState({ mulliganHand: hand })}
-          settings={defaultSettings}
-          onDispatch={() => {}}
-        />,
-      );
-      expect(screen.getByRole('button', { name: "Tap to reveal Player A's hand" })).toBeTruthy();
-      expect(screen.queryByText('Forest 1')).toBeNull();
-    });
-
-    it('reveals card names after clicking the reveal gate', () => {
-      const hand = makeHand(3, 4);
-      render(
-        <MulliganHand
-          player="A"
-          playerState={makePlayerState({ mulliganHand: hand })}
-          settings={defaultSettings}
-          onDispatch={() => {}}
-        />,
-      );
-      fireEvent.click(screen.getByRole('button', { name: "Tap to reveal Player A's hand" }));
-      expect(screen.getByText('Forest 1')).toBeTruthy();
-      expect(screen.queryByRole('button', { name: "Tap to reveal Player A's hand" })).toBeNull();
-    });
-
-    it('hides card names again after clicking Hide', () => {
-      const hand = makeHand(3, 4);
-      render(
-        <MulliganHand
-          player="A"
-          playerState={makePlayerState({ mulliganHand: hand })}
-          settings={defaultSettings}
-          onDispatch={() => {}}
-        />,
-      );
-      fireEvent.click(screen.getByRole('button', { name: "Tap to reveal Player A's hand" }));
-      expect(screen.getByText('Forest 1')).toBeTruthy();
-      fireEvent.click(screen.getByRole('button', { name: "Hide Player A's hand" }));
-      expect(screen.queryByText('Forest 1')).toBeNull();
-      expect(screen.getByRole('button', { name: "Tap to reveal Player A's hand" })).toBeTruthy();
-    });
-
-    it('reveal gate is keyboard-accessible (button element)', () => {
-      render(
-        <MulliganHand
-          player="A"
-          playerState={makePlayerState()}
-          settings={defaultSettings}
-          onDispatch={() => {}}
-        />,
-      );
-      const gate = screen.getByRole('button', { name: "Tap to reveal Player A's hand" });
-      // <button> elements are keyboard-accessible by default (Enter/Space trigger click)
-      expect(gate.tagName.toLowerCase()).toBe('button');
-    });
-  });
-
   it('has appropriate aria-labels on Keep and Mulligan buttons', () => {
     render(
       <MulliganHand
@@ -274,7 +210,6 @@ describe('<MulliganHand />', () => {
     );
     expect(screen.getByRole('button', { name: "Keep Player B's opening hand" })).toBeTruthy();
     expect(screen.getByRole('button', { name: "Mulligan Player B's hand" })).toBeTruthy();
-    expect(screen.getByRole('button', { name: "Tap to reveal Player B's hand" })).toBeTruthy();
   });
 
   it('passes vitest-axe a11y assertions (gate hidden)', async () => {
@@ -299,7 +234,6 @@ describe('<MulliganHand />', () => {
         onDispatch={() => {}}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: "Tap to reveal Player A's hand" }));
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });

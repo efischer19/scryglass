@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { captureScreenshot } from './helpers/screenshot-helper.js';
+import { showPlayerCards } from './helpers/visibility-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -36,7 +37,9 @@ test('Player B tutors Nazgûl from evil.txt: library shrinks by 1 and Player A i
   const playerBZone = page.locator("section[aria-label=\"Player B's zone\"]");
 
   // --- Keep opening hands for both players to advance past mulligan ---
+  await showPlayerCards(page, 'A');
   await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
+  await showPlayerCards(page, 'B');
   await playerBZone.getByRole('button', { name: "Keep Player B's opening hand" }).click();
 
   // Wait for mulligan UI to disappear before reading library sizes

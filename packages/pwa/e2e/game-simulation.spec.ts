@@ -4,6 +4,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GameLogger } from './helpers/game-logger.js';
 import { captureScreenshot } from './helpers/screenshot-helper.js';
+import { showPlayerCards } from './helpers/visibility-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -35,10 +36,11 @@ test('full game simulation produces a structured game log', async ({ page }) => 
   const playerBZone = page.locator("section[aria-label=\"Player B's zone\"]");
 
   // ── 02: Opening hand display (both players) ───────────────────────────────
-  await expect(playerAZone.locator('section[aria-label="Player A\'s opening hand"]')).toBeVisible();
-  await expect(playerBZone.locator('section[aria-label="Player B\'s opening hand"]')).toBeVisible();
+  await expect(playerAZone.locator('section[aria-label="Player A\'s opening hand"]')).not.toBeVisible();
+  await expect(playerBZone.locator('section[aria-label="Player B\'s opening hand"]')).not.toBeVisible();
   await captureScreenshot(page, '02-opening-hands.png');
 
+  await showPlayerCards(page, 'A');
   await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
   logger.log({
     turn: 0,
@@ -47,6 +49,7 @@ test('full game simulation produces a structured game log', async ({ page }) => 
     result: { librarySize: await getLibrarySize(playerAZone) },
   });
 
+  await showPlayerCards(page, 'B');
   await playerBZone.getByRole('button', { name: "Keep Player B's opening hand" }).click();
   logger.log({
     turn: 0,
@@ -147,6 +150,7 @@ test('full game simulation produces a structured game log', async ({ page }) => 
   // ── 08: Return drawn card to library ──────────────────────────────────────
   // Draw a card so there is a card available to return
   const librarySizeBeforeReturn = await getLibrarySize(playerAZone);
+  await showPlayerCards(page, 'A');
   await playerAZone.getByRole('button', { name: "Draw card from Player A's library" }).click();
   await page.getByRole('button', { name: 'Yes' }).click();
   const librarySizeAfterDraw = await getLibrarySize(playerAZone);

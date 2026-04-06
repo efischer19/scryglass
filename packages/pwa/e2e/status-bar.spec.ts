@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { drawCard } from './helpers/draw-card-helper.js';
+import { showPlayerCards } from './helpers/visibility-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -52,10 +53,12 @@ test.describe('Status bar', () => {
 
     await page.waitForURL('**/#/app');
 
-    // Keep both players' opening hands
+    // Keep both players' opening hands (show cards first due to visibility gate)
     const playerAZone = page.locator("section[aria-label=\"Player A's zone\"]");
     const playerBZone = page.locator("section[aria-label=\"Player B's zone\"]");
+    await showPlayerCards(page, 'A');
     await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
+    await showPlayerCards(page, 'B');
     await playerBZone.getByRole('button', { name: "Keep Player B's opening hand" }).click();
 
     // Draw a card for Player A

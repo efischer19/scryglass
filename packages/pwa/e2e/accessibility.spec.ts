@@ -3,6 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { showPlayerCards } from './helpers/visibility-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -27,7 +28,10 @@ async function loadBothDecks(page: import('@playwright/test').Page) {
 
 /** Helper: keep hand for both players to advance past mulligan phase */
 async function keepBothHands(page: import('@playwright/test').Page) {
+  await showPlayerCards(page, 'A');
   await page.getByRole('button', { name: "Keep Player A's opening hand" }).click();
+  // Auto-reset: visiblePlayer becomes null after keeping
+  await showPlayerCards(page, 'B');
   await page.getByRole('button', { name: "Keep Player B's opening hand" }).click();
 }
 

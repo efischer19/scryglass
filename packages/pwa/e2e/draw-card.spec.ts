@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { drawCard } from './helpers/draw-card-helper.js';
+import { showPlayerCards } from './helpers/visibility-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -33,7 +34,11 @@ async function setupGame(page: Page): Promise<void> {
   const playerAZone = page.locator("section[aria-label=\"Player A's zone\"]");
   const playerBZone = page.locator("section[aria-label=\"Player B's zone\"]");
 
+  // Show Player A's cards, keep hand (auto-resets visibility), then same for Player B
+  await showPlayerCards(page, 'A');
   await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
+
+  await showPlayerCards(page, 'B');
   await playerBZone.getByRole('button', { name: "Keep Player B's opening hand" }).click();
 
   // Confirm the mulligan phase has ended for both players
@@ -56,6 +61,7 @@ test.describe('Draw card action', () => {
   });
 
   test('Player A draws a card: drawn card is displayed in the UI', async ({ page }) => {
+    await showPlayerCards(page, 'A');
     await drawCard(page, 'A');
 
     const playerAZone = page.locator("section[aria-label=\"Player A's zone\"]");
@@ -72,6 +78,7 @@ test.describe('Draw card action', () => {
   });
 
   test('Player B draws a card: drawn card is displayed in the UI', async ({ page }) => {
+    await showPlayerCards(page, 'B');
     await drawCard(page, 'B');
 
     const playerBZone = page.locator("section[aria-label=\"Player B's zone\"]");
