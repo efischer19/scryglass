@@ -24,7 +24,7 @@ Scryglass is a **free, open-source Progressive Web App (PWA)** that replaces phy
 
 **No installation. No account. Just open and play.**
 
-1. Visit the app at `[scryglass.cards](https://scryglass.cards)` (or run locally — see below)
+1. Visit the app at [`scryglass.cards`](https://scryglass.cards) (or run locally — see below)
 2. Paste your deck list (Scryglass CSV format, or import from Moxfield/Archidekt/MTGO)
 3. Both players load their decks → automatic shuffle → opening hands dealt
 4. Play! Draw, scry, tutor, and fetch — Scryglass handles the library for you
