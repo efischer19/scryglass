@@ -368,14 +368,14 @@ export function DeckEditor({
         >
           {parseResult.warnings.length > 0 && (
             <ul class="deck-editor__warnings" aria-label="Warnings">
-              {parseResult.warnings.map((w, i) => (
+              {parseResult.warnings.map((w: string, i: number) => (
                 <li key={i}>{w}</li>
               ))}
             </ul>
           )}
           {parseResult.errors.length > 0 && (
             <ul class="deck-editor__errors" aria-label="Errors">
-              {parseResult.errors.map((e, i) => (
+              {parseResult.errors.map((e: string, i: number) => (
                 <li key={i}>{e}</li>
               ))}
             </ul>

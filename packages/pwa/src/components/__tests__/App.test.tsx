@@ -45,20 +45,28 @@ describe('<App />', () => {
   });
 
   describe('integration: mulligan flow', () => {
-    it('enters mulligan phase after loading deck (both players see Opening Hand)', async () => {
+    async function loadBothDecks() {
+      // Step 1: Load Player A's deck
+      const textareaA = screen.getByRole('textbox');
+      fireEvent.input(textareaA, { target: { value: makeMinimalDeckText() } });
+      await new Promise((r) => setTimeout(r, 300));
+      const loadBtnA = await screen.findByRole('button', { name: 'Load Deck' });
+      fireEvent.click(loadBtnA);
+
+      // Step 2: Load Player B's deck (DeckInput re-mounts for Player B)
+      const textareaB = await screen.findByRole('textbox');
+      fireEvent.input(textareaB, { target: { value: makeMinimalDeckText() } });
+      await new Promise((r) => setTimeout(r, 300));
+      const loadBtnB = await screen.findByRole('button', { name: 'Load Deck' });
+      fireEvent.click(loadBtnB);
+    }
+
+    it('enters mulligan phase after loading both decks (both players see Opening Hand)', async () => {
       render(<App />);
 
-      // Simulate loading a deck via the DeckInput callback by calling handleLoadDeck indirectly
-      // The DeckInput fires onLoadDeck; the App wires it to load + deal opening hands and navigate to #/app
-      // We test this by checking that after navigation both players are in mulligan phase
-      const textarea = screen.getByRole('textbox');
-      fireEvent.input(textarea, { target: { value: makeMinimalDeckText() } });
-
-      // Wait for debounce and load button to enable
-      await new Promise((r) => setTimeout(r, 300));
-
-      const loadBtn = await screen.findByRole('button', { name: 'Load Deck' });
-      fireEvent.click(loadBtn);
+      // The App now uses a two-step flow: first load Player A's deck, then Player B's deck.
+      // After both decks are loaded, the App deals opening hands and navigates to #/app.
+      await loadBothDecks();
 
       // Both players should now be in mulligan phase showing Opening Hand heading
       const openingHandHeadings = await screen.findAllByText('Opening Hand');
@@ -68,12 +76,7 @@ describe('<App />', () => {
     it('transitions to playing phase when both players keep their hands', async () => {
       render(<App />);
 
-      const textarea = screen.getByRole('textbox');
-      fireEvent.input(textarea, { target: { value: makeMinimalDeckText() } });
-      await new Promise((r) => setTimeout(r, 300));
-
-      const loadBtn = await screen.findByRole('button', { name: 'Load Deck' });
-      fireEvent.click(loadBtn);
+      await loadBothDecks();
 
       // Both players are in mulligan phase — keep both hands
       // The verdict for 30 lands / 60 cards hand has 3-4 lands, so "must_keep"

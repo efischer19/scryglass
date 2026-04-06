@@ -17,6 +17,7 @@ import {
 } from '../storage/deck-storage.js';
 
 interface DeckInputProps {
+  player?: 'A' | 'B';
   onLoadDeck: (cards: Card[]) => void;
   onOpenEditor?: (result: ConvertResult) => void;
 }
@@ -30,7 +31,7 @@ const EMPTY_RESULT: ParseResult = { cards: [], warnings: [], errors: [] };
 const DEBOUNCE_DELAY_MS = 250;
 const AUTOSAVE_DELAY_MS = 1000;
 
-export function DeckInput({ onLoadDeck, onOpenEditor }: DeckInputProps) {
+export function DeckInput({ player = 'A', onLoadDeck, onOpenEditor }: DeckInputProps) {
   const [text, setText] = useState('');
   const [result, setResult] = useState<ParseResult>(EMPTY_RESULT);
   const [savedDecks, setSavedDecks] = useState<SavedDeck[]>([]);
@@ -107,9 +108,9 @@ export function DeckInput({ onLoadDeck, onOpenEditor }: DeckInputProps) {
     clearMessages();
   };
 
-  const landCount = result.cards.filter((c) => c.cardType === 'land').length;
+  const landCount = result.cards.filter((c: Card) => c.cardType === 'land').length;
   const nonlandCount = result.cards.filter(
-    (c) => c.cardType === 'nonland',
+    (c: Card) => c.cardType === 'nonland',
   ).length;
   const hasCards = result.cards.length > 0;
   const hasErrors = result.errors.length > 0;
@@ -261,7 +262,7 @@ export function DeckInput({ onLoadDeck, onOpenEditor }: DeckInputProps) {
   };
 
   return (
-    <section class="deck-input" aria-label="Deck input">
+    <section class="deck-input" aria-label={`Deck input for Player ${player}`}>
       <h2 class="deck-input__title">Enter Your Decklist</h2>
 
       {/* ── Saved Decks ── */}
@@ -430,14 +431,14 @@ export function DeckInput({ onLoadDeck, onOpenEditor }: DeckInputProps) {
         </p>
         {result.warnings.length > 0 && (
           <ul class="deck-input__warnings" aria-label="Warnings">
-            {result.warnings.map((w, i) => (
+            {result.warnings.map((w: string, i: number) => (
               <li key={i}>{w}</li>
             ))}
           </ul>
         )}
         {result.errors.length > 0 && (
           <ul class="deck-input__errors" aria-label="Errors">
-            {result.errors.map((e, i) => (
+            {result.errors.map((e: string, i: number) => (
               <li key={i}>{e}</li>
             ))}
           </ul>
