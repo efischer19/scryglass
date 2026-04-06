@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks';
 import { countLands, getMulliganVerdict } from '@scryglass/core';
 import type { PlayerState, Action, GameState, Card } from '@scryglass/core';
+import { CardImage } from './CardDisplay.js';
 
 interface MulliganHandProps {
   player: 'A' | 'B';
@@ -41,7 +42,9 @@ export function MulliganHand({ player, playerState, settings, onDispatch }: Mull
         <div class="mulligan-hand__revealed">
           <ul class="mulligan-hand__card-list" aria-label={`${label}'s hand cards`}>
             {playerState.mulliganHand.map((card: Card, i: number) => (
-              <li key={i} class="mulligan-hand__card-item">{card.name}</li>
+              <li key={i} class="mulligan-hand__card-item">
+                <CardImage card={card} />
+              </li>
             ))}
           </ul>
           <button

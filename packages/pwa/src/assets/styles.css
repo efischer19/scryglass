@@ -369,18 +369,25 @@ textarea:focus-visible,
 }
 
 .mulligan-hand__card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: var(--space-sm);
   list-style: none;
   margin-bottom: var(--space-sm);
 }
 
 .mulligan-hand__card-item {
-  padding: var(--space-xs) 0;
   font-size: var(--font-size-sm);
-  border-bottom: 1px solid var(--color-border);
 }
 
-.mulligan-hand__card-item:last-child {
-  border-bottom: none;
+.mulligan-hand__card-item .card-display__image {
+  width: 100%;
+  max-height: none;
+}
+
+.mulligan-hand__card-item .card-display__loading {
+  padding: var(--space-xs);
+  gap: var(--space-xs);
 }
 
 .mulligan-hand__hide-btn {
@@ -686,6 +693,31 @@ textarea:focus-visible,
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
   margin-bottom: var(--spacing-xs);
+  display: flex;
+  gap: var(--space-sm);
+  align-items: flex-start;
+}
+
+.scry-modal__card-thumb {
+  flex-shrink: 0;
+  width: 80px;
+}
+
+.scry-modal__card-thumb .card-display__image {
+  width: 100%;
+  max-height: none;
+  border-radius: var(--radius-sm);
+}
+
+.scry-modal__card-thumb .card-display__loading {
+  padding: var(--space-xs);
+  gap: var(--space-xs);
+  font-size: var(--font-size-sm);
+}
+
+.scry-modal__card-controls {
+  flex: 1;
+  min-width: 0;
 }
 
 .scry-modal__card-name {

@@ -4,6 +4,18 @@ import { axe } from 'vitest-axe';
 import { MulliganHand } from '../MulliganHand.js';
 import type { PlayerState, Action, GameState } from '@scryglass/core';
 
+/* ------------------------------------------------------------------ */
+/*  Module mock for useCardImage                                      */
+/* ------------------------------------------------------------------ */
+
+vi.mock('../../scryfall/useCardImage', () => ({
+  useCardImage: (collectorNumber: string) => ({
+    status: 'loading' as const,
+    imageUrl: null,
+    collectorNumber,
+  }),
+}));
+
 const defaultSettings: GameState['settings'] = { allowMulliganWith2or5Lands: false };
 
 function makePlayerState(overrides: Partial<PlayerState> = {}): PlayerState {
