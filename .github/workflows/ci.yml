@@ -143,8 +143,7 @@ jobs:
         with:
           name: e2e-results
           path: |
-            packages/pwa/e2e/screenshots/
-            packages/pwa/e2e/test-results/game-log.json
+            packages/pwa/test-results/
 
   markdown-lint:
     name: Markdown Lint
