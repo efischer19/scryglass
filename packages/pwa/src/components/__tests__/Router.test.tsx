@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, act } from '@testing-library/preact';
+import { axe } from 'vitest-axe';
 import { Router, navigate } from '../Router.js';
 
 beforeEach(() => {
@@ -132,6 +133,18 @@ describe('<Router />', () => {
       expect(document.title).toBe(expectedTitle);
     },
   );
+
+  it('passes vitest-axe a11y assertions', async () => {
+    const { container } = render(
+      <Router
+        inputView={<p>Input View</p>}
+        editorView={<p>Editor View</p>}
+        appView={<p>App View</p>}
+      />,
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
 });
 
 describe('navigate()', () => {
