@@ -3,7 +3,7 @@ import type { Action, ActionResult, Card, ScryDecision } from '@scryglass/core';
 import { peekTop } from '@scryglass/core';
 import type { GameState } from '@scryglass/core';
 import { ConfirmationGate } from './ConfirmationGate.js';
-import { CardDisplay } from './CardDisplay.js';
+import { CardDisplay, CardImage } from './CardDisplay.js';
 
 type Destination = 'top' | 'bottom' | 'remove';
 
@@ -226,6 +226,10 @@ export function ScryModal({ player, libraryLength, gameState, onDispatch, onClos
               const topIdx = topOrder.indexOf(i);
               return (
                 <li key={i} class="scry-modal__card-item">
+                  <div class="scry-modal__card-thumb">
+                    <CardImage card={card} />
+                  </div>
+                  <div class="scry-modal__card-controls">
                   <span class="scry-modal__card-name">{card.name}</span>
                   <div role="radiogroup" aria-label={`Destination for ${card.name}`}>
                     <label>
@@ -299,6 +303,7 @@ export function ScryModal({ player, libraryLength, gameState, onDispatch, onClos
                       </button>
                     </div>
                   )}
+                  </div>
                 </li>
               );
             })}

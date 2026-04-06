@@ -4,6 +4,18 @@ import { axe } from 'vitest-axe';
 import { ScryModal } from '../ScryModal.js';
 import type { Action, ActionResult, GameState, Card } from '@scryglass/core';
 
+/* ------------------------------------------------------------------ */
+/*  Module mock for useCardImage                                      */
+/* ------------------------------------------------------------------ */
+
+vi.mock('../../scryfall/useCardImage', () => ({
+  useCardImage: (collectorNumber: string) => ({
+    status: 'loaded' as const,
+    imageUrl: 'blob:mock/1',
+    collectorNumber,
+  }),
+}));
+
 function makeCard(name: string): Card {
   return { name, setCode: 'TST', collectorNumber: '1', cardType: 'nonland' };
 }

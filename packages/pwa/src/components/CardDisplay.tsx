@@ -13,7 +13,7 @@ const PLAYER_LABELS: Record<'A' | 'B', string> = {
   B: 'Player B',
 };
 
-function CardImage({ card }: { card: Card }) {
+export function CardImage({ card }: { card: Card }) {
   const { status, imageUrl } = useCardImage(card.collectorNumber, card.setCode);
 
   if (status === 'loading') {
