@@ -60,6 +60,24 @@ body {
 }
 
 /* ===================================================================
+   Skip Link (accessibility)
+   =================================================================== */
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  z-index: 100;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* ===================================================================
    Global Focus Indicators
    =================================================================== */
 

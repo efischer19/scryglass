@@ -71,6 +71,25 @@ describe('<Router />', () => {
     const liveRegion = container.querySelector('[aria-live="polite"]');
     expect(liveRegion).toBeTruthy();
   });
+
+  it.each([
+    ['#/input', 'Deck Input — Scryglass'],
+    ['#/editor', 'Deck Editor — Scryglass'],
+    ['#/app', 'Game — Scryglass'],
+  ] as const)(
+    'sets document.title to "%s" for route %s',
+    (hash, expectedTitle) => {
+      window.location.hash = hash;
+      render(
+        <Router
+          inputView={<p>Input View</p>}
+          editorView={<p>Editor View</p>}
+          appView={<p>App View</p>}
+        />,
+      );
+      expect(document.title).toBe(expectedTitle);
+    },
+  );
 });
 
 describe('navigate()', () => {

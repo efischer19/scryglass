@@ -4,6 +4,12 @@ type Route = '#/input' | '#/editor' | '#/app';
 
 const VALID_ROUTES = new Set<string>(['#/input', '#/editor', '#/app']);
 
+const ROUTE_TITLES: Record<Route, string> = {
+  '#/input': 'Deck Input — Scryglass',
+  '#/editor': 'Deck Editor — Scryglass',
+  '#/app': 'Game — Scryglass',
+};
+
 function getRoute(): Route {
   const hash = window.location.hash;
   return VALID_ROUTES.has(hash) ? (hash as Route) : '#/input';
@@ -23,6 +29,10 @@ export function Router({ inputView, editorView, appView }: RouterProps) {
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
+
+  useEffect(() => {
+    document.title = ROUTE_TITLES[route];
+  }, [route]);
 
   let view: preact.ComponentChild;
   if (route === '#/editor') {
