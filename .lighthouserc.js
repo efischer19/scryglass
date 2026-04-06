@@ -5,7 +5,7 @@ module.exports = {
       startServerCommand: 'npm run preview --workspace=packages/pwa',
       startServerReadyPattern: 'Local.*4173',
       url: ['http://localhost:4173/'],
-      numberOfRuns: 1,
+      numberOfRuns: 3,
     },
     assert: {
       assertions: {
