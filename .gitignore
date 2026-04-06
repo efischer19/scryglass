@@ -58,6 +58,7 @@ out/
 # Playwright
 test-results/
 playwright-report/
+packages/pwa/e2e/screenshots/*.png
 
 # =============================================================================
 # Frontend dependencies and package managers

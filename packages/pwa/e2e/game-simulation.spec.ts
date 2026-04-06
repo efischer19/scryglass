@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GameLogger } from './helpers/game-logger.js';
+import { captureScreenshot } from './helpers/screenshot-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -16,6 +17,11 @@ test('full game simulation produces a structured game log', async ({ page }) => 
 
   await expect(page.locator('section[aria-label="Deck input for Player A"]')).toBeVisible();
   await page.locator('#deck-textarea').fill(goodDeck);
+  await expect(page.locator('.deck-input__counts')).toContainText(/Total cards: [1-9][0-9]*/);
+
+  // ── 01: After deck load, showing DeckInput ────────────────────────────────
+  await captureScreenshot(page, '01-deck-loaded.png');
+
   await page.getByRole('button', { name: 'Load Deck', exact: true }).click();
 
   await expect(page.locator('section[aria-label="Deck input for Player B"]')).toBeVisible();
@@ -27,6 +33,11 @@ test('full game simulation produces a structured game log', async ({ page }) => 
   // --- Keep opening hands for both players ---
   const playerAZone = page.locator("section[aria-label=\"Player A's zone\"]");
   const playerBZone = page.locator("section[aria-label=\"Player B's zone\"]");
+
+  // ── 02: Opening hand display (both players) ───────────────────────────────
+  await expect(playerAZone.locator('section[aria-label="Player A\'s opening hand"]')).toBeVisible();
+  await expect(playerBZone.locator('section[aria-label="Player B\'s opening hand"]')).toBeVisible();
+  await captureScreenshot(page, '02-opening-hands.png');
 
   await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
   logger.log({
@@ -43,6 +54,11 @@ test('full game simulation produces a structured game log', async ({ page }) => 
     action: { type: 'KEEP_HAND', payload: { player: 'B' } },
     result: { librarySize: await getLibrarySize(playerBZone) },
   });
+
+  // ── 03: After mulligan decision ───────────────────────────────────────────
+  await expect(playerAZone.locator('section[aria-label="Player A\'s opening hand"]')).not.toBeVisible();
+  await expect(playerBZone.locator('section[aria-label="Player B\'s opening hand"]')).not.toBeVisible();
+  await captureScreenshot(page, '03-post-mulligan.png');
 
   // --- Simulate 5 turns: each turn Player A and Player B each draw a card ---
   for (let turn = 1; turn <= 5; turn++) {
@@ -72,6 +88,47 @@ test('full game simulation produces a structured game log', async ({ page }) => 
   await expect(playerAZone.locator('.player-zone__card-count')).toContainText(/Cards: [1-9][0-9]*/);
   await expect(playerBZone.locator('.player-zone__card-count')).toContainText(/Cards: [1-9][0-9]*/);
 
+  // ── 04: Mid-game board state (~turn 5) ────────────────────────────────────
+  await captureScreenshot(page, '04-mid-game.png');
+
+  // --- Write the game log ---
+  logger.flush();
+
+  // ── 05: Scry modal with card decisions ───────────────────────────────────
+  await playerAZone.getByRole('button', { name: "Scry Player A's library" }).click();
+  // Confirm the scry action via ConfirmationGate
+  await expect(page.locator('.confirmation-gate')).toBeVisible();
+  await page.getByRole('button', { name: 'Yes' }).first().click();
+  // In count phase — set count to 1 and look
+  await expect(page.locator('.scry-modal__count')).toBeVisible();
+  await page.locator('input[aria-label="Number of cards to look at"]').fill('1');
+  await page.getByRole('button', { name: 'Look' }).click();
+  // Now in decide phase with card radio buttons visible
+  await expect(page.locator('.scry-modal__decide')).toBeVisible();
+  await captureScreenshot(page, '05-scry-modal.png');
+  // Assign the card to top and confirm
+  await page.locator('input[value="top"]').first().click();
+  await page.getByRole('button', { name: 'Confirm Scry' }).click();
+  await page.getByRole('button', { name: 'Close' }).first().click();
+
+  // ── 06: Tutor search results ──────────────────────────────────────────────
+  await playerAZone.getByRole('button', { name: "Tutor card from Player A's library" }).click();
+  await expect(page.locator('.tutor-modal')).toBeVisible();
+  // The search input is shown with all cards listed by default
+  await expect(page.locator('.tutor-modal__list')).toBeVisible();
+  await captureScreenshot(page, '06-tutor-results.png');
+  // Close the tutor modal
+  await page.getByRole('button', { name: 'Cancel' }).first().click();
+
+  // ── 07: Fetch land confirmation ───────────────────────────────────────────
+  await playerAZone.getByRole('button', { name: "Fetch basic land from Player A's library" }).click();
+  await expect(page.locator('.fetch-land-modal')).toBeVisible();
+  // Click the first available land type to reach the ConfirmationGate
+  await page.locator('.fetch-land-modal__land-buttons button:not([disabled])').first().click();
+  await expect(page.locator('.confirmation-gate')).toBeVisible();
+  await captureScreenshot(page, '07-fetch-land.png');
+  // Cancel out of the modal
+  await page.getByRole('button', { name: 'Cancel' }).first().click();
   // --- Write the game log ---
   logger.flush();
 });
