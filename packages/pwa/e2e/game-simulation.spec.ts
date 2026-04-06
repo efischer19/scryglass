@@ -121,14 +121,53 @@ test('full game simulation produces a structured game log', async ({ page }) => 
   await page.getByRole('button', { name: 'Cancel' }).first().click();
 
   // ── 07: Fetch land confirmation ───────────────────────────────────────────
+  const librarySizeBeforeFetch = await getLibrarySize(playerAZone);
+  const playerBSizeBeforeFetch = await getLibrarySize(playerBZone);
   await playerAZone.getByRole('button', { name: "Fetch basic land from Player A's library" }).click();
   await expect(page.locator('.fetch-land-modal')).toBeVisible();
   // Click the first available land type to reach the ConfirmationGate
   await page.locator('.fetch-land-modal__land-buttons button:not([disabled])').first().click();
   await expect(page.locator('.confirmation-gate')).toBeVisible();
   await captureScreenshot(page, '07-fetch-land.png');
-  // Cancel out of the modal
-  await page.getByRole('button', { name: 'Cancel' }).first().click();
+  // Confirm the fetch
+  await page.getByRole('button', { name: 'Yes' }).first().click();
+  // Modal transitions to done phase — close it
+  await expect(page.locator('.fetch-land-modal__done')).toBeVisible();
+  await page.getByRole('button', { name: 'Close' }).first().click();
+  // Assert library size decreased by 1
+  const librarySizeAfterFetch = await getLibrarySize(playerAZone);
+  expect(librarySizeAfterFetch).toBe(librarySizeBeforeFetch - 1);
+  logger.log({
+    turn: 6,
+    player: 'A',
+    action: { type: 'FETCH_BASIC_LAND', payload: { player: 'A', landType: 'Forest' } },
+    result: { librarySize: librarySizeAfterFetch },
+  });
+
+  // ── 08: Return drawn card to library ──────────────────────────────────────
+  // Draw a card so there is a card available to return
+  const librarySizeBeforeReturn = await getLibrarySize(playerAZone);
+  await playerAZone.getByRole('button', { name: "Draw card from Player A's library" }).click();
+  await page.getByRole('button', { name: 'Yes' }).click();
+  const librarySizeAfterDraw = await getLibrarySize(playerAZone);
+  expect(librarySizeAfterDraw).toBe(librarySizeBeforeReturn - 1);
+  // Verify a card is shown in the card display area
+  await expect(playerAZone.locator('.card-display__content')).toBeVisible();
+  // Return the drawn card to the top of the library
+  await playerAZone.getByRole('button', { name: 'Return card to library' }).click();
+  // Assert library size increased by 1 (returned to pre-draw count)
+  const librarySizeAfterReturn = await getLibrarySize(playerAZone);
+  expect(librarySizeAfterReturn).toBe(librarySizeAfterDraw + 1);
+  logger.log({
+    turn: 6,
+    player: 'A',
+    action: { type: 'RETURN_TO_LIBRARY', payload: { player: 'A', position: 'top' } },
+    result: { librarySize: librarySizeAfterReturn },
+  });
+
+  // Cross-player isolation: Player B's library size unchanged during steps 07–08
+  expect(await getLibrarySize(playerBZone)).toBe(playerBSizeBeforeFetch);
+
   // --- Write the game log ---
   logger.flush();
 });
