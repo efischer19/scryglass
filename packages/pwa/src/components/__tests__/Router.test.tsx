@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen } from '@testing-library/preact';
+import { render, screen, act } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { Router, navigate } from '../Router.js';
 
@@ -61,7 +61,7 @@ describe('<Router />', () => {
     expect(screen.getByText('Input View')).toBeTruthy();
   });
 
-  it('has an aria-live region for accessibility', () => {
+  it('has a visually-hidden assertive aria-live announcement region', () => {
     const { container } = render(
       <Router
         inputView={<p>Input View</p>}
@@ -69,8 +69,50 @@ describe('<Router />', () => {
         appView={<p>App View</p>}
       />,
     );
-    const liveRegion = container.querySelector('[aria-live="polite"]');
+    const liveRegion = container.querySelector('[aria-live="assertive"]');
     expect(liveRegion).toBeTruthy();
+    expect(liveRegion?.className).toContain('sr-only');
+  });
+
+  it.each([
+    ['#/input', 'Navigated to Deck Input'],
+    ['#/editor', 'Navigated to Deck Editor'],
+    ['#/app', 'Navigated to Game'],
+  ] as const)(
+    'announces "%s" when navigating to %s',
+    (hash, expectedAnnouncement) => {
+      window.location.hash = hash;
+      const { container } = render(
+        <Router
+          inputView={<p>Input View</p>}
+          editorView={<p>Editor View</p>}
+          appView={<p>App View</p>}
+        />,
+      );
+      const liveRegion = container.querySelector('[aria-live="assertive"]');
+      expect(liveRegion?.textContent).toBe(expectedAnnouncement);
+    },
+  );
+
+  it('updates announcement text when route changes', async () => {
+    window.location.hash = '#/input';
+    const { container } = render(
+      <Router
+        inputView={<p>Input View</p>}
+        editorView={<p>Editor View</p>}
+        appView={<p>App View</p>}
+      />,
+    );
+    const liveRegion = container.querySelector('[aria-live="assertive"]');
+    expect(liveRegion?.textContent).toBe('Navigated to Deck Input');
+
+    await act(async () => {
+      window.location.hash = '#/app';
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+
+    expect(liveRegion?.textContent).toBe('Navigated to Game');
+    expect(document.title).toBe('Game — Scryglass');
   });
 
   it.each([

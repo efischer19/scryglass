@@ -11,6 +11,8 @@ import { ExportDropdown } from './ExportDropdown.js';
 export function App() {
   const [state, setState] = useState(createInitialState);
   const [editorResult, setEditorResult] = useState<ConvertResult | null>(null);
+  const [playerLoadingPhase, setPlayerLoadingPhase] = useState<'A' | 'B'>('A');
+  const [deckA, setDeckA] = useState<Card[] | null>(null);
 
   const handleDispatch = (action: Action) => {
     const result = dispatch(state, action);
@@ -18,9 +20,22 @@ export function App() {
     return result;
   };
 
+  const resetToInput = () => {
+    setPlayerLoadingPhase('A');
+    setDeckA(null);
+  };
+
   const handleLoadDeck = (cards: Card[]) => {
+    if (playerLoadingPhase === 'A') {
+      setDeckA(cards);
+      setPlayerLoadingPhase('B');
+      return;
+    }
+    if (deckA === null) {
+      return;
+    }
     let currentState = state;
-    const r1 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: 'A', cards } });
+    const r1 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: 'A', cards: deckA } });
     currentState = r1.state;
     const r2 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: 'B', cards } });
     currentState = r2.state;
@@ -30,6 +45,7 @@ export function App() {
     currentState = r4.state;
     setState(currentState);
     setEditorResult(null);
+    resetToInput();
     navigate('#/app');
   };
 
@@ -45,8 +61,13 @@ export function App() {
 
   const inputView = (
     <main id="main-content">
-      <Header onLoadDecks={() => { /* Ticket 06 */ }} />
-      <DeckInput onLoadDeck={handleLoadDeck} onOpenEditor={handleOpenEditor} />
+      <Header onLoadDecks={resetToInput} />
+      <DeckInput
+        key={playerLoadingPhase}
+        player={playerLoadingPhase}
+        onLoadDeck={handleLoadDeck}
+        onOpenEditor={handleOpenEditor}
+      />
     </main>
   );
 
@@ -67,7 +88,7 @@ export function App() {
 
   const appView = (
     <main id="main-content">
-      <Header onLoadDecks={() => navigate('#/input')} />
+      <Header onLoadDecks={() => { resetToInput(); navigate('#/input'); }} />
       <ExportDropdown cards={state.players.A.library} />
       <div class="pod-layout">
         <PlayerZone

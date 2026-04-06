@@ -4,10 +4,10 @@ type Route = '#/input' | '#/editor' | '#/app';
 
 const VALID_ROUTES = new Set<string>(['#/input', '#/editor', '#/app']);
 
-const ROUTE_TITLES: Record<Route, string> = {
-  '#/input': 'Deck Input — Scryglass',
-  '#/editor': 'Deck Editor — Scryglass',
-  '#/app': 'Game — Scryglass',
+const ROUTE_LABELS: Record<Route, string> = {
+  '#/input': 'Deck Input',
+  '#/editor': 'Deck Editor',
+  '#/app': 'Game',
 };
 
 function getRoute(): Route {
@@ -23,6 +23,7 @@ interface RouterProps {
 
 export function Router({ inputView, editorView, appView }: RouterProps) {
   const [route, setRoute] = useState<Route>(getRoute);
+  const [announcement, setAnnouncement] = useState(`Navigated to ${ROUTE_LABELS[getRoute()]}`);
 
   useEffect(() => {
     const onHashChange = () => setRoute(getRoute());
@@ -31,7 +32,15 @@ export function Router({ inputView, editorView, appView }: RouterProps) {
   }, []);
 
   useEffect(() => {
-    document.title = ROUTE_TITLES[route];
+    const label = ROUTE_LABELS[route];
+    setAnnouncement(`Navigated to ${label}`);
+    document.title = `${label} — Scryglass`;
+
+    const main = document.getElementById('main-content');
+    if (main) {
+      main.tabIndex = -1;
+      main.focus();
+    }
   }, [route]);
 
   let view: preact.ComponentChild;
@@ -44,9 +53,14 @@ export function Router({ inputView, editorView, appView }: RouterProps) {
   }
 
   return (
-    <div aria-live="polite" aria-label="Application view">
-      {view}
-    </div>
+    <>
+      <div class="sr-only" role="status" aria-live="assertive" aria-atomic="true">
+        {announcement}
+      </div>
+      <div aria-label="Application view">
+        {view}
+      </div>
+    </>
   );
 }
 
