@@ -27,6 +27,11 @@ async function loadDecksAndKeepHands(
 
   await page.waitForURL('**/#/app');
 
+  // Deal initial hands for both players
+  await expect(playerAZone.locator('section[aria-label="Player A\'s opening hand"]')).toBeVisible();
+  await playerAZone.getByRole('button', { name: "Deal initial hand for Player A" }).click();
+  await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
+
   // Keep opening hands for both players
   await expect(playerAZone.locator('section[aria-label="Player A\'s opening hand"]')).toBeVisible();
   await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();

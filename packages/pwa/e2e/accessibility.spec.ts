@@ -27,6 +27,8 @@ async function loadBothDecks(page: import('@playwright/test').Page) {
 
 /** Helper: keep hand for both players to advance past mulligan phase */
 async function keepBothHands(page: import('@playwright/test').Page) {
+  await page.getByRole('button', { name: "Deal initial hand for Player A" }).click();
+  await page.getByRole('button', { name: "Deal initial hand for Player B" }).click();
   await page.getByRole('button', { name: "Keep Player A's opening hand" }).click();
   await page.getByRole('button', { name: "Keep Player B's opening hand" }).click();
 }
