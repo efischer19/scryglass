@@ -39,6 +39,9 @@ test('full game simulation produces a structured game log', async ({ page }) => 
   await expect(playerBZone.locator('section[aria-label="Player B\'s opening hand"]')).toBeVisible();
   await captureScreenshot(page, '02-opening-hands.png');
 
+  await playerAZone.getByRole('button', { name: "Deal initial hand for Player A" }).click();
+  await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
+
   await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
   logger.log({
     turn: 0,

@@ -55,6 +55,8 @@ test.describe('Status bar', () => {
     // Keep both players' opening hands
     const playerAZone = page.locator("section[aria-label=\"Player A's zone\"]");
     const playerBZone = page.locator("section[aria-label=\"Player B's zone\"]");
+    await playerAZone.getByRole('button', { name: "Deal initial hand for Player A" }).click();
+    await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
     await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
     await playerBZone.getByRole('button', { name: "Keep Player B's opening hand" }).click();
 

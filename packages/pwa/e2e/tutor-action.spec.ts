@@ -35,7 +35,9 @@ test('Player B tutors Nazgûl from evil.txt: library shrinks by 1 and Player A i
   const playerAZone = page.locator("section[aria-label=\"Player A's zone\"]");
   const playerBZone = page.locator("section[aria-label=\"Player B's zone\"]");
 
-  // --- Keep opening hands for both players to advance past mulligan ---
+  // --- Deal initial hands and keep for both players to advance past mulligan ---
+  await playerAZone.getByRole('button', { name: "Deal initial hand for Player A" }).click();
+  await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
   await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
   await playerBZone.getByRole('button', { name: "Keep Player B's opening hand" }).click();
 
