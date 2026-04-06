@@ -6,15 +6,17 @@ import { showPlayerCards, hideAllCards } from './helpers/visibility-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
+// A deck with zero lands — guarantees 0 lands in any opening hand → must_mulligan always enabled
+const noLandsDeck = readFileSync(resolve(__dirname, 'fixtures/no-lands.txt'), 'utf-8');
 const evilDeck = readFileSync(resolve(__dirname, 'fixtures/evil.txt'), 'utf-8');
 
-/** Helper: load both decks and navigate to #/app */
-async function loadBothDecks(page: Page) {
+/** Helper: load decks, navigate to #/app, and deal initial hands for both players */
+async function loadDecksAndDeal(page: Page, playerADeck: string) {
   await page.goto('/');
 
   // Player A
   await expect(page.locator('section[aria-label="Deck input for Player A"]')).toBeVisible();
-  await page.locator('#deck-textarea').fill(goodDeck);
+  await page.locator('#deck-textarea').fill(playerADeck);
   await page.getByRole('button', { name: 'Load Deck', exact: true }).click();
 
   // Player B
@@ -32,11 +34,11 @@ async function loadBothDecks(page: Page) {
 
 test.describe('mulligan phase', () => {
   test.beforeEach(async ({ page }) => {
-    await loadBothDecks(page);
+    await loadDecksAndDeal(page, goodDeck);
   });
 
   test('both players start in mulligan phase with 7-card opening hands', async ({ page }) => {
-    // Both players' mulligan hand sections should be visible (but cards hidden behind gate)
+    // Both players' mulligan hand sections are hidden behind the visibility gate
     await expect(page.locator('section[aria-label="Player A\'s opening hand"]')).not.toBeVisible();
     await expect(page.locator('section[aria-label="Player B\'s opening hand"]')).not.toBeVisible();
 
@@ -48,6 +50,40 @@ test.describe('mulligan phase', () => {
     // Show Player B's cards and verify exactly 7 cards
     await showPlayerCards(page, 'B');
     await expect(page.locator('ul[aria-label="Player B\'s hand cards"] li')).toHaveCount(7);
+  });
+
+  test('keeping both hands transitions both players to the playing phase', async ({ page }) => {
+    const playerAZone = page.locator('section[aria-label="Player A\'s zone"]');
+    const playerBZone = page.locator('section[aria-label="Player B\'s zone"]');
+
+    // Keep Player A's hand (requires showing cards first via visibility gate)
+    await showPlayerCards(page, 'A');
+    await playerAZone
+      .getByRole('button', { name: "Keep Player A's opening hand" })
+      .click();
+    // Auto-reset: visiblePlayer becomes null after keeping
+
+    // Keep Player B's hand
+    await showPlayerCards(page, 'B');
+    await playerBZone
+      .getByRole('button', { name: "Keep Player B's opening hand" })
+      .click();
+    // Auto-reset: visiblePlayer becomes null after keeping
+
+    // Mulligan hand sections should no longer be visible (phase has transitioned)
+    await expect(page.locator('section[aria-label="Player A\'s opening hand"]')).not.toBeVisible();
+    await expect(page.locator('section[aria-label="Player B\'s opening hand"]')).not.toBeVisible();
+
+    // Gameplay action buttons should now be enabled for both players
+    await expect(playerAZone.getByRole('button', { name: "Draw card from Player A's library" })).toBeEnabled();
+    await expect(playerBZone.getByRole('button', { name: "Draw card from Player B's library" })).toBeEnabled();
+  });
+});
+
+// Uses a zero-land deck for Player A so the Mulligan button is always enabled (0 lands → must_mulligan)
+test.describe('mulligan phase — isolation', () => {
+  test.beforeEach(async ({ page }) => {
+    await loadDecksAndDeal(page, noLandsDeck);
   });
 
   test('mulligan reshuffles and deals 7 new cards; other player state is unaffected', async ({ page }) => {
@@ -64,7 +100,7 @@ test.describe('mulligan phase', () => {
     const playerBHandBefore = await playerBHandLocator.allTextContents();
     await hideAllCards(page);
 
-    // Perform mulligan for Player A
+    // Perform mulligan for Player A (0 lands → must_mulligan → button always enabled)
     await showPlayerCards(page, 'A');
     await page.getByRole('button', { name: "Mulligan Player A's hand" }).click();
 
@@ -86,33 +122,6 @@ test.describe('mulligan phase', () => {
     await showPlayerCards(page, 'B');
     const playerBHandAfter = await playerBHandLocator.allTextContents();
     expect(playerBHandAfter).toEqual(playerBHandBefore);
-  });
-
-  test('keeping both hands transitions both players to the playing phase', async ({ page }) => {
-    const playerAZone = page.locator('section[aria-label="Player A\'s zone"]');
-    const playerBZone = page.locator('section[aria-label="Player B\'s zone"]');
-
-    // Keep Player A's hand (requires showing cards first)
-    await showPlayerCards(page, 'A');
-    await playerAZone
-      .getByRole('button', { name: "Keep Player A's opening hand" })
-      .click();
-    // Auto-reset: visiblePlayer becomes null after keeping
-
-    // Keep Player B's hand
-    await showPlayerCards(page, 'B');
-    await playerBZone
-      .getByRole('button', { name: "Keep Player B's opening hand" })
-      .click();
-    // Auto-reset: visiblePlayer becomes null after keeping
-
-    // Mulligan hand sections should no longer be visible (phase has transitioned)
-    await expect(page.locator('section[aria-label="Player A\'s opening hand"]')).not.toBeVisible();
-    await expect(page.locator('section[aria-label="Player B\'s opening hand"]')).not.toBeVisible();
-
-    // Gameplay action buttons should now be enabled for both players
-    await expect(playerAZone.getByRole('button', { name: "Draw card from Player A's library" })).toBeEnabled();
-    await expect(playerBZone.getByRole('button', { name: "Draw card from Player B's library" })).toBeEnabled();
   });
 });
 
