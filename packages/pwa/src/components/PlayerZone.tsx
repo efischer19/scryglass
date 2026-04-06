@@ -153,6 +153,9 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, ga
           onClose={() => setShowTutor(false)}
         />
       )}
+      {/* Drawn card is only shown when this player's cards are visible.
+          If the player hides all cards (visiblePlayer → null), the drawn card
+          is preserved in state and reappears when visibility is restored. */}
       {isVisible && drawnCard && (
         <CardDisplay
           player={player}
