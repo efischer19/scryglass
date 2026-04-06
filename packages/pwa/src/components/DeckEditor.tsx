@@ -260,7 +260,6 @@ export function DeckEditor({
               key={card.key}
               class={`deck-editor__card ${complete ? '' : 'deck-editor__card--unresolved'}`}
               role="listitem"
-              tabIndex={0}
               aria-label={`${card.name}${complete ? '' : ' (unresolved)'}`}
             >
               <div class="deck-editor__card-header">
