@@ -44,11 +44,11 @@ export function App() {
     let currentState = state;
     const r1 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: 'A', cards: deckA } });
     currentState = r1.state;
-    const r2 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: 'B', cards } });
+    const r2 = dispatch(currentState, { type: 'SHUFFLE_LIBRARY', payload: { player: 'A' } });
     currentState = r2.state;
-    const r3 = dispatch(currentState, { type: 'DEAL_OPENING_HAND', payload: { player: 'A' } });
+    const r3 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: 'B', cards } });
     currentState = r3.state;
-    const r4 = dispatch(currentState, { type: 'DEAL_OPENING_HAND', payload: { player: 'B' } });
+    const r4 = dispatch(currentState, { type: 'SHUFFLE_LIBRARY', payload: { player: 'B' } });
     currentState = r4.state;
     setState(currentState);
     setEditorResult(null);

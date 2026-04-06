@@ -78,7 +78,13 @@ describe('<App />', () => {
 
       await loadBothDecks();
 
-      // Both players are in mulligan phase — keep both hands
+      // Both players are in pre-deal state — click "Deal Initial" for each
+      const dealBtns = await screen.findAllByRole('button', { name: /deal initial hand/i });
+      expect(dealBtns).toHaveLength(2);
+      fireEvent.click(dealBtns[0]);
+      fireEvent.click(dealBtns[1]);
+
+      // Both players are now in mulligan phase — keep both hands
       // The verdict for 30 lands / 60 cards hand has 3-4 lands, so "must_keep"
       const keepBtns = await screen.findAllByRole('button', { name: /keep.*opening hand/i });
       expect(keepBtns).toHaveLength(2);

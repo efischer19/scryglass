@@ -105,6 +105,14 @@ test('full 2-player, 10-turn game simulation', async ({ page }) => {
   ).toBeVisible();
   await captureScreenshot(page, 'full-02-opening-hands.png');
 
+  // Both players deal their initial hands
+  await playerAZone
+    .getByRole('button', { name: "Deal initial hand for Player A" })
+    .click();
+  await playerBZone
+    .getByRole('button', { name: "Deal initial hand for Player B" })
+    .click();
+
   // Player A mulligans once
   await page
     .getByRole('button', { name: "Mulligan Player A's hand" })
