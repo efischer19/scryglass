@@ -1,0 +1,20 @@
+Boromir, Warden of the Tower;LTR;455;nonland
+Flowering of the White Tree;LTR;466;nonland
+Gandalf the White;LTR;470;nonland
+Landroval, Horizon Witness;LTR;472;nonland
+Lost to Legend;LTR;473;nonland
+Reprieve;LTR;477;nonland
+Arwen’s Gift;LTR;490;nonland
+Elrond, Lord of Rivendell;LTR;500;nonland
+Gandalf, Friend of the Shire;LTR;501;nonland
+Lórien Revealed;LTR;511;nonland
+Meneldor, Swift Savior;LTR;513;nonland
+Stern Scolding;LTR;522;nonland
+Celeborn the Wise;LTR;607;nonland
+Delighted Halfling;LTR;609;nonland
+Elven Chorus;LTR;611;nonland
+Elven Farsight;LTR;612;nonland
+Entish Restoration;LTR;614;nonland
+Generous Ent;LTR;620;nonland
+Last March of the Ents;LTR;623;nonland
+Legolas, Master Archer;LTR;624;nonland
