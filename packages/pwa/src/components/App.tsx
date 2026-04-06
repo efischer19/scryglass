@@ -20,14 +20,22 @@ export function App() {
     return result;
   };
 
+  const resetToInput = () => {
+    setPlayerLoadingPhase('A');
+    setDeckA(null);
+  };
+
   const handleLoadDeck = (cards: Card[]) => {
     if (playerLoadingPhase === 'A') {
       setDeckA(cards);
       setPlayerLoadingPhase('B');
       return;
     }
+    if (deckA === null) {
+      return;
+    }
     let currentState = state;
-    const r1 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: 'A', cards: deckA! } });
+    const r1 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: 'A', cards: deckA } });
     currentState = r1.state;
     const r2 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: 'B', cards } });
     currentState = r2.state;
@@ -37,8 +45,7 @@ export function App() {
     currentState = r4.state;
     setState(currentState);
     setEditorResult(null);
-    setDeckA(null);
-    setPlayerLoadingPhase('A');
+    resetToInput();
     navigate('#/app');
   };
 
@@ -54,7 +61,7 @@ export function App() {
 
   const inputView = (
     <main>
-      <Header onLoadDecks={() => { setPlayerLoadingPhase('A'); setDeckA(null); }} />
+      <Header onLoadDecks={resetToInput} />
       <DeckInput
         key={playerLoadingPhase}
         player={playerLoadingPhase}
@@ -81,7 +88,7 @@ export function App() {
 
   const appView = (
     <main>
-      <Header onLoadDecks={() => { setPlayerLoadingPhase('A'); setDeckA(null); navigate('#/input'); }} />
+      <Header onLoadDecks={() => { resetToInput(); navigate('#/input'); }} />
       <ExportDropdown cards={state.players.A.library} />
       <div class="pod-layout">
         <PlayerZone

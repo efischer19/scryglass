@@ -28,7 +28,7 @@ test('loads good.txt for Player A and evil.txt for Player B, then transitions to
 
   // --- Verify both players' libraries are populated (non-zero card count) ---
   const playerAZone = page.locator('section[aria-label="Player A\'s zone"]');
-  const playerBZone = page.locator("section[aria-label=\"Player B's zone\"]");
+  const playerBZone = page.locator('section[aria-label="Player B\'s zone"]');
 
   await expect(playerAZone.locator('.player-zone__card-count')).toContainText(/Cards: [1-9][0-9]*/);
   await expect(playerBZone.locator('.player-zone__card-count')).toContainText(/Cards: [1-9][0-9]*/);
