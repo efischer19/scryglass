@@ -60,7 +60,7 @@ export function App() {
   };
 
   const inputView = (
-    <main>
+    <main id="main-content">
       <Header onLoadDecks={resetToInput} />
       <DeckInput
         key={playerLoadingPhase}
@@ -72,7 +72,7 @@ export function App() {
   );
 
   const editorView = (
-    <main>
+    <main id="main-content">
       <Header onLoadDecks={() => navigate('#/input')} />
       {editorResult ? (
         <DeckEditor
@@ -87,7 +87,7 @@ export function App() {
   );
 
   const appView = (
-    <main>
+    <main id="main-content"n>
       <Header onLoadDecks={() => { resetToInput(); navigate('#/input'); }} />
       <ExportDropdown cards={state.players.A.library} />
       <div class="pod-layout">
