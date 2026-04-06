@@ -92,5 +92,35 @@ describe('<App />', () => {
         expect(btn).toHaveProperty('disabled', false);
       }
     });
+
+    it('shows New Game button in app view after decks are loaded', async () => {
+      render(<App />);
+      await loadBothDecks();
+
+      const newGameBtn = await screen.findByRole('button', { name: /new game/i });
+      expect(newGameBtn).toBeTruthy();
+    });
+
+    it('resets to mulligan phase when New Game is clicked', async () => {
+      render(<App />);
+      await loadBothDecks();
+
+      // Both players keep hands to enter playing phase
+      const keepBtns = await screen.findAllByRole('button', { name: /keep.*opening hand/i });
+      fireEvent.click(keepBtns[0]);
+      fireEvent.click(keepBtns[1]);
+
+      // Confirm we're in playing phase
+      const drawBtns = await screen.findAllByRole('button', { name: /draw card/i });
+      expect(drawBtns.length).toBeGreaterThan(0);
+
+      // Click New Game
+      const newGameBtn = screen.getByRole('button', { name: /new game/i });
+      fireEvent.click(newGameBtn);
+
+      // Both players should be back in mulligan phase
+      const openingHandHeadings = await screen.findAllByText('Opening Hand');
+      expect(openingHandHeadings).toHaveLength(2);
+    });
   });
 });
