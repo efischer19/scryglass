@@ -71,4 +71,3 @@ test.describe('Status bar', () => {
     await expect(page.locator('.status-bar')).toContainText('Number of draws - A:2 B:1');
   });
 });
-
