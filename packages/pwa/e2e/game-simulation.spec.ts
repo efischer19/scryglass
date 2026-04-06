@@ -129,6 +129,8 @@ test('full game simulation produces a structured game log', async ({ page }) => 
   await captureScreenshot(page, '07-fetch-land.png');
   // Cancel out of the modal
   await page.getByRole('button', { name: 'Cancel' }).first().click();
+  // --- Write the game log ---
+  logger.flush();
 });
 
 async function getLibrarySize(zone: Locator): Promise<number> {
@@ -144,4 +146,3 @@ async function getDrawnCardName(zone: Locator): Promise<string | null> {
   const nameEl = cardDisplay.locator('.card-display__name');
   return (await nameEl.isVisible()) ? nameEl.textContent() : null;
 }
-
