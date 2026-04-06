@@ -1,4 +1,4 @@
-# 🔮 [scryglass.cards](https://scryglass.cards)
+# 🔮 [Scryglass](https://scryglass.cards)
 
 [![CI](https://github.com/efischer19/scryglass/actions/workflows/ci.yml/badge.svg)](https://github.com/efischer19/scryglass/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
