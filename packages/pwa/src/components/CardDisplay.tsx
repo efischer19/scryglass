@@ -5,6 +5,7 @@ interface CardDisplayProps {
   player: 'A' | 'B';
   card?: Card | null;
   onDismiss?: () => void;
+  onReturnToLibrary?: () => void;
 }
 
 const PLAYER_LABELS: Record<'A' | 'B', string> = {
@@ -38,7 +39,7 @@ function CardImage({ card }: { card: Card }) {
   );
 }
 
-export function CardDisplay({ player, card, onDismiss }: CardDisplayProps) {
+export function CardDisplay({ player, card, onDismiss, onReturnToLibrary }: CardDisplayProps) {
   return (
     <div
       class="card-display"
@@ -48,6 +49,16 @@ export function CardDisplay({ player, card, onDismiss }: CardDisplayProps) {
       {card ? (
         <div class="card-display__content">
           <CardImage card={card} />
+          {onReturnToLibrary && (
+            <button
+              class="action-btn card-display__return"
+              type="button"
+              onClick={onReturnToLibrary}
+              aria-label="Return card to library"
+            >
+              Return to Library
+            </button>
+          )}
           {onDismiss && (
             <button
               class="action-btn card-display__dismiss"
