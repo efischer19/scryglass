@@ -25,9 +25,10 @@ export function MulliganHand({ player, playerState, settings, onDispatch }: Mull
   const [revealed, setRevealed] = useState(false);
   const label = PLAYER_LABELS[player];
   const isPreDeal = playerState.mulliganHand.length === 0;
-  const landCount = countLands(playerState.mulliganHand);
-  const verdict = getMulliganVerdict(landCount, settings);
-  const mulliganDisabled = verdict === 'must_keep';
+
+  const landCount = isPreDeal ? 0 : countLands(playerState.mulliganHand);
+  const verdict = isPreDeal ? 'must_keep' : getMulliganVerdict(landCount, settings);
+  const mulliganDisabled = isPreDeal || verdict === 'must_keep';
 
   return (
     <section class="mulligan-hand" aria-label={`${label}'s opening hand`}>
