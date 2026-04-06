@@ -489,7 +489,7 @@ describe('<DeckEditor />', () => {
       expect(results).toHaveNoViolations();
     });
 
-    it('has keyboard-navigable card rows', () => {
+    it('has keyboard-navigable inputs within card rows', () => {
       const { container } = render(
         <DeckEditor
           convertResult={makeResolvedResult()}
@@ -497,10 +497,15 @@ describe('<DeckEditor />', () => {
           onCancel={vi.fn()}
         />,
       );
+      // The wrapper div should NOT have tabIndex (non-interactive divs should not be
+      // independently focusable; interactive children handle keyboard navigation).
       const items = container.querySelectorAll('[role="listitem"]');
       for (const item of items) {
-        expect((item as HTMLElement).tabIndex).toBe(0);
+        expect((item as HTMLElement).hasAttribute('tabindex')).toBe(false);
       }
+      // Each card row contains focusable inputs and selects for keyboard navigation.
+      const inputs = container.querySelectorAll('input, select');
+      expect(inputs.length).toBeGreaterThan(0);
     });
 
     it('has aria-invalid on empty required fields', () => {
