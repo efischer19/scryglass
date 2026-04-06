@@ -3,6 +3,7 @@ import type { SavedDeck } from '@scryglass/core';
 
 const STORAGE_KEY = 'scryglass:decklists';
 const AUTOSAVE_KEY = '__autosave__';
+const SEED_KEY = 'scryglass:seeded';
 
 /** Error thrown when localStorage quota is exceeded. */
 export class StorageQuotaError extends Error {
@@ -145,4 +146,27 @@ export function loadAutosave(): { rawText: string; updatedAt: string } | null {
 /** Clear the autosave entry. */
 export function clearAutosave(): void {
   localStorage.removeItem(`${STORAGE_KEY}:${AUTOSAVE_KEY}`);
+}
+
+/**
+ * Seed default decks into localStorage on first use.
+ * A "seeded" flag prevents the decks from being re-added after the user
+ * deletes them. Calling this function more than once is safe.
+ */
+export function seedExampleDecks(
+  decks: { name: string; rawText: string; cardCount: number }[],
+): void {
+  if (localStorage.getItem(SEED_KEY) !== null) return;
+  const existing = loadAllDecks();
+  const now = new Date().toISOString();
+  const seeded: SavedDeck[] = decks.map((d) => ({
+    id: crypto.randomUUID(),
+    name: d.name,
+    rawText: d.rawText,
+    cardCount: d.cardCount,
+    createdAt: now,
+    updatedAt: now,
+  }));
+  writeDecks([...seeded, ...existing]);
+  localStorage.setItem(SEED_KEY, '1');
 }
