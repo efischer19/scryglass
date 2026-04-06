@@ -55,6 +55,10 @@ build/
 out/
 .output/
 
+# Playwright
+test-results/
+playwright-report/
+
 # =============================================================================
 # Frontend dependencies and package managers
 # =============================================================================
