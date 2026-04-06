@@ -1,9 +1,9 @@
-# 🔮 Scryglass
+# 🔮 [Scryglass](https://scryglass.cards)
 
 [![CI](https://github.com/efischer19/scryglass/actions/workflows/ci.yml/badge.svg)](https://github.com/efischer19/scryglass/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](./packages/core/tsconfig.json)
-[![PWA Ready](https://img.shields.io/badge/PWA-ready-brightgreen)]()
+[![PWA Ready](https://img.shields.io/badge/PWA-ready-brightgreen)](./packages/pwa/public/manifest.json)
 
 > **Scry, shuffle, and goldfish your Magic: The Gathering decks — offline, at the table, no account required.**
 
@@ -24,7 +24,7 @@ Scryglass is a **free, open-source Progressive Web App (PWA)** that replaces phy
 
 **No installation. No account. Just open and play.**
 
-1. Visit the app at your deployment URL (or run locally — see below)
+1. Visit the app at [`scryglass.cards`](https://scryglass.cards) (or run locally — see below)
 2. Paste your deck list (Scryglass CSV format, or import from Moxfield/Archidekt/MTGO)
 3. Both players load their decks → automatic shuffle → opening hands dealt
 4. Play! Draw, scry, tutor, and fetch — Scryglass handles the library for you
