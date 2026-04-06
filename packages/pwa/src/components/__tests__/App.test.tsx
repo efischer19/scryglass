@@ -83,13 +83,18 @@ describe('<App />', () => {
 
       await loadBothDecks();
 
-      // Show Player A's cards, keep hand (visibility auto-resets after keep)
+      // Both players are in pre-deal state — click "Deal Initial" for each,
+      // using the visibility gate (show cards first, then deal+keep)
       fireEvent.click(await screen.findByRole('button', { name: "Show Player A's cards" }));
+      const dealBtnA = await screen.findByRole('button', { name: /deal initial hand for player a/i });
+      fireEvent.click(dealBtnA);
       const keepBtnA = await screen.findByRole('button', { name: /keep player a's opening hand/i });
       fireEvent.click(keepBtnA);
 
-      // Show Player B's cards, keep hand
+      // Show Player B's cards, deal initial hand, then keep
       fireEvent.click(await screen.findByRole('button', { name: "Show Player B's cards" }));
+      const dealBtnB = await screen.findByRole('button', { name: /deal initial hand for player b/i });
+      fireEvent.click(dealBtnB);
       const keepBtnB = await screen.findByRole('button', { name: /keep player b's opening hand/i });
       fireEvent.click(keepBtnB);
 
@@ -98,6 +103,45 @@ describe('<App />', () => {
       for (const btn of drawBtns) {
         expect(btn).toHaveProperty('disabled', false);
       }
+    });
+
+    it('shows New Game button in app view after decks are loaded', async () => {
+      render(<App />);
+      await loadBothDecks();
+
+      const newGameBtn = await screen.findByRole('button', { name: /new game/i });
+      expect(newGameBtn).toBeTruthy();
+    });
+
+    it('resets to mulligan phase when New Game is clicked', async () => {
+      render(<App />);
+      await loadBothDecks();
+
+      // Both players are in pre-deal state — use visibility gate to deal and keep each player
+      fireEvent.click(await screen.findByRole('button', { name: "Show Player A's cards" }));
+      fireEvent.click(await screen.findByRole('button', { name: /deal initial hand for player a/i }));
+      fireEvent.click(await screen.findByRole('button', { name: /keep player a's opening hand/i }));
+
+      fireEvent.click(await screen.findByRole('button', { name: "Show Player B's cards" }));
+      fireEvent.click(await screen.findByRole('button', { name: /deal initial hand for player b/i }));
+      fireEvent.click(await screen.findByRole('button', { name: /keep player b's opening hand/i }));
+
+      // Confirm we're in playing phase
+      const drawBtns = await screen.findAllByRole('button', { name: /draw card/i });
+      expect(drawBtns.length).toBeGreaterThan(0);
+
+      // Click New Game
+      const newGameBtn = screen.getByRole('button', { name: /new game/i });
+      fireEvent.click(newGameBtn);
+
+      // Both players should be back in pre-deal state (visibility gate shows "Show" buttons)
+      const showBtns = await screen.findAllByRole('button', { name: /show player.*cards/i });
+      expect(showBtns).toHaveLength(2);
+
+      // Show Player A to verify pre-deal state (Deal Initial button, not Keep/Mulligan)
+      fireEvent.click(showBtns[0]);
+      const dealInitialBtn = await screen.findByRole('button', { name: /deal initial hand for player a/i });
+      expect(dealInitialBtn).toBeTruthy();
     });
   });
 });

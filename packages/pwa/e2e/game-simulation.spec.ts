@@ -41,6 +41,7 @@ test('full game simulation produces a structured game log', async ({ page }) => 
   await captureScreenshot(page, '02-opening-hands.png');
 
   await showPlayerCards(page, 'A');
+  await playerAZone.getByRole('button', { name: "Deal initial hand for Player A" }).click();
   await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
   logger.log({
     turn: 0,
@@ -50,6 +51,7 @@ test('full game simulation produces a structured game log', async ({ page }) => 
   });
 
   await showPlayerCards(page, 'B');
+  await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
   await playerBZone.getByRole('button', { name: "Keep Player B's opening hand" }).click();
   logger.log({
     turn: 0,

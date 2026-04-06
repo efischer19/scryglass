@@ -34,11 +34,13 @@ async function setupGame(page: Page): Promise<void> {
   const playerAZone = page.locator("section[aria-label=\"Player A's zone\"]");
   const playerBZone = page.locator("section[aria-label=\"Player B's zone\"]");
 
-  // Show Player A's cards, keep hand (auto-resets visibility), then same for Player B
+  // Show Player A's cards, deal initial hand, keep hand (auto-resets visibility), then same for Player B
   await showPlayerCards(page, 'A');
+  await playerAZone.getByRole('button', { name: "Deal initial hand for Player A" }).click();
   await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
 
   await showPlayerCards(page, 'B');
+  await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
   await playerBZone.getByRole('button', { name: "Keep Player B's opening hand" }).click();
 
   // Confirm the mulligan phase has ended for both players

@@ -111,10 +111,11 @@ describe('<MulliganHand />', () => {
 
   it('Keep button dispatches KEEP_HAND for the correct player', () => {
     const onDispatch = vi.fn();
+    const hand = makeHand(3, 4);
     render(
       <MulliganHand
         player="B"
-        playerState={makePlayerState()}
+        playerState={makePlayerState({ mulliganHand: hand })}
         settings={defaultSettings}
         onDispatch={onDispatch}
       />,
@@ -187,10 +188,11 @@ describe('<MulliganHand />', () => {
   });
 
   it('has appropriate aria-labels on Keep and Mulligan buttons', () => {
+    const hand = makeHand(3, 4);
     render(
       <MulliganHand
         player="A"
-        playerState={makePlayerState()}
+        playerState={makePlayerState({ mulliganHand: hand })}
         settings={defaultSettings}
         onDispatch={() => {}}
       />,
@@ -199,7 +201,53 @@ describe('<MulliganHand />', () => {
     expect(screen.getByRole('button', { name: "Mulligan Player A's hand" })).toBeTruthy();
   });
 
-  it('renders Player B labels correctly', () => {
+  it('shows Deal Initial button (not Keep/Mulligan) before hand is dealt', () => {
+    const onDispatch = vi.fn();
+    render(
+      <MulliganHand
+        player="A"
+        playerState={makePlayerState()}
+        settings={defaultSettings}
+        onDispatch={onDispatch}
+      />,
+    );
+    expect(screen.getByRole('button', { name: "Deal initial hand for Player A" })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: "Keep Player A's opening hand" })).toBeNull();
+    expect(screen.queryByRole('button', { name: "Mulligan Player A's hand" })).toBeNull();
+  });
+
+  it('Deal Initial button dispatches DEAL_OPENING_HAND', () => {
+    const onDispatch = vi.fn();
+    render(
+      <MulliganHand
+        player="A"
+        playerState={makePlayerState()}
+        settings={defaultSettings}
+        onDispatch={onDispatch}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: "Deal initial hand for Player A" }));
+    expect(onDispatch).toHaveBeenCalledWith({
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    });
+  });
+
+  it('renders Player B labels correctly after hand is dealt', () => {
+    const hand = makeHand(3, 4);
+    render(
+      <MulliganHand
+        player="B"
+        playerState={makePlayerState({ mulliganHand: hand })}
+        settings={defaultSettings}
+        onDispatch={() => {}}
+      />,
+    );
+    expect(screen.getByRole('button', { name: "Keep Player B's opening hand" })).toBeTruthy();
+    expect(screen.getByRole('button', { name: "Mulligan Player B's hand" })).toBeTruthy();
+  });
+
+  it('renders Player B Deal Initial label correctly before hand is dealt', () => {
     render(
       <MulliganHand
         player="B"
@@ -208,8 +256,7 @@ describe('<MulliganHand />', () => {
         onDispatch={() => {}}
       />,
     );
-    expect(screen.getByRole('button', { name: "Keep Player B's opening hand" })).toBeTruthy();
-    expect(screen.getByRole('button', { name: "Mulligan Player B's hand" })).toBeTruthy();
+    expect(screen.getByRole('button', { name: "Deal initial hand for Player B" })).toBeTruthy();
   });
 
   it('passes vitest-axe a11y assertions (gate hidden)', async () => {

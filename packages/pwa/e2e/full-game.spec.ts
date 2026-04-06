@@ -94,10 +94,10 @@ test('full 2-player, 10-turn game simulation', async ({ page }) => {
   await page.waitForURL('**/#/app');
 
   // =========================================================================
-  // Phase 2 — Mulligan (Player A mulligans once; both keep)
+  // Phase 2 — Deal initial hands; both players keep
   // =========================================================================
 
-  // ── Screenshot 02: Opening hands (both players) ────────────────────────
+  // ── Screenshot 02: Pre-deal state (both players) ───────────────────────
   await expect(
     playerAZone.locator('section[aria-label="Player A\'s opening hand"]'),
   ).not.toBeVisible();
@@ -106,23 +106,14 @@ test('full 2-player, 10-turn game simulation', async ({ page }) => {
   ).not.toBeVisible();
   await captureScreenshot(page, 'full-02-opening-hands.png');
 
-  // Player A mulligans once (show cards first)
+  // Both players deal their initial hands (show cards first due to visibility gate)
   await showPlayerCards(page, 'A');
-  await page
-    .getByRole('button', { name: "Mulligan Player A's hand" })
+  await playerAZone
+    .getByRole('button', { name: "Deal initial hand for Player A" })
     .click();
-  await expect(
-    playerAZone.locator('.mulligan-hand__mulligan-count'),
-  ).toContainText('Mulligans taken: 1');
 
-  logger.log({
-    turn: 0,
-    player: 'A',
-    action: { type: 'MULLIGAN', payload: { player: 'A' } },
-    result: {},
-  });
-
-  // Both players keep (Player A is still visible after mulligan; auto-resets on keep)
+  // Both players keep (hands are randomly shuffled, so we keep regardless of verdict)
+  // Player A is still visible after deal; auto-resets on keep
   await playerAZone
     .getByRole('button', { name: "Keep Player A's opening hand" })
     .click();
@@ -135,6 +126,9 @@ test('full 2-player, 10-turn game simulation', async ({ page }) => {
   });
 
   await showPlayerCards(page, 'B');
+  await playerBZone
+    .getByRole('button', { name: "Deal initial hand for Player B" })
+    .click();
   await playerBZone
     .getByRole('button', { name: "Keep Player B's opening hand" })
     .click();

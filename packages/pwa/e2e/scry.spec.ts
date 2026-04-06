@@ -28,13 +28,15 @@ async function loadDecksAndKeepHands(
 
   await page.waitForURL('**/#/app');
 
-  // Keep opening hands for both players (show cards first due to visibility gate)
+  // Deal initial hands and keep (show cards first due to visibility gate)
   await expect(playerAZone.locator('section[aria-label="Player A\'s opening hand"]')).not.toBeVisible();
   await showPlayerCards(page, 'A');
+  await playerAZone.getByRole('button', { name: "Deal initial hand for Player A" }).click();
   await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
 
   await expect(playerBZone.locator('section[aria-label="Player B\'s opening hand"]')).not.toBeVisible();
   await showPlayerCards(page, 'B');
+  await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
   await playerBZone.getByRole('button', { name: "Keep Player B's opening hand" }).click();
 
   // Wait for mulligan sections to disappear
