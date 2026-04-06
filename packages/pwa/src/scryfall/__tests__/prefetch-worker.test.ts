@@ -39,9 +39,9 @@ import {
 /* ------------------------------------------------------------------ */
 
 const LIBRARY: PrefetchCard[] = [
-  { cardName: 'Lightning Bolt', setCode: 'lea' },
-  { cardName: 'Counterspell', setCode: 'lea' },
-  { cardName: 'Dark Ritual', setCode: 'lea' },
+  { collectorNumber: '161', setCode: 'lea' },
+  { collectorNumber: '75', setCode: 'lea' },
+  { collectorNumber: '67', setCode: 'lea' },
 ];
 
 function outboundMessages(spy: ReturnType<typeof vi.fn>): WorkerOutboundMessage[] {
@@ -194,7 +194,7 @@ describe('prefetch worker', () => {
 
     // New library
     const newLibrary: PrefetchCard[] = [
-      { cardName: 'Swords to Plowshares', setCode: 'lea' },
+      { collectorNumber: '1', setCode: 'lea' },
     ];
 
     send({ type: 'start', library: newLibrary });
@@ -265,7 +265,7 @@ describe('prefetch coordinator', () => {
     const blob = new Blob(['cached'], { type: 'image/jpeg' });
     vi.mocked(getCachedImage).mockResolvedValue(blob);
 
-    const card: PrefetchCard = { cardName: 'Lightning Bolt', setCode: 'lea' };
+    const card: PrefetchCard = { collectorNumber: '161', setCode: 'lea' };
     startPrefetch([card]);
 
     // Simulate worker sending a fetch-request
@@ -273,7 +273,7 @@ describe('prefetch coordinator', () => {
 
     // Let the async handler settle
     await vi.waitFor(() => {
-      expect(getCachedImage).toHaveBeenCalledWith('Lightning Bolt', 'lea');
+      expect(getCachedImage).toHaveBeenCalledWith('161', 'lea');
     });
 
     expect(fetchCardImage).not.toHaveBeenCalled();
@@ -288,7 +288,7 @@ describe('prefetch coordinator', () => {
     vi.mocked(fetchCardImage).mockResolvedValue(blob);
     vi.mocked(cacheImage).mockResolvedValue(undefined);
 
-    const card: PrefetchCard = { cardName: 'Counterspell', setCode: 'lea' };
+    const card: PrefetchCard = { collectorNumber: '75', setCode: 'lea' };
     startPrefetch([card]);
 
     simulateWorkerMessage({ type: 'fetch-request', card });
@@ -296,12 +296,12 @@ describe('prefetch coordinator', () => {
     await vi.waitFor(() => {
       expect(fetchCardImage).toHaveBeenCalledWith({
         setCode: 'lea',
-        collectorNumber: 'Counterspell',
+        collectorNumber: '75',
       });
     });
 
     await vi.waitFor(() => {
-      expect(cacheImage).toHaveBeenCalledWith('Counterspell', 'lea', blob);
+      expect(cacheImage).toHaveBeenCalledWith('75', 'lea', blob);
     });
 
     stopPrefetch();
@@ -309,7 +309,7 @@ describe('prefetch coordinator', () => {
 
   it('sends start message to worker with the library', () => {
     const library: PrefetchCard[] = [
-      { cardName: 'Lightning Bolt', setCode: 'lea' },
+      { collectorNumber: '161', setCode: 'lea' },
     ];
 
     startPrefetch(library);

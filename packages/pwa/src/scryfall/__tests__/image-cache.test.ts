@@ -60,15 +60,15 @@ beforeEach(async () => {
 
 describe('getCachedImage', () => {
   it('returns null on cache miss', async () => {
-    const result = await getCachedImage('Lightning Bolt', 'lea');
+    const result = await getCachedImage('161', 'lea');
     expect(result).toBeNull();
   });
 
   it('returns the stored Blob on cache hit', async () => {
     const blob = makeBlob();
-    await cacheImage('Lightning Bolt', 'lea', blob);
+    await cacheImage('161', 'lea', blob);
 
-    const result = await getCachedImage('Lightning Bolt', 'lea');
+    const result = await getCachedImage('161', 'lea');
     expect(result).not.toBeNull();
     expect(result!.size).toBe(blob.size);
     expect(result!.type).toBe('image/jpeg');
@@ -78,9 +78,9 @@ describe('getCachedImage', () => {
 describe('cacheImage / getCachedImage round-trip', () => {
   it('round-trips — cacheImage then getCachedImage returns the same blob', async () => {
     const blob = makeBlob('round-trip-data', 'image/png');
-    await cacheImage('Counterspell', 'tmp', blob);
+    await cacheImage('75', 'tmp', blob);
 
-    const result = await getCachedImage('Counterspell', 'tmp');
+    const result = await getCachedImage('75', 'tmp');
     expect(result).not.toBeNull();
     expect(result!.size).toBe(blob.size);
     expect(result!.type).toBe('image/png');
@@ -92,8 +92,8 @@ describe('cacheImage / getCachedImage round-trip', () => {
 
 describe('clearCache', () => {
   it('removes all entries and getCacheSize returns 0', async () => {
-    await cacheImage('Card A', 'set1', makeBlob());
-    await cacheImage('Card B', 'set2', makeBlob());
+    await cacheImage('1', 'set1', makeBlob());
+    await cacheImage('2', 'set2', makeBlob());
     expect(await getCacheSize()).toBe(2);
 
     await clearCache();
@@ -105,13 +105,13 @@ describe('getCacheSize', () => {
   it('returns the correct count after multiple inserts', async () => {
     expect(await getCacheSize()).toBe(0);
 
-    await cacheImage('Card A', 'set1', makeBlob());
+    await cacheImage('1', 'set1', makeBlob());
     expect(await getCacheSize()).toBe(1);
 
-    await cacheImage('Card B', 'set2', makeBlob());
+    await cacheImage('2', 'set2', makeBlob());
     expect(await getCacheSize()).toBe(2);
 
-    await cacheImage('Card C', 'set3', makeBlob());
+    await cacheImage('3', 'set3', makeBlob());
     expect(await getCacheSize()).toBe(3);
   });
 });
@@ -119,9 +119,9 @@ describe('getCacheSize', () => {
 describe('getImageUrl', () => {
   it('returns an object URL for a cached image without calling the fetch wrapper', async () => {
     const blob = makeBlob();
-    await cacheImage('Cached Card', 'set1', blob);
+    await cacheImage('1', 'set1', blob);
 
-    const url = await getImageUrl('Cached Card', 'set1');
+    const url = await getImageUrl('1', 'set1');
     expect(url).not.toBeNull();
     expect(typeof url).toBe('string');
     expect(url).toContain('blob:');
@@ -132,14 +132,14 @@ describe('getImageUrl', () => {
     const blob = makeBlob('fetched-image');
     vi.mocked(fetchCardImage).mockResolvedValueOnce(blob);
 
-    const url = await getImageUrl('New Card', 'set2');
+    const url = await getImageUrl('42', 'set2');
     expect(url).not.toBeNull();
     expect(typeof url).toBe('string');
     expect(url).toContain('blob:');
     expect(fetchCardImage).toHaveBeenCalledTimes(1);
 
     // Verify the image was cached
-    const cached = await getCachedImage('New Card', 'set2');
+    const cached = await getCachedImage('42', 'set2');
     expect(cached).not.toBeNull();
     expect(cached!.size).toBe(blob.size);
   });
@@ -147,7 +147,7 @@ describe('getImageUrl', () => {
   it('returns null when fetch wrapper returns null (card not found)', async () => {
     vi.mocked(fetchCardImage).mockResolvedValueOnce(null);
 
-    const url = await getImageUrl('Missing Card', 'set3');
+    const url = await getImageUrl('999', 'set3');
     expect(url).toBeNull();
     expect(fetchCardImage).toHaveBeenCalledTimes(1);
   });
@@ -162,12 +162,12 @@ describe('graceful degradation', () => {
     });
 
     // getCachedImage returns null (miss)
-    const result = await getCachedImage('Any Card', 'any');
+    const result = await getCachedImage('1', 'any');
     expect(result).toBeNull();
 
     // cacheImage does not throw
     await expect(
-      cacheImage('Any Card', 'any', makeBlob()),
+      cacheImage('1', 'any', makeBlob()),
     ).resolves.toBeUndefined();
 
     // getCacheSize returns 0

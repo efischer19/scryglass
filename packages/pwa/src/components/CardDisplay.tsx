@@ -14,7 +14,7 @@ const PLAYER_LABELS: Record<'A' | 'B', string> = {
 };
 
 function CardImage({ card }: { card: Card }) {
-  const { status, imageUrl } = useCardImage(card.name, card.setCode);
+  const { status, imageUrl } = useCardImage(card.collectorNumber, card.setCode);
 
   if (status === 'loading') {
     return (

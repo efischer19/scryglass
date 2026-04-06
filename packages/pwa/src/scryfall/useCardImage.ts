@@ -6,29 +6,29 @@ import type { CardImageState } from './jit-priority';
 
 export type { CardImageState } from './jit-priority';
 
-export function useCardImage(cardName: string, setCode: string): CardImageState {
+export function useCardImage(collectorNumber: string, setCode: string): CardImageState {
   const [state, setState] = useState<CardImageState>({
     status: 'loading',
     imageUrl: null,
-    cardName,
+    collectorNumber,
   });
 
   useEffect(() => {
     let cancelled = false;
     let objectUrl: string | null = null;
 
-    setState({ status: 'loading', imageUrl: null, cardName });
+    setState({ status: 'loading', imageUrl: null, collectorNumber });
 
-    priorityFetch(cardName, setCode).then((url) => {
+    priorityFetch(collectorNumber, setCode).then((url) => {
       if (cancelled) {
         if (url) URL.revokeObjectURL(url);
         return;
       }
       if (url) {
         objectUrl = url;
-        setState({ status: 'loaded', imageUrl: url, cardName });
+        setState({ status: 'loaded', imageUrl: url, collectorNumber });
       } else {
-        setState({ status: 'error', imageUrl: null, cardName });
+        setState({ status: 'error', imageUrl: null, collectorNumber });
       }
     });
 
@@ -36,7 +36,7 @@ export function useCardImage(cardName: string, setCode: string): CardImageState 
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [cardName, setCode]);
+  }, [collectorNumber, setCode]);
 
   return state;
 }

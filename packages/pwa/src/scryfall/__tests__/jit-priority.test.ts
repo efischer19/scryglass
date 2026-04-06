@@ -72,9 +72,9 @@ afterEach(() => {
 describe('priorityFetch', () => {
   it('returns immediately from cache without calling the fetch wrapper', async () => {
     const blob = makeBlob();
-    await cacheImage('Lightning Bolt', 'lea', blob);
+    await cacheImage('161', 'lea', blob);
 
-    const url = await priorityFetch('Lightning Bolt', 'lea');
+    const url = await priorityFetch('161', 'lea');
 
     expect(url).not.toBeNull();
     expect(url).toContain('blob:');
@@ -85,25 +85,25 @@ describe('priorityFetch', () => {
     const blob = makeBlob('fetched-data');
     vi.mocked(fetchCardImage).mockResolvedValueOnce(blob);
 
-    const url = await priorityFetch('Counterspell', 'tmp');
+    const url = await priorityFetch('75', 'tmp');
 
     expect(url).not.toBeNull();
     expect(url).toContain('blob:');
     expect(fetchCardImage).toHaveBeenCalledTimes(1);
     expect(fetchCardImage).toHaveBeenCalledWith(
-      { setCode: 'tmp', collectorNumber: 'Counterspell' },
+      { setCode: 'tmp', collectorNumber: '75' },
       'jit',
     );
 
     // Verify the image was cached
-    const cached = await getCachedImage('Counterspell', 'tmp');
+    const cached = await getCachedImage('75', 'tmp');
     expect(cached).not.toBeNull();
   });
 
   it('passes jit priority to fetchCardImage', async () => {
     vi.mocked(fetchCardImage).mockResolvedValueOnce(makeBlob());
 
-    await priorityFetch('Card A', 'set1');
+    await priorityFetch('1', 'set1');
 
     expect(fetchCardImage).toHaveBeenCalledWith(
       expect.objectContaining({ setCode: 'set1' }),
@@ -114,7 +114,7 @@ describe('priorityFetch', () => {
   it('returns null when the card is not found (404)', async () => {
     vi.mocked(fetchCardImage).mockResolvedValueOnce(null);
 
-    const url = await priorityFetch('Missing Card', 'set1');
+    const url = await priorityFetch('999', 'set1');
 
     expect(url).toBeNull();
   });
@@ -122,7 +122,7 @@ describe('priorityFetch', () => {
   it('returns null when fetch throws a network error', async () => {
     vi.mocked(fetchCardImage).mockRejectedValueOnce(new Error('Network error'));
 
-    const url = await priorityFetch('Error Card', 'set1');
+    const url = await priorityFetch('999', 'set1');
 
     expect(url).toBeNull();
   });
@@ -130,7 +130,7 @@ describe('priorityFetch', () => {
   it('pauses the background prefetch worker during JIT fetch and resumes after', async () => {
     vi.mocked(fetchCardImage).mockResolvedValueOnce(makeBlob());
 
-    await priorityFetch('Card A', 'set1');
+    await priorityFetch('1', 'set1');
 
     expect(pausePrefetch).toHaveBeenCalledTimes(1);
     expect(resumePrefetch).toHaveBeenCalledTimes(1);
@@ -139,7 +139,7 @@ describe('priorityFetch', () => {
   it('resumes the background prefetch worker even when fetch fails', async () => {
     vi.mocked(fetchCardImage).mockRejectedValueOnce(new Error('fail'));
 
-    await priorityFetch('Card A', 'set1');
+    await priorityFetch('1', 'set1');
 
     expect(pausePrefetch).toHaveBeenCalledTimes(1);
     expect(resumePrefetch).toHaveBeenCalledTimes(1);
@@ -153,8 +153,8 @@ describe('priorityFetch', () => {
       .mockImplementationOnce(() => new Promise((r) => { resolveA = r; }))
       .mockImplementationOnce(() => new Promise((r) => { resolveB = r; }));
 
-    const p1 = priorityFetch('Card A', 'set1');
-    const p2 = priorityFetch('Card B', 'set2');
+    const p1 = priorityFetch('1', 'set1');
+    const p2 = priorityFetch('2', 'set2');
 
     // Wait until the first in-flight JIT request pauses background prefetch.
     await vi.waitFor(() => {
@@ -179,9 +179,9 @@ describe('priorityFetch', () => {
   });
 
   it('does not pause prefetch when the result is cached', async () => {
-    await cacheImage('Cached Card', 'set1', makeBlob());
+    await cacheImage('1', 'set1', makeBlob());
 
-    await priorityFetch('Cached Card', 'set1');
+    await priorityFetch('1', 'set1');
 
     expect(pausePrefetch).not.toHaveBeenCalled();
     expect(resumePrefetch).not.toHaveBeenCalled();

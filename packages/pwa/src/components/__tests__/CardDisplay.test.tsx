@@ -52,7 +52,7 @@ describe('<CardDisplay />', () => {
     mockUseCardImage.mockReturnValue({
       status: 'loading',
       imageUrl: null,
-      cardName: 'Lightning Bolt',
+      collectorNumber: '161',
     });
 
     render(<CardDisplay player="A" card={testCard} />);
@@ -65,7 +65,7 @@ describe('<CardDisplay />', () => {
     mockUseCardImage.mockReturnValue({
       status: 'loaded',
       imageUrl: 'blob:mock/1',
-      cardName: 'Lightning Bolt',
+      collectorNumber: '161',
     });
 
     render(<CardDisplay player="A" card={testCard} />);
@@ -79,7 +79,7 @@ describe('<CardDisplay />', () => {
     mockUseCardImage.mockReturnValue({
       status: 'error',
       imageUrl: null,
-      cardName: 'Lightning Bolt',
+      collectorNumber: '161',
     });
 
     render(<CardDisplay player="A" card={testCard} />);
