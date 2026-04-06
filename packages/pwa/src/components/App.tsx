@@ -7,22 +7,29 @@ import { Router, navigate } from './Router.js';
 import { DeckInput } from './DeckInput.js';
 import { DeckEditor } from './DeckEditor.js';
 import { ExportDropdown } from './ExportDropdown.js';
+import { StatusBar } from './StatusBar.js';
 
 export function App() {
   const [state, setState] = useState(createInitialState);
   const [editorResult, setEditorResult] = useState<ConvertResult | null>(null);
   const [playerLoadingPhase, setPlayerLoadingPhase] = useState<'A' | 'B'>('A');
   const [deckA, setDeckA] = useState<Card[] | null>(null);
+  const [drawCounts, setDrawCounts] = useState<{ A: number; B: number }>({ A: 0, B: 0 });
 
   const handleDispatch = (action: Action) => {
     const result = dispatch(state, action);
     setState(result.state);
+    if (action.type === 'DRAW_CARD') {
+      const player = action.payload.player as 'A' | 'B';
+      setDrawCounts((prev) => ({ ...prev, [player]: prev[player] + 1 }));
+    }
     return result;
   };
 
   const resetToInput = () => {
     setPlayerLoadingPhase('A');
     setDeckA(null);
+    setDrawCounts({ A: 0, B: 0 });
   };
 
   const handleLoadDeck = (cards: Card[]) => {
@@ -62,6 +69,7 @@ export function App() {
   const inputView = (
     <main id="main-content">
       <Header onLoadDecks={resetToInput} />
+      <StatusBar mode="deck-selection" player={playerLoadingPhase} />
       <DeckInput
         key={playerLoadingPhase}
         player={playerLoadingPhase}
@@ -89,6 +97,7 @@ export function App() {
   const appView = (
     <main id="main-content">
       <Header onLoadDecks={() => { resetToInput(); navigate('#/input'); }} />
+      <StatusBar mode="game" drawCounts={drawCounts} />
       <ExportDropdown cards={state.players.A.library} />
       <div class="pod-layout">
         <PlayerZone
