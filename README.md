@@ -3,7 +3,7 @@
 [![CI](https://github.com/efischer19/scryglass/actions/workflows/ci.yml/badge.svg)](https://github.com/efischer19/scryglass/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](./packages/core/tsconfig.json)
-[![PWA Ready](https://img.shields.io/badge/PWA-ready-brightgreen)]()
+[![PWA Ready](https://img.shields.io/badge/PWA-ready-brightgreen)](./packages/pwa/public/manifest.json)
 
 > **Scry, shuffle, and goldfish your Magic: The Gathering decks — offline, at the table, no account required.**
 
