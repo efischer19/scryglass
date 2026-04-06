@@ -46,8 +46,11 @@
    *   --color-surface (#ffffff) on --player-b-accent (#dc2626): 4.84:1 ✓ (WCAG AA text)
    *   --color-disabled (#64748b) vs --color-bg (#f8fafc): 4.57:1 ✓ (WCAG AA non-text)
    *   --color-surface (#ffffff) on --color-disabled (#64748b): 4.77:1 ✓ (WCAG AA text)
+   *   --color-new-game (#166534) vs --color-bg (#f8fafc): 7.31:1 ✓ (WCAG AA non-text)
+   *   --color-surface (#ffffff) on --color-new-game (#166534): 7.61:1 ✓ (WCAG AA text)
    */
   --color-disabled: #64748b;
+  --color-new-game: #166534;
 }
 
 /* ===================================================================
@@ -121,6 +124,12 @@ textarea:focus-visible,
   color: var(--color-text);
 }
 
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
 .app-header__btn {
   padding: var(--space-sm) var(--space-md);
   font-size: var(--font-size-sm);
@@ -139,6 +148,14 @@ textarea:focus-visible,
 .app-header__btn:focus-visible {
   outline: 2px solid var(--player-a-accent);
   outline-offset: 2px;
+}
+
+.app-header__btn--new-game {
+  background-color: var(--color-new-game);
+}
+
+.app-header__btn--new-game:focus-visible {
+  outline-color: var(--color-new-game);
 }
 
 /* ===================================================================

@@ -14,6 +14,7 @@ export function App() {
   const [editorResult, setEditorResult] = useState<ConvertResult | null>(null);
   const [playerLoadingPhase, setPlayerLoadingPhase] = useState<'A' | 'B'>('A');
   const [deckA, setDeckA] = useState<Card[] | null>(null);
+  const [deckB, setDeckB] = useState<Card[] | null>(null);
   const [drawCounts, setDrawCounts] = useState<{ A: number; B: number }>({ A: 0, B: 0 });
 
   const handleDispatch = (action: Action) => {
@@ -29,6 +30,7 @@ export function App() {
   const resetToInput = () => {
     setPlayerLoadingPhase('A');
     setDeckA(null);
+    setDeckB(null);
     setDrawCounts({ A: 0, B: 0 });
   };
 
@@ -41,8 +43,9 @@ export function App() {
     if (deckA === null) {
       return;
     }
-    let currentState = state;
-    const r1 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: 'A', cards: deckA } });
+    const savedDeckA = deckA;
+    let currentState = createInitialState();
+    const r1 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: 'A', cards: savedDeckA } });
     currentState = r1.state;
     const r2 = dispatch(currentState, { type: 'SHUFFLE_LIBRARY', payload: { player: 'A' } });
     currentState = r2.state;
@@ -52,8 +55,28 @@ export function App() {
     currentState = r4.state;
     setState(currentState);
     setEditorResult(null);
-    resetToInput();
+    setPlayerLoadingPhase('A');
+    setDeckA(savedDeckA);
+    setDeckB(cards);
+    setDrawCounts({ A: 0, B: 0 });
     navigate('#/app');
+  };
+
+  const handleNewGame = () => {
+    if (deckA === null || deckB === null) {
+      return;
+    }
+    let currentState = createInitialState();
+    const r1 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: 'A', cards: deckA } });
+    currentState = r1.state;
+    const r2 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: 'B', cards: deckB } });
+    currentState = r2.state;
+    const r3 = dispatch(currentState, { type: 'DEAL_OPENING_HAND', payload: { player: 'A' } });
+    currentState = r3.state;
+    const r4 = dispatch(currentState, { type: 'DEAL_OPENING_HAND', payload: { player: 'B' } });
+    currentState = r4.state;
+    setState(currentState);
+    setDrawCounts({ A: 0, B: 0 });
   };
 
   const handleOpenEditor = (result: ConvertResult) => {
@@ -96,7 +119,7 @@ export function App() {
 
   const appView = (
     <main id="main-content">
-      <Header onLoadDecks={() => { resetToInput(); navigate('#/input'); }} />
+      <Header onLoadDecks={() => { resetToInput(); navigate('#/input'); }} onNewGame={deckA !== null && deckB !== null ? handleNewGame : undefined} />
       <StatusBar mode="game" drawCounts={drawCounts} />
       <ExportDropdown cards={state.players.A.library} />
       <div class="pod-layout">
