@@ -87,7 +87,7 @@ export function App() {
   );
 
   const appView = (
-    <main id="main-content"n>
+    <main id="main-content">
       <Header onLoadDecks={() => { resetToInput(); navigate('#/input'); }} />
       <ExportDropdown cards={state.players.A.library} />
       <div class="pod-layout">
