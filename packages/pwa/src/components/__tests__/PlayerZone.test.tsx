@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/preact';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { PlayerZone } from '../PlayerZone.js';
 import type { PlayerState, PlayerPhase, Action, ActionResult, GameState } from '@scryglass/core';
@@ -44,7 +44,7 @@ function renderPlayerZone(
   otherPlayerPhase: PlayerPhase = 'loading',
   player: 'A' | 'B' = 'A',
   onDispatch: (action: Action) => ActionResult = stubDispatch(),
-  visiblePlayer: 'A' | 'B' | null | undefined = undefined,
+  visiblePlayer: 'A' | 'B' | null = null,
 ) {
   return render(
     <PlayerZone
@@ -54,7 +54,7 @@ function renderPlayerZone(
       settings={defaultSettings}
       gameState={makeGameState(playerState, player)}
       onDispatch={onDispatch}
-      visiblePlayer={visiblePlayer as 'A' | 'B' | null}
+      visiblePlayer={visiblePlayer}
       onShowPlayer={() => {}}
       onHideAll={() => {}}
     />,
@@ -80,10 +80,16 @@ describe('<PlayerZone />', () => {
   it('disables action buttons when phase is loading', () => {
     renderPlayerZone(makePlayerState({ phase: 'loading' }));
 
-    const buttons = screen.getAllByRole('button');
-    for (const button of buttons) {
-      expect(button).toHaveProperty('disabled', true);
-    }
+    // Game action buttons (Draw, Fetch Land, Tutor, Scry) should be disabled during loading
+    // Visibility controls (Show/Hide) are not game actions and are not affected by phase
+    const drawBtn = screen.getByRole('button', { name: /draw card/i });
+    const fetchBtn = screen.getByRole('button', { name: /fetch basic land/i });
+    const tutorBtn = screen.getByRole('button', { name: /tutor card/i });
+    const scryBtn = screen.getByRole('button', { name: /scry/i });
+    expect(drawBtn).toHaveProperty('disabled', true);
+    expect(fetchBtn).toHaveProperty('disabled', true);
+    expect(tutorBtn).toHaveProperty('disabled', true);
+    expect(scryBtn).toHaveProperty('disabled', true);
   });
 
   it('enables action buttons when both players are in playing phase', () => {
@@ -92,19 +98,27 @@ describe('<PlayerZone />', () => {
     ];
     renderPlayerZone(makePlayerState({ phase: 'playing', library: cards }), 'playing');
 
-    const buttons = screen.getAllByRole('button');
-    for (const button of buttons) {
-      expect(button).toHaveProperty('disabled', false);
-    }
+    const drawBtn = screen.getByRole('button', { name: /draw card/i });
+    const fetchBtn = screen.getByRole('button', { name: /fetch basic land/i });
+    const tutorBtn = screen.getByRole('button', { name: /tutor card/i });
+    const scryBtn = screen.getByRole('button', { name: /scry/i });
+    expect(drawBtn).toHaveProperty('disabled', false);
+    expect(fetchBtn).toHaveProperty('disabled', false);
+    expect(tutorBtn).toHaveProperty('disabled', false);
+    expect(scryBtn).toHaveProperty('disabled', false);
   });
 
   it('disables action buttons when own phase is playing but other player is still mulliganing', () => {
     renderPlayerZone(makePlayerState({ phase: 'playing' }), 'mulligan');
 
-    const buttons = screen.getAllByRole('button');
-    for (const button of buttons) {
-      expect(button).toHaveProperty('disabled', true);
-    }
+    const drawBtn = screen.getByRole('button', { name: /draw card/i });
+    const fetchBtn = screen.getByRole('button', { name: /fetch basic land/i });
+    const tutorBtn = screen.getByRole('button', { name: /tutor card/i });
+    const scryBtn = screen.getByRole('button', { name: /scry/i });
+    expect(drawBtn).toHaveProperty('disabled', true);
+    expect(fetchBtn).toHaveProperty('disabled', true);
+    expect(tutorBtn).toHaveProperty('disabled', true);
+    expect(scryBtn).toHaveProperty('disabled', true);
   });
 
   it('renders Draw, Fetch Land, Tutor, and Scry buttons', () => {
@@ -155,6 +169,44 @@ describe('<PlayerZone />', () => {
   it('does not render MulliganHand when player phase is loading', () => {
     renderPlayerZone(makePlayerState({ phase: 'loading' }));
     expect(screen.queryByText('Opening Hand')).toBeNull();
+  });
+
+  it('calls onShowPlayer when "Show" button is clicked', () => {
+    const onShowPlayer = vi.fn();
+    render(
+      <PlayerZone
+        player="A"
+        playerState={makePlayerState()}
+        otherPlayerPhase="loading"
+        settings={defaultSettings}
+        gameState={makeGameState(makePlayerState())}
+        onDispatch={stubDispatch()}
+        visiblePlayer={null}
+        onShowPlayer={onShowPlayer}
+        onHideAll={() => {}}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: "Show Player A's cards" }));
+    expect(onShowPlayer).toHaveBeenCalledWith('A');
+  });
+
+  it('calls onHideAll when "Hide all cards" button is clicked', () => {
+    const onHideAll = vi.fn();
+    render(
+      <PlayerZone
+        player="A"
+        playerState={makePlayerState()}
+        otherPlayerPhase="loading"
+        settings={defaultSettings}
+        gameState={makeGameState(makePlayerState())}
+        onDispatch={stubDispatch()}
+        visiblePlayer="A"
+        onShowPlayer={() => {}}
+        onHideAll={onHideAll}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Hide all cards' }));
+    expect(onHideAll).toHaveBeenCalled();
   });
 
   it('passes vitest-axe a11y assertions', async () => {
