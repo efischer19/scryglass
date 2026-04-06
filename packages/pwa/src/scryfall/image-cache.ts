@@ -6,7 +6,7 @@ import { fetchCardImage } from './fetch-wrapper';
 /*  Types                                                             */
 /* ------------------------------------------------------------------ */
 
-/** Cache key in the format `{setCode}:{cardName}`. */
+/** Cache key in the format `{setCode}:{collectorNumber}`. */
 export type CacheKey = `${string}:${string}`;
 
 export interface CacheEntry {
@@ -42,8 +42,8 @@ const DB_NAME = 'scryglass-image-cache';
 const STORE_NAME = 'images';
 const DB_VERSION = 1;
 
-function buildKey(cardName: string, setCode: string): CacheKey {
-  return `${setCode.toLowerCase().trim()}:${cardName.toLowerCase().trim()}`;
+function buildKey(collectorNumber: string, setCode: string): CacheKey {
+  return `${setCode.toLowerCase().trim()}:${collectorNumber.toLowerCase().trim()}`;
 }
 
 function openDB(): Promise<IDBDatabase> {
@@ -67,12 +67,12 @@ function openDB(): Promise<IDBDatabase> {
 /* ------------------------------------------------------------------ */
 
 export async function getCachedImage(
-  cardName: string,
+  collectorNumber: string,
   setCode: string,
 ): Promise<CacheLookupResult> {
   try {
     const db = await openDB();
-    const key = buildKey(cardName, setCode);
+    const key = buildKey(collectorNumber, setCode);
 
     return new Promise<CacheLookupResult>((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readonly');
@@ -92,13 +92,13 @@ export async function getCachedImage(
 }
 
 export async function cacheImage(
-  cardName: string,
+  collectorNumber: string,
   setCode: string,
   blob: Blob,
 ): Promise<void> {
   try {
     const db = await openDB();
-    const key = buildKey(cardName, setCode);
+    const key = buildKey(collectorNumber, setCode);
     const data = await blob.arrayBuffer();
     const entry: StoredEntry = { key, data, type: blob.type, cachedAt: Date.now() };
 
@@ -116,29 +116,24 @@ export async function cacheImage(
 }
 
 export async function getImageUrl(
-  cardName: string,
+  collectorNumber: string,
   setCode: string,
 ): Promise<string | null> {
-  const cached = await getCachedImage(cardName, setCode);
+  const cached = await getCachedImage(collectorNumber, setCode);
   if (cached) {
     return URL.createObjectURL(cached);
   }
 
   try {
-    // NOTE: fetchCardImage expects a collector number, not a card name.
-    // A future integration layer will resolve card names to collector
-    // numbers before reaching this point. For now, callers who need the
-    // fetch fallback should ensure the cardName value is the collector
-    // number or provide their own fetch-then-cache logic.
     const blob = await fetchCardImage({
       setCode,
-      collectorNumber: cardName,
+      collectorNumber,
     });
     if (!blob) {
       return null;
     }
 
-    await cacheImage(cardName, setCode, blob);
+    await cacheImage(collectorNumber, setCode, blob);
     return URL.createObjectURL(blob);
   } catch {
     return null;

@@ -11,7 +11,7 @@ export type { PriorityLevel } from './fetch-wrapper';
 /* ------------------------------------------------------------------ */
 
 export interface PriorityFetchRequest {
-  cardName: string;
+  collectorNumber: string;
   setCode: string;
   priority: 'jit' | 'background';
 }
@@ -19,7 +19,7 @@ export interface PriorityFetchRequest {
 export interface CardImageState {
   status: 'loading' | 'loaded' | 'error';
   imageUrl: string | null;
-  cardName: string;
+  collectorNumber: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -40,11 +40,11 @@ let activeJitCount = 0;
  * Returns an object URL string on success, or `null` on failure.
  */
 export async function priorityFetch(
-  cardName: string,
+  collectorNumber: string,
   setCode: string,
 ): Promise<string | null> {
   // Check cache first
-  const cached = await getCachedImage(cardName, setCode);
+  const cached = await getCachedImage(collectorNumber, setCode);
   if (cached) {
     return URL.createObjectURL(cached);
   }
@@ -56,12 +56,8 @@ export async function priorityFetch(
   }
 
   try {
-    // NOTE: fetchCardImage expects a collector number, not a card name.
-    // A future integration layer will resolve card names to collector
-    // numbers before reaching this point — see the same note in
-    // image-cache.ts getImageUrl().
     const blob = await fetchCardImage(
-      { setCode, collectorNumber: cardName },
+      { setCode, collectorNumber },
       'jit',
     );
 
@@ -69,7 +65,7 @@ export async function priorityFetch(
       return null;
     }
 
-    await cacheImage(cardName, setCode, blob);
+    await cacheImage(collectorNumber, setCode, blob);
     return URL.createObjectURL(blob);
   } catch {
     return null;

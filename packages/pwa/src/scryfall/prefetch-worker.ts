@@ -5,7 +5,7 @@
 /* ------------------------------------------------------------------ */
 
 export interface PrefetchCard {
-  cardName: string;
+  collectorNumber: string;
   setCode: string;
 }
 

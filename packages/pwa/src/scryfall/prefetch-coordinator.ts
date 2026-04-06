@@ -21,15 +21,15 @@ let worker: Worker | null = null;
 /* ------------------------------------------------------------------ */
 
 async function handleFetchRequest(card: PrefetchCard): Promise<void> {
-  const cached = await getCachedImage(card.cardName, card.setCode);
+  const cached = await getCachedImage(card.collectorNumber, card.setCode);
   if (cached) return;
 
   const blob = await fetchCardImage({
     setCode: card.setCode,
-    collectorNumber: card.cardName,
+    collectorNumber: card.collectorNumber,
   });
   if (blob) {
-    await cacheImage(card.cardName, card.setCode, blob);
+    await cacheImage(card.collectorNumber, card.setCode, blob);
   }
 }
 
