@@ -23,7 +23,7 @@ interface RouterProps {
 
 export function Router({ inputView, editorView, appView }: RouterProps) {
   const [route, setRoute] = useState<Route>(getRoute);
-  const [announcement, setAnnouncement] = useState('');
+  const [announcement, setAnnouncement] = useState(`Navigated to ${ROUTE_LABELS[getRoute()]}`);
 
   useEffect(() => {
     const onHashChange = () => setRoute(getRoute());
@@ -38,7 +38,7 @@ export function Router({ inputView, editorView, appView }: RouterProps) {
 
     const main = document.getElementById('main-content');
     if (main) {
-      main.setAttribute('tabindex', '-1');
+      main.tabIndex = -1;
       main.focus();
     }
   }, [route]);
