@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { drawCard } from './helpers/draw-card-helper.js';
 import { GameLogger } from './helpers/game-logger.js';
 import { captureScreenshot } from './helpers/screenshot-helper.js';
+import { showPlayerCards, hideAllCards } from './helpers/visibility-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -96,24 +97,18 @@ test('full 2-player, 10-turn game simulation', async ({ page }) => {
   // Phase 2 — Deal initial hands; both players keep
   // =========================================================================
 
-  // ── Screenshot 02: Pre-deal state (both players) ───────────────────────
+  // ── Screenshot 02: Pre-deal state (Player A's opening hand) ───────────
+  // Show Player A's cards to access their mulligan section
+  await showPlayerCards(page, 'A');
   await expect(
     playerAZone.locator('section[aria-label="Player A\'s opening hand"]'),
   ).toBeVisible();
-  await expect(
-    playerBZone.locator('section[aria-label="Player B\'s opening hand"]'),
-  ).toBeVisible();
   await captureScreenshot(page, 'full-02-opening-hands.png');
 
-  // Both players deal their initial hands
+  // Player A: deal, keep (auto-hides on KEEP_HAND)
   await playerAZone
     .getByRole('button', { name: "Deal initial hand for Player A" })
     .click();
-  await playerBZone
-    .getByRole('button', { name: "Deal initial hand for Player B" })
-    .click();
-
-  // Both players keep (hands are randomly shuffled, so we keep regardless of verdict)
   await playerAZone
     .getByRole('button', { name: "Keep Player A's opening hand" })
     .click();
@@ -125,6 +120,14 @@ test('full 2-player, 10-turn game simulation', async ({ page }) => {
     result: { librarySize: await getLibrarySize(playerAZone) },
   });
 
+  // Player B: show cards, deal, keep (auto-hides on KEEP_HAND)
+  await showPlayerCards(page, 'B');
+  await expect(
+    playerBZone.locator('section[aria-label="Player B\'s opening hand"]'),
+  ).toBeVisible();
+  await playerBZone
+    .getByRole('button', { name: "Deal initial hand for Player B" })
+    .click();
   await playerBZone
     .getByRole('button', { name: "Keep Player B's opening hand" })
     .click();
@@ -136,13 +139,17 @@ test('full 2-player, 10-turn game simulation', async ({ page }) => {
     result: { librarySize: await getLibrarySize(playerBZone) },
   });
 
-  // Wait for mulligan UI to disappear
+  // Wait for mulligan UI to disappear (hidden behind gate after KEEP_HAND)
+  await showPlayerCards(page, 'A');
   await expect(
     playerAZone.locator('section[aria-label="Player A\'s opening hand"]'),
   ).not.toBeVisible();
+  await hideAllCards(page);
+  await showPlayerCards(page, 'B');
   await expect(
     playerBZone.locator('section[aria-label="Player B\'s opening hand"]'),
   ).not.toBeVisible();
+  await hideAllCards(page);
 
   // ── Screenshot 03: Post-mulligan ───────────────────────────────────────
   await captureScreenshot(page, 'full-03-post-mulligan.png');
@@ -343,6 +350,8 @@ test('full 2-player, 10-turn game simulation', async ({ page }) => {
 
   // Turn 6: Player A draws + returns card to library; Player B draws
   // -----------------------------------------------------------------------
+  // Show Player A's cards so the drawn card display is visible for return
+  await showPlayerCards(page, 'A');
   await drawCard(page, 'A');
   expectedLibA -= 1;
   logger.log({
@@ -362,6 +371,7 @@ test('full 2-player, 10-turn game simulation', async ({ page }) => {
     action: { type: 'RETURN_TO_LIBRARY', payload: { player: 'A', position: 'top' } },
     result: { librarySize: expectedLibA },
   });
+  await hideAllCards(page);
 
   await drawCard(page, 'B');
   expectedLibB -= 1;

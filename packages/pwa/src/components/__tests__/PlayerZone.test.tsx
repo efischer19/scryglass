@@ -44,6 +44,7 @@ function renderPlayerZone(
   otherPlayerPhase: PlayerPhase = 'loading',
   player: 'A' | 'B' = 'A',
   onDispatch: (action: Action) => ActionResult = stubDispatch(),
+  visiblePlayer: 'A' | 'B' | null | undefined = undefined,
 ) {
   return render(
     <PlayerZone
@@ -53,6 +54,9 @@ function renderPlayerZone(
       settings={defaultSettings}
       gameState={makeGameState(playerState, player)}
       onDispatch={onDispatch}
+      visiblePlayer={visiblePlayer as 'A' | 'B' | null}
+      onShowPlayer={() => {}}
+      onHideAll={() => {}}
     />,
   );
 }
@@ -144,7 +148,7 @@ describe('<PlayerZone />', () => {
   });
 
   it('renders MulliganHand when player phase is mulligan', () => {
-    renderPlayerZone(makePlayerState({ phase: 'mulligan' }));
+    renderPlayerZone(makePlayerState({ phase: 'mulligan' }), 'loading', 'A', stubDispatch(), 'A');
     expect(screen.getByText('Opening Hand')).toBeTruthy();
   });
 
@@ -166,6 +170,10 @@ describe('<PlayerZone />', () => {
     ];
     const { container } = renderPlayerZone(
       makePlayerState({ phase: 'mulligan', mulliganHand }),
+      'loading',
+      'A',
+      stubDispatch(),
+      'A',
     );
     const results = await axe(container);
     expect(results).toHaveNoViolations();

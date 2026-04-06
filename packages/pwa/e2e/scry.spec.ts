@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { captureScreenshot } from './helpers/screenshot-helper.js';
+import { showPlayerCards, hideAllCards } from './helpers/visibility-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -27,21 +28,25 @@ async function loadDecksAndKeepHands(
 
   await page.waitForURL('**/#/app');
 
-  // Deal initial hands for both players
+  // Player A: show cards, deal, keep (auto-hides on KEEP_HAND)
+  await showPlayerCards(page, 'A');
   await expect(playerAZone.locator('section[aria-label="Player A\'s opening hand"]')).toBeVisible();
   await playerAZone.getByRole('button', { name: "Deal initial hand for Player A" }).click();
-  await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
-
-  // Keep opening hands for both players
-  await expect(playerAZone.locator('section[aria-label="Player A\'s opening hand"]')).toBeVisible();
   await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
 
+  // Player B: show cards, deal, keep (auto-hides on KEEP_HAND)
+  await showPlayerCards(page, 'B');
   await expect(playerBZone.locator('section[aria-label="Player B\'s opening hand"]')).toBeVisible();
+  await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
   await playerBZone.getByRole('button', { name: "Keep Player B's opening hand" }).click();
 
-  // Wait for mulligan sections to disappear
+  // Wait for mulligan sections to disappear (hidden behind gate after KEEP_HAND)
+  await showPlayerCards(page, 'A');
   await expect(playerAZone.locator('section[aria-label="Player A\'s opening hand"]')).not.toBeVisible();
+  await hideAllCards(page);
+  await showPlayerCards(page, 'B');
   await expect(playerBZone.locator('section[aria-label="Player B\'s opening hand"]')).not.toBeVisible();
+  await hideAllCards(page);
 }
 
 async function getLibrarySize(zone: Locator): Promise<number> {
@@ -111,6 +116,7 @@ test('scry 2 cards: one to top, one to bottom - library size unchanged and top c
   expect(playerBLibrarySizeAfter).toBe(playerBLibrarySizeBefore);
 
   // --- Draw a card for Player A and verify it matches the card placed on top ---
+  await showPlayerCards(page, 'A');
   await playerAZone.getByRole('button', { name: `Draw card from Player A's library` }).click();
   await page.getByRole('button', { name: 'Yes' }).click();
 

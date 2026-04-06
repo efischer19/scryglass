@@ -68,9 +68,18 @@ describe('<App />', () => {
       // After both decks are loaded, the App deals opening hands and navigates to #/app.
       await loadBothDecks();
 
-      // Both players should now be in mulligan phase showing Opening Hand heading
-      const openingHandHeadings = await screen.findAllByText('Opening Hand');
-      expect(openingHandHeadings).toHaveLength(2);
+      // With pass-and-play visibility gate, each player's section must be shown individually.
+      // Show Player A's section and verify the Opening Hand heading is present
+      const showPlayerABtn = await screen.findByRole('button', { name: "Show Player A's cards" });
+      fireEvent.click(showPlayerABtn);
+      expect(screen.getAllByText('Opening Hand')).toHaveLength(1);
+
+      // Hide all then show Player B's section
+      const hideBtn = screen.getByRole('button', { name: 'Hide all cards' });
+      fireEvent.click(hideBtn);
+      const showPlayerBBtn = screen.getByRole('button', { name: "Show Player B's cards" });
+      fireEvent.click(showPlayerBBtn);
+      expect(screen.getAllByText('Opening Hand')).toHaveLength(1);
     });
 
     it('transitions to playing phase when both players keep their hands', async () => {
@@ -78,21 +87,23 @@ describe('<App />', () => {
 
       await loadBothDecks();
 
-      // Both players are in pre-deal state — click "Deal Initial" for each
-      const dealBtns = await screen.findAllByRole('button', { name: /deal initial hand/i });
-      expect(dealBtns).toHaveLength(2);
-      fireEvent.click(dealBtns[0]);
-      fireEvent.click(dealBtns[1]);
+      // Player A: show cards, deal, keep (auto-hides on KEEP_HAND)
+      const showPlayerABtn = await screen.findByRole('button', { name: "Show Player A's cards" });
+      fireEvent.click(showPlayerABtn);
+      const dealBtnA = await screen.findByRole('button', { name: /deal initial hand for player a/i });
+      fireEvent.click(dealBtnA);
+      const keepBtnA = await screen.findByRole('button', { name: /keep player a's opening hand/i });
+      fireEvent.click(keepBtnA);
 
-      // Both players are now in mulligan phase — keep both hands
-      // The verdict for 30 lands / 60 cards hand has 3-4 lands, so "must_keep"
-      const keepBtns = await screen.findAllByRole('button', { name: /keep.*opening hand/i });
-      expect(keepBtns).toHaveLength(2);
+      // Player B: show cards, deal, keep (auto-hides on KEEP_HAND)
+      const showPlayerBBtn = await screen.findByRole('button', { name: "Show Player B's cards" });
+      fireEvent.click(showPlayerBBtn);
+      const dealBtnB = await screen.findByRole('button', { name: /deal initial hand for player b/i });
+      fireEvent.click(dealBtnB);
+      const keepBtnB = await screen.findByRole('button', { name: /keep player b's opening hand/i });
+      fireEvent.click(keepBtnB);
 
-      fireEvent.click(keepBtns[0]);
-      fireEvent.click(keepBtns[1]);
-
-      // After both keep, action buttons (Draw) should be enabled
+      // After both keep, action buttons (Draw) should be enabled — they are always rendered
       const drawBtns = await screen.findAllByRole('button', { name: /draw card/i });
       for (const btn of drawBtns) {
         expect(btn).toHaveProperty('disabled', false);
@@ -111,27 +122,35 @@ describe('<App />', () => {
       render(<App />);
       await loadBothDecks();
 
-      // Both players are in pre-deal state — click "Deal Initial" for each
-      const dealBtns = await screen.findAllByRole('button', { name: /deal initial hand/i });
-      fireEvent.click(dealBtns[0]);
-      fireEvent.click(dealBtns[1]);
+      // Player A: show cards, deal, keep (auto-hides on KEEP_HAND)
+      const showPlayerABtn = await screen.findByRole('button', { name: "Show Player A's cards" });
+      fireEvent.click(showPlayerABtn);
+      const dealBtnA = screen.getByRole('button', { name: /deal initial hand for player a/i });
+      fireEvent.click(dealBtnA);
+      const keepBtnA = screen.getByRole('button', { name: /keep player a's opening hand/i });
+      fireEvent.click(keepBtnA);
 
-      // Both players keep hands to enter playing phase
-      const keepBtns = await screen.findAllByRole('button', { name: /keep.*opening hand/i });
-      fireEvent.click(keepBtns[0]);
-      fireEvent.click(keepBtns[1]);
+      // Player B: show cards, deal, keep (auto-hides on KEEP_HAND)
+      const showPlayerBBtn = screen.getByRole('button', { name: "Show Player B's cards" });
+      fireEvent.click(showPlayerBBtn);
+      const dealBtnB = screen.getByRole('button', { name: /deal initial hand for player b/i });
+      fireEvent.click(dealBtnB);
+      const keepBtnB = screen.getByRole('button', { name: /keep player b's opening hand/i });
+      fireEvent.click(keepBtnB);
 
-      // Confirm we're in playing phase
+      // Confirm we're in playing phase (draw buttons are always rendered)
       const drawBtns = await screen.findAllByRole('button', { name: /draw card/i });
       expect(drawBtns.length).toBeGreaterThan(0);
 
-      // Click New Game
+      // Click New Game — visibility resets to null
       const newGameBtn = screen.getByRole('button', { name: /new game/i });
       fireEvent.click(newGameBtn);
 
-      // Both players should be back in mulligan phase (pre-deal: shows Opening Hand + Deal Initial)
+      // Show Player A's cards to verify they're back in mulligan phase
+      const showABtn = screen.getByRole('button', { name: "Show Player A's cards" });
+      fireEvent.click(showABtn);
       const openingHandHeadings = await screen.findAllByText('Opening Hand');
-      expect(openingHandHeadings).toHaveLength(2);
+      expect(openingHandHeadings).toHaveLength(1);
     });
   });
 });

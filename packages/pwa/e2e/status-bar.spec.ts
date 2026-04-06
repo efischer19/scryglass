@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { drawCard } from './helpers/draw-card-helper.js';
+import { showPlayerCards } from './helpers/visibility-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -55,9 +56,13 @@ test.describe('Status bar', () => {
     // Keep both players' opening hands
     const playerAZone = page.locator("section[aria-label=\"Player A's zone\"]");
     const playerBZone = page.locator("section[aria-label=\"Player B's zone\"]");
+    // Player A: show cards, deal, keep (auto-hides on KEEP_HAND)
+    await showPlayerCards(page, 'A');
     await playerAZone.getByRole('button', { name: "Deal initial hand for Player A" }).click();
-    await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
     await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
+    // Player B: show cards, deal, keep (auto-hides on KEEP_HAND)
+    await showPlayerCards(page, 'B');
+    await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
     await playerBZone.getByRole('button', { name: "Keep Player B's opening hand" }).click();
 
     // Draw a card for Player A
