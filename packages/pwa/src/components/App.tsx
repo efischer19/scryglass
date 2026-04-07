@@ -8,6 +8,7 @@ import { DeckInput } from './DeckInput.js';
 import { DeckEditor } from './DeckEditor.js';
 import { ExportDropdown } from './ExportDropdown.js';
 import { StatusBar } from './StatusBar.js';
+import { GameHistory } from './GameHistory.js';
 import { PreGameSettings } from './PreGameSettings.js';
 import type { GameSettings } from './PreGameSettings.js';
 
@@ -19,6 +20,7 @@ export function App() {
   const [decks, setDecks] = useState<Partial<Record<PlayerId, Card[]>>>({});
   const [drawCounts, setDrawCounts] = useState<Partial<Record<PlayerId, number>>>({});
   const [visiblePlayer, setVisiblePlayer] = useState<PlayerId | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const playerCount = gameSettings?.playerCount ?? 2;
   const activePlayers = PLAYER_IDS.slice(0, playerCount);
@@ -154,7 +156,22 @@ export function App() {
     <main id="main-content">
       <Header onLoadDecks={() => { resetToInput(); navigate('#/input'); }} onNewGame={allDecksLoaded ? handleNewGame : undefined} />
       <StatusBar mode="game" drawCounts={drawCounts} activePlayers={activePlayers} />
-      <ExportDropdown cards={state.players.A?.library ?? []} />
+      <div class="game-toolbar">
+        <ExportDropdown cards={state.players.A?.library ?? []} />
+        <button
+          class="action-btn game-toolbar__history-btn"
+          type="button"
+          onClick={() => setHistoryOpen(true)}
+          aria-label="Open game history"
+        >
+          History
+        </button>
+      </div>
+      <GameHistory
+        history={state.history}
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      />
       <div class="pod-layout">
         {activePlayers.map((p) => {
           const playerState = state.players[p];

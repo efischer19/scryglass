@@ -960,3 +960,170 @@ describe('dispatch — TUTOR_CARD', () => {
     expect(result.state.players.B).toEqual(playerBBefore);
   });
 });
+
+describe('dispatch — history entries', () => {
+  it('initializes with an empty history array', () => {
+    const state = createInitialState();
+    expect(state.history).toEqual([]);
+  });
+
+  it('appends a history entry for LOAD_DECK', () => {
+    const state = createInitialState();
+    const cards = makeCards(3);
+    const result = dispatch(state, {
+      type: 'LOAD_DECK',
+      payload: { player: 'A', cards },
+    });
+
+    expect(result.state.history).toHaveLength(1);
+    expect(result.state.history[0].actionType).toBe('LOAD_DECK');
+    expect(result.state.history[0].player).toBe('A');
+    expect(result.state.history[0].description).toBe('Player A loaded a deck (3 cards)');
+  });
+
+  it('appends a history entry for SHUFFLE_LIBRARY', () => {
+    let state = createInitialState();
+    const cards = makeCards(3);
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, { type: 'SHUFFLE_LIBRARY', payload: { player: 'A' } });
+    expect(result.state.history).toHaveLength(2);
+    expect(result.state.history[1].actionType).toBe('SHUFFLE_LIBRARY');
+    expect(result.state.history[1].description).toBe('Player A shuffled their library');
+  });
+
+  it('appends a history entry for DRAW_CARD with the drawn card', () => {
+    let state = createInitialState();
+    const cards = makeCards(3);
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, { type: 'DRAW_CARD', payload: { player: 'A' } });
+    expect(result.state.history).toHaveLength(2);
+    const entry = result.state.history[1];
+    expect(entry.actionType).toBe('DRAW_CARD');
+    expect(entry.description).toBe('Player A drew a card');
+    expect(entry.cards).toEqual([cards[0]]);
+  });
+
+  it('appends a history entry for DEAL_OPENING_HAND', () => {
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards: makeCards(10) } }).state;
+
+    const result = dispatch(state, { type: 'DEAL_OPENING_HAND', payload: { player: 'A' } });
+    expect(result.state.history).toHaveLength(2);
+    expect(result.state.history[1].actionType).toBe('DEAL_OPENING_HAND');
+    expect(result.state.history[1].description).toBe('Player A was dealt an opening hand');
+  });
+
+  it('appends a history entry for MULLIGAN', () => {
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards: makeCards(10) } }).state;
+    state = dispatch(state, { type: 'DEAL_OPENING_HAND', payload: { player: 'A' } }).state;
+
+    const result = dispatch(state, { type: 'MULLIGAN', payload: { player: 'A' } });
+    expect(result.state.history).toHaveLength(3);
+    expect(result.state.history[2].actionType).toBe('MULLIGAN');
+    expect(result.state.history[2].description).toBe('Player A took a mulligan');
+  });
+
+  it('appends a history entry for KEEP_HAND', () => {
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards: makeCards(10) } }).state;
+    state = dispatch(state, { type: 'DEAL_OPENING_HAND', payload: { player: 'A' } }).state;
+
+    const result = dispatch(state, { type: 'KEEP_HAND', payload: { player: 'A' } });
+    expect(result.state.history).toHaveLength(3);
+    expect(result.state.history[2].actionType).toBe('KEEP_HAND');
+    expect(result.state.history[2].description).toBe('Player A kept their hand');
+  });
+
+  it('appends a history entry for TUTOR_CARD with the tutored card', () => {
+    let state = createInitialState();
+    const cards = [makeCard('Sol Ring'), makeCard('Forest')];
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, {
+      type: 'TUTOR_CARD',
+      payload: { player: 'A', cardName: 'Sol Ring' },
+    });
+    expect(result.state.history).toHaveLength(2);
+    const entry = result.state.history[1];
+    expect(entry.actionType).toBe('TUTOR_CARD');
+    expect(entry.description).toBe('Player A tutored for Sol Ring');
+    expect(entry.cards).toEqual([makeCard('Sol Ring')]);
+  });
+
+  it('appends a history entry for FETCH_BASIC_LAND with the fetched card', () => {
+    let state = createInitialState();
+    const mountain = { name: 'Mountain', setCode: 'TST', collectorNumber: '1', cardType: 'land' as const };
+    const cards = [makeCard('Sol Ring'), mountain];
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, {
+      type: 'FETCH_BASIC_LAND',
+      payload: { player: 'A', landType: 'Mountain' },
+    });
+    expect(result.state.history).toHaveLength(2);
+    const entry = result.state.history[1];
+    expect(entry.actionType).toBe('FETCH_BASIC_LAND');
+    expect(entry.description).toBe('Player A fetched a Mountain');
+    expect(entry.cards).toEqual([mountain]);
+  });
+
+  it('appends a history entry for SCRY_RESOLVE', () => {
+    let state = createInitialState();
+    const cards = makeCards(5);
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, {
+      type: 'SCRY_RESOLVE',
+      payload: {
+        player: 'A',
+        decisions: [
+          { cardIndex: 0, destination: 'top' },
+          { cardIndex: 1, destination: 'bottom' },
+        ],
+      },
+    });
+    expect(result.state.history).toHaveLength(2);
+    const entry = result.state.history[1];
+    expect(entry.actionType).toBe('SCRY_RESOLVE');
+    expect(entry.description).toBe('Player A resolved scry (2 cards)');
+  });
+
+  it('appends a history entry for RETURN_TO_LIBRARY', () => {
+    let state = createInitialState();
+    const cards = makeCards(3);
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+    const drawResult = dispatch(state, { type: 'DRAW_CARD', payload: { player: 'A' } });
+    state = drawResult.state;
+    const drawnCard = drawResult.card!;
+
+    const result = dispatch(state, {
+      type: 'RETURN_TO_LIBRARY',
+      payload: { player: 'A', card: drawnCard, position: 'top' },
+    });
+    expect(result.state.history).toHaveLength(3);
+    const entry = result.state.history[2];
+    expect(entry.actionType).toBe('RETURN_TO_LIBRARY');
+    expect(entry.description).toBe(`Player A returned ${drawnCard.name} to top of library`);
+  });
+
+  it('accumulates history entries across multiple dispatches', () => {
+    let state = createInitialState();
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards: makeCards(10) } }).state;
+    state = dispatch(state, { type: 'SHUFFLE_LIBRARY', payload: { player: 'A' } }).state;
+    state = dispatch(state, { type: 'DRAW_CARD', payload: { player: 'A' } }).state;
+
+    expect(state.history).toHaveLength(3);
+    expect(state.history[0].actionType).toBe('LOAD_DECK');
+    expect(state.history[1].actionType).toBe('SHUFFLE_LIBRARY');
+    expect(state.history[2].actionType).toBe('DRAW_CARD');
+  });
+
+  it('does not include cards field when no card output exists', () => {
+    const state = createInitialState();
+    const result = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards: makeCards(3) } });
+    expect(result.state.history[0].cards).toBeUndefined();
+  });
+});
