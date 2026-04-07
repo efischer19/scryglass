@@ -1,16 +1,11 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
-import type { Action, ActionResult, Card, LandType } from '@scryglass/core';
+import type { Action, ActionResult, Card, LandType, PlayerId } from '@scryglass/core';
 import { getBasicLandCounts, BASIC_LAND_TYPES } from '@scryglass/core';
 import { ConfirmationGate } from './ConfirmationGate.js';
 import { CardDisplay } from './CardDisplay.js';
 
-const PLAYER_LABELS: Record<'A' | 'B', string> = {
-  A: 'Player A',
-  B: 'Player B',
-};
-
 interface FetchLandModalProps {
-  player: 'A' | 'B';
+  player: PlayerId;
   library: Card[];
   onDispatch: (action: Action) => ActionResult;
   onClose: () => void;
@@ -22,7 +17,7 @@ export function FetchLandModal({ player, library, onDispatch, onClose }: FetchLa
   const [fetchedCard, setFetchedCard] = useState<Card | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const label = PLAYER_LABELS[player];
+  const label = `Player ${player}`;
 
   const counts = getBasicLandCounts(library);
   const hasAnyLands = BASIC_LAND_TYPES.some(lt => (counts[lt] ?? 0) > 0);

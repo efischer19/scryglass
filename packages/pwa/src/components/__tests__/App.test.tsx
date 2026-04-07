@@ -19,9 +19,22 @@ beforeEach(() => {
   window.location.hash = '';
 });
 
+/** Navigate past the pre-game settings screen with defaults (2 players). */
+function confirmDefaultSettings() {
+  const startBtn = screen.getByRole('button', { name: /start game/i });
+  fireEvent.click(startBtn);
+}
+
 describe('<App />', () => {
-  it('renders the deck input view by default', () => {
+  it('renders the pre-game settings view by default', () => {
     render(<App />);
+    expect(screen.getByText('Game Settings')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /start game/i })).toBeTruthy();
+  });
+
+  it('shows the deck input view after confirming settings', () => {
+    render(<App />);
+    confirmDefaultSettings();
     expect(screen.getByText('Enter Your Decklist')).toBeTruthy();
     expect(screen.getByRole('textbox')).toBeTruthy();
   });
@@ -38,7 +51,7 @@ describe('<App />', () => {
     expect(screen.getByText('Scryglass')).toBeTruthy();
   });
 
-  it('passes vitest-axe a11y assertions on the input view', async () => {
+  it('passes vitest-axe a11y assertions on the settings view', async () => {
     const { container } = render(<App />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
@@ -63,6 +76,7 @@ describe('<App />', () => {
 
     it('enters mulligan phase after loading both decks (both players see Opening Hand)', async () => {
       render(<App />);
+      confirmDefaultSettings();
 
       // The App now uses a two-step flow: first load Player A's deck, then Player B's deck.
       // After both decks are loaded, the App deals opening hands and navigates to #/app.
@@ -84,6 +98,7 @@ describe('<App />', () => {
 
     it('transitions to playing phase when both players keep their hands', async () => {
       render(<App />);
+      confirmDefaultSettings();
 
       await loadBothDecks();
 
@@ -112,6 +127,7 @@ describe('<App />', () => {
 
     it('shows New Game button in app view after decks are loaded', async () => {
       render(<App />);
+      confirmDefaultSettings();
       await loadBothDecks();
 
       const newGameBtn = await screen.findByRole('button', { name: /new game/i });
@@ -120,6 +136,7 @@ describe('<App />', () => {
 
     it('resets to mulligan phase when New Game is clicked', async () => {
       render(<App />);
+      confirmDefaultSettings();
       await loadBothDecks();
 
       // Player A: show cards, deal, keep (auto-hides on KEEP_HAND)

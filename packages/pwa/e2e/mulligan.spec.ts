@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { showPlayerCards, hideAllCards } from './helpers/visibility-helper.js';
+import { confirmDefaultSettings } from './helpers/settings-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -13,6 +14,7 @@ const evilDeck = readFileSync(resolve(__dirname, 'fixtures/evil.txt'), 'utf-8');
 /** Helper: load decks, navigate to #/app, and deal initial hands for both players */
 async function loadDecksAndDeal(page: Page, playerADeck: string) {
   await page.goto('/');
+  await confirmDefaultSettings(page);
 
   // Player A
   await expect(page.locator('section[aria-label="Deck input for Player A"]')).toBeVisible();

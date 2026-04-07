@@ -1,20 +1,33 @@
 import { ActionSchema } from './schemas/action.js';
 import type { Action, ActionResult } from './schemas/action.js';
 import type { GameState } from './schemas/state.js';
+import { PLAYER_IDS } from './schemas/state.js';
+import type { PlayerId } from './schemas/state.js';
 import { shuffle, cryptoRandomInt } from './shuffle.js';
 import { isBasicLandOfType } from './helpers/lands.js';
 
 /**
- * Create the initial game state with two players in the `loading` phase.
+ * Create the initial game state.
+ *
+ * @param playerCount Number of players (1–4). Defaults to 2.
+ * @param settings Optional initial settings overrides.
  */
-export function createInitialState(): GameState {
+export function createInitialState(
+  playerCount = 2,
+  settings?: Partial<GameState['settings']>,
+): GameState {
+  if (playerCount < 1 || playerCount > 4) {
+    throw new Error(`playerCount must be between 1 and 4, got ${playerCount}`);
+  }
+  const players: Record<string, GameState['players'][PlayerId]> = {};
+  for (let i = 0; i < playerCount; i++) {
+    players[PLAYER_IDS[i]] = { library: [], phase: 'loading', mulliganHand: [], mulliganCount: 0 };
+  }
   return {
-    players: {
-      A: { library: [], phase: 'loading', mulliganHand: [], mulliganCount: 0 },
-      B: { library: [], phase: 'loading', mulliganHand: [], mulliganCount: 0 },
-    },
+    players: players as GameState['players'],
     settings: {
       allowMulliganWith2or5Lands: false,
+      ...settings,
     },
   };
 }
@@ -113,7 +126,7 @@ function handleReturnToLibrary(state: GameState, action: Extract<Action, { type:
   };
 }
 
-function requireMulliganPhase(state: GameState, player: 'A' | 'B', actionType: string): void {
+function requireMulliganPhase(state: GameState, player: PlayerId, actionType: string): void {
   if (state.players[player].phase !== 'mulligan') {
     throw new Error(
       `Cannot ${actionType}: Player ${player} is in '${state.players[player].phase}' phase, but must be in 'mulligan' phase`,

@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { confirmDefaultSettings } from './helpers/settings-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -9,6 +10,7 @@ const evilDeck = readFileSync(resolve(__dirname, 'fixtures/evil.txt'), 'utf-8');
 
 test('loads good.txt for Player A and evil.txt for Player B, then transitions to shuffler view', async ({ page }) => {
   await page.goto('/');
+  await confirmDefaultSettings(page);
 
   // --- Player A: load good.txt (Fellowship) ---
   await expect(page.locator('section[aria-label="Deck input for Player A"]')).toBeVisible();
