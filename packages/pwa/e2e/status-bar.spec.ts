@@ -4,19 +4,22 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { drawCard } from './helpers/draw-card-helper.js';
 import { showPlayerCards } from './helpers/visibility-helper.js';
+import { confirmDefaultSettings } from './helpers/settings-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
 const evilDeck = readFileSync(resolve(__dirname, 'fixtures/evil.txt'), 'utf-8');
 
 test.describe('Status bar', () => {
-  test('shows "Selecting deck for Player A" on initial load', async ({ page }) => {
+  test('shows "Selecting deck for Player A" after confirming settings', async ({ page }) => {
     await page.goto('/');
+    await confirmDefaultSettings(page);
     await expect(page.locator('.status-bar')).toContainText('Selecting deck for Player A');
   });
 
   test('shows "Selecting deck for Player B" after Player A loads their deck', async ({ page }) => {
     await page.goto('/');
+    await confirmDefaultSettings(page);
 
     await expect(page.locator('section[aria-label="Deck input for Player A"]')).toBeVisible();
     await page.locator('#deck-textarea').fill(goodDeck);
@@ -28,6 +31,7 @@ test.describe('Status bar', () => {
 
   test('shows draw counts starting at 0 after both decks are loaded', async ({ page }) => {
     await page.goto('/');
+    await confirmDefaultSettings(page);
 
     await page.locator('#deck-textarea').fill(goodDeck);
     await page.getByRole('button', { name: 'Load Deck', exact: true }).click();
@@ -43,6 +47,7 @@ test.describe('Status bar', () => {
 
   test('increments draw count after each player draws a card', async ({ page }) => {
     await page.goto('/');
+    await confirmDefaultSettings(page);
 
     await page.locator('#deck-textarea').fill(goodDeck);
     await page.getByRole('button', { name: 'Load Deck', exact: true }).click();
