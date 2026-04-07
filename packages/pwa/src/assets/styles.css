@@ -1137,6 +1137,7 @@ textarea:focus-visible,
 
 .game-toolbar__history-btn {
   margin-left: auto;
+  background-color: var(--color-text);
 }
 
 /* ===================================================================
