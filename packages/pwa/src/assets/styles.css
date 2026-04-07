@@ -1123,3 +1123,129 @@ textarea:focus-visible,
     align-items: stretch;
   }
 }
+
+/* ===================================================================
+   Game Toolbar
+   =================================================================== */
+
+.game-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+}
+
+.game-toolbar__history-btn {
+  margin-left: auto;
+}
+
+/* ===================================================================
+   Game History Drawer
+   =================================================================== */
+
+.game-history {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(400px, 90vw);
+  height: 100vh;
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-border);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.game-history__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.game-history__title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+
+.game-history__close {
+  font-size: var(--font-size-sm);
+}
+
+.game-history__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.game-history__empty {
+  padding: var(--space-lg);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.game-history__entry {
+  padding: var(--space-sm) var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+
+.game-history__entry--a {
+  border-left: 3px solid var(--player-a-accent);
+}
+
+.game-history__entry--b {
+  border-left: 3px solid var(--player-b-accent);
+}
+
+.game-history__badge {
+  display: inline-block;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-surface);
+  background-color: var(--color-text-muted);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.game-history__description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  flex: 1;
+  min-width: 0;
+  align-self: center;
+}
+
+.game-history__cards {
+  display: flex;
+  gap: var(--space-xs);
+  flex-basis: 100%;
+  flex-wrap: wrap;
+}
+
+.game-history__card-thumb {
+  width: 60px;
+  flex-shrink: 0;
+}
+
+.game-history__card-thumb .card-display__image {
+  width: 100%;
+  max-height: none;
+  border-radius: var(--radius-sm);
+}
+
+.game-history__card-thumb .card-display__loading {
+  padding: var(--space-xs);
+  gap: var(--space-xs);
+  font-size: var(--font-size-sm);
+}
