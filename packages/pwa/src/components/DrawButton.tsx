@@ -1,24 +1,23 @@
 import { useState, useRef } from 'preact/hooks';
-import type { Action, ActionResult, Card } from '@scryglass/core';
+import type { Action, ActionResult, Card, PlayerId } from '@scryglass/core';
 import { ConfirmationGate } from './ConfirmationGate.js';
 
 interface DrawButtonProps {
-  player: 'A' | 'B';
+  player: PlayerId;
   disabled: boolean;
   libraryEmpty: boolean;
   onDispatch: (action: Action) => ActionResult;
   onCardDrawn: (card: Card | null) => void;
 }
 
-const PLAYER_LABELS: Record<'A' | 'B', string> = {
-  A: 'Player A',
-  B: 'Player B',
-};
+function playerLabel(id: PlayerId): string {
+  return `Player ${id}`;
+}
 
 export function DrawButton({ player, disabled, libraryEmpty, onDispatch, onCardDrawn }: DrawButtonProps) {
   const [showGate, setShowGate] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const label = PLAYER_LABELS[player];
+  const label = playerLabel(player);
   const isDisabled = disabled || libraryEmpty;
 
   const handleConfirm = () => {

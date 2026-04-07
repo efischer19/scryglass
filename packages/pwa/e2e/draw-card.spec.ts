@@ -4,6 +4,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { drawCard } from './helpers/draw-card-helper.js';
 import { showPlayerCards, hideAllCards } from './helpers/visibility-helper.js';
+import { confirmDefaultSettings } from './helpers/settings-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -20,6 +21,7 @@ async function getLibrarySize(page: Page, player: 'A' | 'B'): Promise<number> {
 /** Loads both decks and keeps both players' opening hands, ending in the #/app view. */
 async function setupGame(page: Page): Promise<void> {
   await page.goto('/');
+  await confirmDefaultSettings(page);
 
   await expect(page.locator('section[aria-label="Deck input for Player A"]')).toBeVisible();
   await page.locator('#deck-textarea').fill(goodDeck);

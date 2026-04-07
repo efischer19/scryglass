@@ -6,6 +6,7 @@ import { drawCard } from './helpers/draw-card-helper.js';
 import { GameLogger } from './helpers/game-logger.js';
 import { captureScreenshot } from './helpers/screenshot-helper.js';
 import { showPlayerCards, hideAllCards } from './helpers/visibility-helper.js';
+import { confirmDefaultSettings } from './helpers/settings-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -74,8 +75,7 @@ test('full 2-player, 10-turn game simulation', async ({ page }) => {
   // =========================================================================
 
   await page.goto('/');
-
-  // Player A — load good.txt
+  await confirmDefaultSettings(page);
   await expect(page.locator('section[aria-label="Deck input for Player A"]')).toBeVisible();
   await page.locator('#deck-textarea').fill(goodDeck);
   await expect(page.locator('.deck-input__counts')).toContainText(/Total cards: [1-9][0-9]*/);

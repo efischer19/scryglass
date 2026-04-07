@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { PlayerZone } from '../PlayerZone.js';
-import type { PlayerState, PlayerPhase, Action, ActionResult, GameState } from '@scryglass/core';
+import type { PlayerState, PlayerPhase, Action, ActionResult, GameState, PlayerId } from '@scryglass/core';
 
 function makePlayerState(overrides: Partial<PlayerState> = {}): PlayerState {
   return {
@@ -29,7 +29,7 @@ function stubDispatch(state?: PlayerState): (action: Action) => ActionResult {
   });
 }
 
-function makeGameState(playerState: PlayerState, player: 'A' | 'B' = 'A'): GameState {
+function makeGameState(playerState: PlayerState, player: PlayerId = 'A'): GameState {
   const other = makePlayerState();
   return {
     players: player === 'A'
@@ -42,9 +42,9 @@ function makeGameState(playerState: PlayerState, player: 'A' | 'B' = 'A'): GameS
 function renderPlayerZone(
   playerState: PlayerState,
   otherPlayerPhase: PlayerPhase = 'loading',
-  player: 'A' | 'B' = 'A',
+  player: PlayerId = 'A',
   onDispatch: (action: Action) => ActionResult = stubDispatch(),
-  visiblePlayer: 'A' | 'B' | null = null,
+  visiblePlayer: PlayerId | null = null,
 ) {
   return render(
     <PlayerZone

@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import type { PlayerState, PlayerPhase, Action, ActionResult, Card, GameState } from '@scryglass/core';
+import type { PlayerState, PlayerPhase, Action, ActionResult, Card, GameState, PlayerId } from '@scryglass/core';
 import { CardDisplay } from './CardDisplay.js';
 import { MulliganHand } from './MulliganHand.js';
 import { DrawButton } from './DrawButton.js';
@@ -8,28 +8,27 @@ import { FetchLandModal } from './FetchLandModal.js';
 import { TutorModal } from './TutorModal.js';
 
 interface PlayerZoneProps {
-  player: 'A' | 'B';
+  player: PlayerId;
   playerState: PlayerState;
   otherPlayerPhase: PlayerPhase;
   settings: GameState['settings'];
   gameState: GameState;
   onDispatch: (action: Action) => ActionResult;
-  visiblePlayer: 'A' | 'B' | null;
-  onShowPlayer: (player: 'A' | 'B') => void;
+  visiblePlayer: PlayerId | null;
+  onShowPlayer: (player: PlayerId) => void;
   onHideAll: () => void;
 }
 
-const PLAYER_LABELS: Record<'A' | 'B', string> = {
-  A: 'Player A',
-  B: 'Player B',
-};
+function playerLabel(id: PlayerId): string {
+  return `Player ${id}`;
+}
 
 export function PlayerZone({ player, playerState, otherPlayerPhase, settings, gameState, onDispatch, visiblePlayer, onShowPlayer, onHideAll }: PlayerZoneProps) {
   const [drawnCard, setDrawnCard] = useState<Card | null>(null);
   const [showScry, setShowScry] = useState(false);
   const [showFetchLand, setShowFetchLand] = useState(false);
   const [showTutor, setShowTutor] = useState(false);
-  const label = PLAYER_LABELS[player];
+  const label = playerLabel(player);
   const disabled = playerState.phase !== 'playing' || otherPlayerPhase !== 'playing';
 
   const isVisible = visiblePlayer === player;

@@ -4,7 +4,7 @@ Place deck list files in this directory using the scryglass semicolon-delimited 
 
 ## Format
 
-Each row represents one card copy:
+Each row represents **one card copy** — use multiple rows for multiple copies of the same card (e.g., four copies of Lightning Bolt require four separate rows):
 
 ```text
 card_name;set_code;collector_number;card_type
@@ -15,6 +15,8 @@ card_name;set_code;collector_number;card_type
 - **`set_code`:** The set code (e.g., `ltc`, `ltr`, `m21`)
 - **`collector_number`:** Collector number within the set (e.g., `498`, `715`)
 - **`card_type`:** One of `land`, `nonland`, or `commander` (case-insensitive)
+
+See [ADR-006](../../meta/adr/ADR-006-deck_import_format.md) for the full parsing specification.
 
 ## Example
 

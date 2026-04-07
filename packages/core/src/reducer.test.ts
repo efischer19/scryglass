@@ -25,6 +25,30 @@ describe('createInitialState', () => {
     expect(state.players.B.mulliganCount).toBe(0);
     expect(state.settings.allowMulliganWith2or5Lands).toBe(false);
   });
+
+  it('creates state for 1 player when playerCount is 1', () => {
+    const state = createInitialState(1);
+    expect(state.players.A.phase).toBe('loading');
+    expect(state.players.B).toBeUndefined();
+  });
+
+  it('creates state for 4 players when playerCount is 4', () => {
+    const state = createInitialState(4);
+    expect(state.players.A.phase).toBe('loading');
+    expect(state.players.B.phase).toBe('loading');
+    expect(state.players.C.phase).toBe('loading');
+    expect(state.players.D.phase).toBe('loading');
+  });
+
+  it('throws when playerCount is out of range', () => {
+    expect(() => createInitialState(0)).toThrow(/playerCount must be between 1 and 4/);
+    expect(() => createInitialState(5)).toThrow(/playerCount must be between 1 and 4/);
+  });
+
+  it('applies settings overrides', () => {
+    const state = createInitialState(2, { allowMulliganWith2or5Lands: true });
+    expect(state.settings.allowMulliganWith2or5Lands).toBe(true);
+  });
 });
 
 describe('dispatch — LOAD_DECK', () => {

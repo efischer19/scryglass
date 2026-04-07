@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import { CardSchema } from './card.js';
-import { GameStateSchema } from './state.js';
-
-const PlayerIdSchema = z.enum(['A', 'B']);
+import { GameStateSchema, PlayerIdSchema } from './state.js';
 
 const LoadDeckActionSchema = z.object({
   type: z.literal('LOAD_DECK'),

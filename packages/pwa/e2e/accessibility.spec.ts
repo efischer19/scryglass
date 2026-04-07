@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { showPlayerCards } from './helpers/visibility-helper.js';
+import { confirmDefaultSettings } from './helpers/settings-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -12,6 +13,7 @@ const evilDeck = readFileSync(resolve(__dirname, 'fixtures/evil.txt'), 'utf-8');
 /** Helper: load both decks and navigate to #/app */
 async function loadBothDecks(page: import('@playwright/test').Page) {
   await page.goto('/');
+  await confirmDefaultSettings(page);
 
   // Player A
   await expect(page.locator('section[aria-label="Deck input for Player A"]')).toBeVisible();
@@ -41,8 +43,19 @@ async function keepBothHands(page: import('@playwright/test').Page) {
 }
 
 test.describe('axe-core accessibility scans', () => {
+  test('pre-game settings page has no a11y violations', async ({ page }) => {
+    await page.goto('/#/input');
+
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])
+      .analyze();
+
+    expect(results.violations).toEqual([]);
+  });
+
   test('deck input page (#/input) has no a11y violations', async ({ page }) => {
     await page.goto('/#/input');
+    await confirmDefaultSettings(page);
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])
@@ -75,6 +88,7 @@ test.describe('axe-core accessibility scans', () => {
 test.describe('keyboard navigation — DeckInput page', () => {
   test('Tab moves through interactive elements in logical order', async ({ page }) => {
     await page.goto('/#/input');
+    await confirmDefaultSettings(page);
 
     // Collect the tab order by pressing Tab repeatedly from the beginning
     await page.keyboard.press('Tab');

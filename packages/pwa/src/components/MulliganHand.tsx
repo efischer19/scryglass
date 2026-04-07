@@ -1,19 +1,18 @@
 import { useState } from 'preact/hooks';
 import { countLands, getMulliganVerdict } from '@scryglass/core';
-import type { PlayerState, Action, GameState, Card } from '@scryglass/core';
+import type { PlayerState, Action, GameState, Card, PlayerId } from '@scryglass/core';
 import { CardImage } from './CardDisplay.js';
 
 interface MulliganHandProps {
-  player: 'A' | 'B';
+  player: PlayerId;
   playerState: PlayerState;
   settings: GameState['settings'];
   onDispatch: (action: Action) => void;
 }
 
-const PLAYER_LABELS: Record<'A' | 'B', string> = {
-  A: 'Player A',
-  B: 'Player B',
-};
+function playerLabel(id: PlayerId): string {
+  return `Player ${id}`;
+}
 
 const VERDICT_DESCRIPTIONS: Record<string, string> = {
   must_mulligan: 'mulligan recommended',
@@ -23,7 +22,7 @@ const VERDICT_DESCRIPTIONS: Record<string, string> = {
 
 export function MulliganHand({ player, playerState, settings, onDispatch }: MulliganHandProps) {
   const [revealed, setRevealed] = useState(false);
-  const label = PLAYER_LABELS[player];
+  const label = playerLabel(player);
   const isPreDeal = playerState.mulliganHand.length === 0;
 
   const landCount = isPreDeal ? 0 : countLands(playerState.mulliganHand);
