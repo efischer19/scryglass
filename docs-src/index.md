@@ -1,32 +1,33 @@
 # scryglass Documentation
 
-Welcome to the official documentation for **scryglass**.
+Welcome to the official documentation for **scryglass** — a free, open-source Progressive Web App (PWA) for goldfishing and casual play of Magic: The Gathering decks offline, at the table, no account required.
 
 ## Overview
 
-scryglass is a static frontend application built on top of the
-[static-js-app-blueprint](https://github.com/efischer19/static-js-app-blueprint)
-template, which provides a foundation for HTML/CSS/JavaScript projects with
-documentation, architecture decision records, and developer tooling.
+scryglass is built as a **Preact + Vite monorepo** consisting of two packages:
+
+- **`@scryglass/core`** — Pure game logic: deck parsing, cryptographic shuffle, state management, mulligan rules, and library manipulation. No DOM or browser dependencies.
+- **`@scryglass/pwa`** — Preact + Vite frontend: UI rendering, Scryfall API integration, IndexedDB caching, and Service Worker.
 
 ## Getting Started
 
-1. **Open `src/index.html`** in a browser to see the starter page.
-2. **Edit files in `src/`** — Modify `index.html`, `assets/styles.css`, and
-   `scripts/app.js` to build your application.
+1. **Install dependencies:** `npm install` from the repository root.
+2. **Build:** `npm run build` (compiles `@scryglass/core` then builds `@scryglass/pwa` with Vite).
+3. **Run the dev server:** `npm run dev --workspace=packages/pwa` then open `http://localhost:5173`.
 
 ## Project Structure
 
 ```text
 scryglass/
-├── src/              # Frontend source files
-│   ├── index.html    # Entry point with semantic HTML
-│   ├── assets/
-│   │   ├── styles.css    # Stylesheet with CSS custom properties
-│   │   └── favicon.svg   # Placeholder favicon
-│   ├── scripts/
-│   │   └── app.js        # JavaScript entry point
-│   └── README.md         # Documents src/ structure and conventions
+├── packages/
+│   ├── core/             # @scryglass/core — game logic library
+│   │   ├── src/
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   └── pwa/              # @scryglass/pwa — Preact + Vite frontend
+│       ├── src/
+│       ├── package.json
+│       └── tsconfig.json
 ├── meta/             # Development philosophy, ADRs, and plans
 ├── docs-src/         # Documentation source files (MkDocs)
 ├── scripts/          # Utility and automation scripts
