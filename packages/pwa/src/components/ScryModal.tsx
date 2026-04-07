@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
-import type { Action, ActionResult, Card, ScryDecision } from '@scryglass/core';
+import type { Action, ActionResult, Card, ScryDecision, PlayerId } from '@scryglass/core';
 import { peekTop } from '@scryglass/core';
 import type { GameState } from '@scryglass/core';
 import { ConfirmationGate } from './ConfirmationGate.js';
@@ -8,17 +8,12 @@ import { CardDisplay, CardImage } from './CardDisplay.js';
 type Destination = 'top' | 'bottom' | 'remove';
 
 interface ScryModalProps {
-  player: 'A' | 'B';
+  player: PlayerId;
   libraryLength: number;
   gameState: GameState;
   onDispatch: (action: Action) => ActionResult;
   onClose: () => void;
 }
-
-const PLAYER_LABELS: Record<'A' | 'B', string> = {
-  A: 'Player A',
-  B: 'Player B',
-};
 
 export function ScryModal({ player, libraryLength, gameState, onDispatch, onClose }: ScryModalProps) {
   const [phase, setPhase] = useState<'confirm' | 'count' | 'decide' | 'done'>('confirm');
@@ -29,7 +24,7 @@ export function ScryModal({ player, libraryLength, gameState, onDispatch, onClos
   const [removedCards, setRemovedCards] = useState<Card[]>([]);
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const label = PLAYER_LABELS[player];
+  const label = `Player ${player}`;
 
   useEffect(() => {
     if (phase === 'count' || phase === 'decide') {

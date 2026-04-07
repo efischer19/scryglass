@@ -1,17 +1,12 @@
-import type { Card } from '@scryglass/core';
+import type { Card, PlayerId } from '@scryglass/core';
 import { useCardImage } from '../scryfall/useCardImage';
 
 interface CardDisplayProps {
-  player: 'A' | 'B';
+  player: PlayerId;
   card?: Card | null;
   onDismiss?: () => void;
   onReturnToLibrary?: () => void;
 }
-
-const PLAYER_LABELS: Record<'A' | 'B', string> = {
-  A: 'Player A',
-  B: 'Player B',
-};
 
 export function CardImage({ card }: { card: Card }) {
   const { status, imageUrl } = useCardImage(card.collectorNumber, card.setCode);
@@ -44,7 +39,7 @@ export function CardDisplay({ player, card, onDismiss, onReturnToLibrary }: Card
     <div
       class="card-display"
       role="region"
-      aria-label={`${PLAYER_LABELS[player]} card display area`}
+      aria-label={`Player ${player} card display area`}
     >
       {card ? (
         <div class="card-display__content">

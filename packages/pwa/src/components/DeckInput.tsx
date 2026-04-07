@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'preact/hooks';
-import { parseDeck } from '@scryglass/core';
-import type { ParseResult, Action, Card, SavedDeck, ConvertResult } from '@scryglass/core';
+import { parseDeck, convertMoxfield, convertArchidekt, convertMtgoArena } from '@scryglass/core';
+import type { ParseResult, Action, Card, SavedDeck, ConvertResult, PlayerId } from '@scryglass/core';
 import { ExportDropdown } from './ExportDropdown.js';
 import { parseCommandersFromScryglassText } from '../utils/deck-parse.js';
 import {
@@ -18,16 +18,86 @@ import {
 } from '../storage/deck-storage.js';
 import { GOOD_DECK_NAME, GOOD_DECK_TEXT, GOOD_DECK_CARD_COUNT, EVIL_DECK_NAME, EVIL_DECK_TEXT, EVIL_DECK_CARD_COUNT } from '../data/example-decks.js';
 
+type ImportFormat = 'scryglass' | 'moxfield' | 'archidekt' | 'mtgo-arena';
+
 interface DeckInputProps {
-  player?: 'A' | 'B';
+  player?: PlayerId;
   onLoadDeck: (cards: Card[]) => void;
   onOpenEditor?: (result: ConvertResult) => void;
 }
 
-const PLACEHOLDER = `card_name;set_code;collector_number;card_type
+const PLACEHOLDER_SCRYGLASS = `card_name;set_code;collector_number;card_type
 Galadriel, Light of Valinor;ltc;498;commander
 Island;ltr;715;land
 Andúril, Flame of the West;ltr;687;nonland`;
+
+const PLACEHOLDER_MOXFIELD = `Name,Edition,Collector Number,Count,Board
+"Galadriel, Light of Valinor",ltc,498,1,Commanders
+Island,ltr,715,1,Mainboard`;
+
+const PLACEHOLDER_ARCHIDEKT = `1 Galadriel, Light of Valinor (ltc) 498 [Commander]
+1 Island (ltr) 715 [Land]
+1 Andúril, Flame of the West (ltr) 687 [Nonland]`;
+
+const PLACEHOLDER_MTGO_ARENA = `Commander
+1 Galadriel, Light of Valinor (ltc) 498
+Deck
+1 Island (ltr) 715
+1 Andúril, Flame of the West (ltr) 687`;
+
+const PLACEHOLDERS: Record<ImportFormat, string> = {
+  scryglass: PLACEHOLDER_SCRYGLASS,
+  moxfield: PLACEHOLDER_MOXFIELD,
+  archidekt: PLACEHOLDER_ARCHIDEKT,
+  'mtgo-arena': PLACEHOLDER_MTGO_ARENA,
+};
+
+const FORMAT_LABELS: Record<ImportFormat, string> = {
+  scryglass: 'scryglass (semicolon-delimited)',
+  moxfield: 'Moxfield CSV',
+  archidekt: 'Archidekt text',
+  'mtgo-arena': 'MTGO/Arena',
+};
+
+function parseWithFormat(value: string, format: ImportFormat): ParseResult {
+  if (format === 'scryglass') {
+    return parseDeck(value);
+  }
+
+  let converted: ConvertResult;
+  switch (format) {
+    case 'moxfield':
+      converted = convertMoxfield(value);
+      break;
+    case 'archidekt':
+      converted = convertArchidekt(value);
+      break;
+    case 'mtgo-arena':
+      converted = convertMtgoArena(value);
+      break;
+  }
+
+  // If conversion produced output, parse the scryglass-formatted result
+  if (converted.output.trim() !== '') {
+    const parsed = parseDeck(converted.output);
+    return {
+      cards: parsed.cards,
+      warnings: [...converted.warnings, ...parsed.warnings],
+      errors: [...converted.errors, ...parsed.errors],
+    };
+  }
+
+  // If conversion produced needsResolution entries, open editor
+  return {
+    cards: [],
+    warnings: converted.warnings,
+    errors: converted.errors.length > 0
+      ? converted.errors
+      : converted.needsResolution.length > 0
+        ? ['Some cards need resolution. Use "Edit Deck" to fix them.']
+        : [],
+  };
+}
 
 const EMPTY_RESULT: ParseResult = { cards: [], warnings: [], errors: [] };
 const DEBOUNCE_DELAY_MS = 250;
@@ -35,6 +105,7 @@ const AUTOSAVE_DELAY_MS = 1000;
 
 export function DeckInput({ player = 'A', onLoadDeck, onOpenEditor }: DeckInputProps) {
   const [text, setText] = useState('');
+  const [importFormat, setImportFormat] = useState<ImportFormat>('scryglass');
   const [result, setResult] = useState<ParseResult>(EMPTY_RESULT);
   const [savedDecks, setSavedDecks] = useState<SavedDeck[]>([]);
   const [statusMessage, setStatusMessage] = useState('');
@@ -53,6 +124,8 @@ export function DeckInput({ player = 'A', onLoadDeck, onOpenEditor }: DeckInputP
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autosaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const formatRef = useRef<ImportFormat>(importFormat);
+  formatRef.current = importFormat;
 
   const refreshDecks = useCallback(() => {
     setSavedDecks(loadAllDecks());
@@ -68,7 +141,7 @@ export function DeckInput({ player = 'A', onLoadDeck, onOpenEditor }: DeckInputP
     const autosave = loadAutosave();
     if (autosave && autosave.rawText.trim() !== '') {
       setText(autosave.rawText);
-      setResult(parseDeck(autosave.rawText));
+      setResult(parseWithFormat(autosave.rawText, formatRef.current));
     }
   }, [refreshDecks]);
 
@@ -80,7 +153,7 @@ export function DeckInput({ player = 'A', onLoadDeck, onOpenEditor }: DeckInputP
       if (value.trim() === '') {
         setResult(EMPTY_RESULT);
       } else {
-        setResult(parseDeck(value));
+        setResult(parseWithFormat(value, formatRef.current));
       }
     }, DEBOUNCE_DELAY_MS);
   }, []);
@@ -112,6 +185,15 @@ export function DeckInput({ player = 'A', onLoadDeck, onOpenEditor }: DeckInputP
     runParse(value);
     runAutosave(value);
     clearMessages();
+  };
+
+  const handleFormatChange = (e: Event) => {
+    const value = (e.target as HTMLSelectElement).value as ImportFormat;
+    setImportFormat(value);
+    // Re-parse current text with new format
+    if (text.trim() !== '') {
+      setResult(parseWithFormat(text, value));
+    }
   };
 
   const landCount = result.cards.filter((c: Card) => c.cardType === 'land').length;
@@ -179,7 +261,7 @@ export function DeckInput({ player = 'A', onLoadDeck, onOpenEditor }: DeckInputP
     if (!deck) return;
     setText(deck.rawText);
     const parsed =
-      deck.rawText.trim() === '' ? EMPTY_RESULT : parseDeck(deck.rawText);
+      deck.rawText.trim() === '' ? EMPTY_RESULT : parseWithFormat(deck.rawText, importFormat);
     setResult(parsed);
     setStatusMessage(`Deck "${deck.name}" loaded.`);
   };
@@ -413,14 +495,32 @@ export function DeckInput({ player = 'A', onLoadDeck, onOpenEditor }: DeckInputP
         )}
       </div>
 
+      <div class="deck-input__format-row">
+        <label class="deck-input__label" for="import-format-select">
+          Import format:
+        </label>
+        <select
+          id="import-format-select"
+          class="deck-input__select"
+          value={importFormat}
+          onChange={handleFormatChange}
+          aria-label="Import format"
+        >
+          <option value="scryglass">{FORMAT_LABELS.scryglass}</option>
+          <option value="moxfield">{FORMAT_LABELS.moxfield}</option>
+          <option value="archidekt">{FORMAT_LABELS.archidekt}</option>
+          <option value="mtgo-arena">{FORMAT_LABELS['mtgo-arena']}</option>
+        </select>
+      </div>
+
       <label class="deck-input__label" for="deck-textarea">
-        Paste your decklist in scryglass format (semicolon-delimited):
+        Paste your decklist in {FORMAT_LABELS[importFormat]} format:
       </label>
       <textarea
         id="deck-textarea"
         class="deck-input__textarea"
         rows={20}
-        placeholder={PLACEHOLDER}
+        placeholder={PLACEHOLDERS[importFormat]}
         value={text}
         onInput={handleInput}
         spellcheck={false}

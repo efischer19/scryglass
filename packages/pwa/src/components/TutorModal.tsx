@@ -1,16 +1,11 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
-import type { Action, ActionResult, Card } from '@scryglass/core';
+import type { Action, ActionResult, Card, PlayerId } from '@scryglass/core';
 import { searchLibrary } from '@scryglass/core';
 import { ConfirmationGate } from './ConfirmationGate.js';
 import { CardDisplay } from './CardDisplay.js';
 
-const PLAYER_LABELS: Record<'A' | 'B', string> = {
-  A: 'Player A',
-  B: 'Player B',
-};
-
 interface TutorModalProps {
-  player: 'A' | 'B';
+  player: PlayerId;
   library: Card[];
   onDispatch: (action: Action) => ActionResult;
   onClose: () => void;
@@ -25,7 +20,7 @@ export function TutorModal({ player, library, onDispatch, onClose }: TutorModalP
 
   const modalRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const label = PLAYER_LABELS[player];
+  const label = `Player ${player}`;
 
   const filteredCards = searchLibrary(library, query);
 
