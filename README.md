@@ -145,11 +145,17 @@ All significant decisions are documented as [Architecture Decision Records](./me
 
 | ADR | Title |
 | :-- | :---- |
+| [ADR-001](./meta/adr/ADR-001-use_adrs.md) | Use Architecture Decision Records (ADRs) to Document Decisions |
 | [ADR-002](./meta/adr/ADR-002-ui_framework_choice.md) | Preact + Vite for the PWA |
 | [ADR-003](./meta/adr/ADR-003-scryfall_api_integration.md) | Scryfall API integration & compliance |
 | [ADR-004](./meta/adr/ADR-004-cryptographic_shuffle.md) | Fisher-Yates shuffle with Web Crypto API |
+| [ADR-005](./meta/adr/ADR-005-client_state_management.md) | Action/Reducer state management — agent-ready game engine |
+| [ADR-006](./meta/adr/ADR-006-deck_import_format.md) | Semicolon-delimited deck import format |
 | [ADR-007](./meta/adr/ADR-007-monorepo_structure.md) | Monorepo structure (core/PWA separation) |
 | [ADR-008](./meta/adr/ADR-008-typescript_and_zod.md) | TypeScript & Zod for strict typing |
+| [ADR-009](./meta/adr/ADR-009-client_side_routing.md) | Client-side routing strategy |
+| [ADR-010](./meta/adr/ADR-010-local_storage_strategy.md) | Local storage strategy for decklists |
+| [ADR-011](./meta/adr/ADR-011-e2e_testing_strategy.md) | End-to-end testing strategy |
 
 ## Contributing
 
@@ -162,3 +168,7 @@ Card images and data are provided by [Scryfall](https://scryfall.com/). Scryglas
 ## License
 
 This project is licensed under a [GPL License](./LICENSE.md).
+
+---
+
+Scryglass is unofficial Fan Content permitted under the [Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy). Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
