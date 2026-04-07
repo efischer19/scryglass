@@ -14,6 +14,9 @@ interface PlayerZoneProps {
   settings: GameState['settings'];
   gameState: GameState;
   onDispatch: (action: Action) => ActionResult;
+  visiblePlayer: 'A' | 'B' | null;
+  onShowPlayer: (player: 'A' | 'B') => void;
+  onHideAll: () => void;
 }
 
 const PLAYER_LABELS: Record<'A' | 'B', string> = {
@@ -21,13 +24,16 @@ const PLAYER_LABELS: Record<'A' | 'B', string> = {
   B: 'Player B',
 };
 
-export function PlayerZone({ player, playerState, otherPlayerPhase, settings, gameState, onDispatch }: PlayerZoneProps) {
+export function PlayerZone({ player, playerState, otherPlayerPhase, settings, gameState, onDispatch, visiblePlayer, onShowPlayer, onHideAll }: PlayerZoneProps) {
   const [drawnCard, setDrawnCard] = useState<Card | null>(null);
   const [showScry, setShowScry] = useState(false);
   const [showFetchLand, setShowFetchLand] = useState(false);
   const [showTutor, setShowTutor] = useState(false);
   const label = PLAYER_LABELS[player];
   const disabled = playerState.phase !== 'playing' || otherPlayerPhase !== 'playing';
+
+  const isVisible = visiblePlayer === player;
+  const canShow = visiblePlayer === null;
 
   const handleCardDrawn = (card: Card | null) => {
     setDrawnCard(card);
@@ -43,6 +49,15 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, ga
     setDrawnCard(null);
   };
 
+  const handleDispatch = (action: Action) => {
+    const result = onDispatch(action);
+    // After keeping hand, hide all cards so the phone can be passed to the other player
+    if (action.type === 'KEEP_HAND') {
+      onHideAll();
+    }
+    return result;
+  };
+
   return (
     <section
       class={`player-zone player-zone--${player.toLowerCase()}`}
@@ -52,12 +67,34 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, ga
       <p class="player-zone__card-count">
         Cards: {playerState.library.length}
       </p>
-      {playerState.phase === 'mulligan' && (
+      <div class="visibility-controls">
+        {canShow && (
+          <button
+            class="action-btn visibility-controls__show"
+            type="button"
+            onClick={() => onShowPlayer(player)}
+            aria-label={`Show ${label}'s cards`}
+          >
+            Show {label}'s cards
+          </button>
+        )}
+        {isVisible && (
+          <button
+            class="action-btn visibility-controls__hide"
+            type="button"
+            onClick={onHideAll}
+            aria-label="Hide all cards"
+          >
+            Hide all cards
+          </button>
+        )}
+      </div>
+      {isVisible && playerState.phase === 'mulligan' && (
         <MulliganHand
           player={player}
           playerState={playerState}
           settings={settings}
-          onDispatch={onDispatch}
+          onDispatch={handleDispatch}
         />
       )}
       <div class="action-buttons">
@@ -121,12 +158,14 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, ga
           onClose={() => setShowTutor(false)}
         />
       )}
-      <CardDisplay
-        player={player}
-        card={drawnCard}
-        onDismiss={() => setDrawnCard(null)}
-        onReturnToLibrary={handleReturnToLibrary}
-      />
+      {isVisible && (
+        <CardDisplay
+          player={player}
+          card={drawnCard}
+          onDismiss={() => setDrawnCard(null)}
+          onReturnToLibrary={handleReturnToLibrary}
+        />
+      )}
     </section>
   );
 }

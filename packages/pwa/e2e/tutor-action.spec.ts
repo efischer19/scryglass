@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { captureScreenshot } from './helpers/screenshot-helper.js';
+import { showPlayerCards } from './helpers/visibility-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -36,12 +37,18 @@ test('Player B tutors Nazgûl from evil.txt: library shrinks by 1 and Player A i
   const playerBZone = page.locator("section[aria-label=\"Player B's zone\"]");
 
   // --- Deal initial hands and keep for both players to advance past mulligan ---
+  // Player A: show cards, deal, keep (auto-hides on KEEP_HAND)
+  await showPlayerCards(page, 'A');
   await playerAZone.getByRole('button', { name: "Deal initial hand for Player A" }).click();
-  await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
   await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
+
+  // Player B: show cards, deal, keep (auto-hides on KEEP_HAND)
+  await showPlayerCards(page, 'B');
+  await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
   await playerBZone.getByRole('button', { name: "Keep Player B's opening hand" }).click();
 
-  // Wait for mulligan UI to disappear before reading library sizes
+  // Wait for Player B's mulligan UI to disappear (hidden behind gate after KEEP_HAND)
+  await showPlayerCards(page, 'B');
   await expect(playerBZone.locator('section[aria-label="Player B\'s opening hand"]')).not.toBeVisible();
 
   // --- Record library sizes before tutoring ---

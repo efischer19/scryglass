@@ -3,6 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { showPlayerCards } from './helpers/visibility-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -27,10 +28,16 @@ async function loadBothDecks(page: import('@playwright/test').Page) {
 
 /** Helper: keep hand for both players to advance past mulligan phase */
 async function keepBothHands(page: import('@playwright/test').Page) {
-  await page.getByRole('button', { name: "Deal initial hand for Player A" }).click();
-  await page.getByRole('button', { name: "Deal initial hand for Player B" }).click();
-  await page.getByRole('button', { name: "Keep Player A's opening hand" }).click();
-  await page.getByRole('button', { name: "Keep Player B's opening hand" }).click();
+  const playerAZone = page.locator("section[aria-label=\"Player A's zone\"]");
+  const playerBZone = page.locator("section[aria-label=\"Player B's zone\"]");
+  // Player A: show cards, deal, keep (auto-hides on KEEP_HAND)
+  await showPlayerCards(page, 'A');
+  await playerAZone.getByRole('button', { name: "Deal initial hand for Player A" }).click();
+  await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
+  // Player B: show cards, deal, keep (auto-hides on KEEP_HAND)
+  await showPlayerCards(page, 'B');
+  await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
+  await playerBZone.getByRole('button', { name: "Keep Player B's opening hand" }).click();
 }
 
 test.describe('axe-core accessibility scans', () => {

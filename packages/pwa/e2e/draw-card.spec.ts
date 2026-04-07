@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { drawCard } from './helpers/draw-card-helper.js';
+import { showPlayerCards, hideAllCards } from './helpers/visibility-helper.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const goodDeck = readFileSync(resolve(__dirname, 'fixtures/good.txt'), 'utf-8');
@@ -33,15 +34,23 @@ async function setupGame(page: Page): Promise<void> {
   const playerAZone = page.locator("section[aria-label=\"Player A's zone\"]");
   const playerBZone = page.locator("section[aria-label=\"Player B's zone\"]");
 
+  // Player A: show cards, deal, keep (auto-hides on KEEP_HAND)
+  await showPlayerCards(page, 'A');
   await playerAZone.getByRole('button', { name: "Deal initial hand for Player A" }).click();
-  await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
-
   await playerAZone.getByRole('button', { name: "Keep Player A's opening hand" }).click();
+
+  // Player B: show cards, deal, keep (auto-hides on KEEP_HAND)
+  await showPlayerCards(page, 'B');
+  await playerBZone.getByRole('button', { name: "Deal initial hand for Player B" }).click();
   await playerBZone.getByRole('button', { name: "Keep Player B's opening hand" }).click();
 
-  // Confirm the mulligan phase has ended for both players
+  // Confirm the mulligan phase has ended for both players (sections hidden behind gate)
+  await showPlayerCards(page, 'A');
   await expect(playerAZone.locator('section[aria-label="Player A\'s opening hand"]')).not.toBeVisible();
+  await hideAllCards(page);
+  await showPlayerCards(page, 'B');
   await expect(playerBZone.locator('section[aria-label="Player B\'s opening hand"]')).not.toBeVisible();
+  await hideAllCards(page);
 }
 
 test.describe('Draw card action', () => {
@@ -59,6 +68,7 @@ test.describe('Draw card action', () => {
   });
 
   test('Player A draws a card: drawn card is displayed in the UI', async ({ page }) => {
+    await showPlayerCards(page, 'A');
     await drawCard(page, 'A');
 
     const playerAZone = page.locator("section[aria-label=\"Player A's zone\"]");
@@ -75,6 +85,7 @@ test.describe('Draw card action', () => {
   });
 
   test('Player B draws a card: drawn card is displayed in the UI', async ({ page }) => {
+    await showPlayerCards(page, 'B');
     await drawCard(page, 'B');
 
     const playerBZone = page.locator("section[aria-label=\"Player B's zone\"]");
