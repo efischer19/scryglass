@@ -81,7 +81,7 @@ export function GameHistory({ history, open, onClose }: GameHistoryProps) {
               {entry.cards && entry.cards.length > 0 && (
                 <div class="game-history__cards">
                   {entry.cards.map((card, ci) => (
-                    <div key={ci} class="game-history__card-thumb">
+                    <div key={`${card.setCode}-${card.collectorNumber}-${ci}`} class="game-history__card-thumb">
                       <CardImage card={card} />
                     </div>
                   ))}

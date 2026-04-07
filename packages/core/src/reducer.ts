@@ -32,8 +32,14 @@ function buildHistoryEntry(action: Action, result: ActionResult): HistoryEntry {
     cards.push(result.card);
   }
   if (result.cards && result.cards.length > 0) {
+    const seen = new Set<string>();
+    for (const c of cards) {
+      seen.add(`${c.setCode}:${c.collectorNumber}:${c.name}`);
+    }
     for (const c of result.cards) {
-      if (!cards.some(existing => existing.name === c.name && existing.setCode === c.setCode && existing.collectorNumber === c.collectorNumber)) {
+      const key = `${c.setCode}:${c.collectorNumber}:${c.name}`;
+      if (!seen.has(key)) {
+        seen.add(key);
         cards.push(c);
       }
     }
