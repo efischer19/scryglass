@@ -1,6 +1,7 @@
 import { ActionSchema } from './schemas/action.js';
 import type { Action, ActionResult } from './schemas/action.js';
-import type { GameState } from './schemas/state.js';
+import type { GameState, HistoryEntry } from './schemas/state.js';
+import type { Card } from './schemas/card.js';
 import { shuffle, cryptoRandomInt } from './shuffle.js';
 import { isBasicLandOfType } from './helpers/lands.js';
 
@@ -16,7 +17,69 @@ export function createInitialState(): GameState {
     settings: {
       allowMulliganWith2or5Lands: false,
     },
+    history: [],
   };
+}
+
+/**
+ * Build a human-readable history entry for a dispatched action.
+ */
+function buildHistoryEntry(action: Action, result: ActionResult): HistoryEntry {
+  const player = action.payload.player as 'A' | 'B';
+  const cards: Card[] = [];
+
+  if (result.card) {
+    cards.push(result.card);
+  }
+  if (result.cards && result.cards.length > 0) {
+    for (const c of result.cards) {
+      if (!cards.some(existing => existing.name === c.name && existing.setCode === c.setCode && existing.collectorNumber === c.collectorNumber)) {
+        cards.push(c);
+      }
+    }
+  }
+
+  let description: string;
+  switch (action.type) {
+    case 'LOAD_DECK':
+      description = `Player ${player} loaded a deck (${action.payload.cards.length} cards)`;
+      break;
+    case 'SHUFFLE_LIBRARY':
+      description = `Player ${player} shuffled their library`;
+      break;
+    case 'DRAW_CARD':
+      description = `Player ${player} drew a card`;
+      break;
+    case 'RETURN_TO_LIBRARY':
+      description = `Player ${player} returned ${action.payload.card.name} to ${action.payload.position} of library`;
+      break;
+    case 'DEAL_OPENING_HAND':
+      description = `Player ${player} was dealt an opening hand`;
+      break;
+    case 'MULLIGAN':
+      description = `Player ${player} took a mulligan`;
+      break;
+    case 'KEEP_HAND':
+      description = `Player ${player} kept their hand`;
+      break;
+    case 'SCRY_RESOLVE': {
+      const count = action.payload.decisions.length;
+      description = `Player ${player} resolved scry (${count} card${count !== 1 ? 's' : ''})`;
+      break;
+    }
+    case 'FETCH_BASIC_LAND':
+      description = `Player ${player} fetched a ${action.payload.landType}`;
+      break;
+    case 'TUTOR_CARD':
+      description = `Player ${player} tutored for ${action.payload.cardName}`;
+      break;
+  }
+
+  const entry: HistoryEntry = { actionType: action.type, player, description };
+  if (cards.length > 0) {
+    entry.cards = cards;
+  }
+  return entry;
 }
 
 function handleLoadDeck(state: GameState, action: Extract<Action, { type: 'LOAD_DECK' }>): ActionResult {
@@ -321,26 +384,45 @@ function handleTutorCard(state: GameState, action: Extract<Action, { type: 'TUTO
 export function dispatch(state: GameState, action: Action): ActionResult {
   const parsed = ActionSchema.parse(action);
 
+  let result: ActionResult;
   switch (parsed.type) {
     case 'LOAD_DECK':
-      return handleLoadDeck(state, parsed);
+      result = handleLoadDeck(state, parsed);
+      break;
     case 'SHUFFLE_LIBRARY':
-      return handleShuffleLibrary(state, parsed);
+      result = handleShuffleLibrary(state, parsed);
+      break;
     case 'DRAW_CARD':
-      return handleDrawCard(state, parsed);
+      result = handleDrawCard(state, parsed);
+      break;
     case 'RETURN_TO_LIBRARY':
-      return handleReturnToLibrary(state, parsed);
+      result = handleReturnToLibrary(state, parsed);
+      break;
     case 'DEAL_OPENING_HAND':
-      return handleDealOpeningHand(state, parsed);
+      result = handleDealOpeningHand(state, parsed);
+      break;
     case 'MULLIGAN':
-      return handleMulligan(state, parsed);
+      result = handleMulligan(state, parsed);
+      break;
     case 'KEEP_HAND':
-      return handleKeepHand(state, parsed);
+      result = handleKeepHand(state, parsed);
+      break;
     case 'SCRY_RESOLVE':
-      return handleScryResolve(state, parsed);
+      result = handleScryResolve(state, parsed);
+      break;
     case 'FETCH_BASIC_LAND':
-      return handleFetchBasicLand(state, parsed);
+      result = handleFetchBasicLand(state, parsed);
+      break;
     case 'TUTOR_CARD':
-      return handleTutorCard(state, parsed);
+      result = handleTutorCard(state, parsed);
+      break;
   }
+
+  const entry = buildHistoryEntry(parsed, result);
+  result.state = {
+    ...result.state,
+    history: [...state.history, entry],
+  };
+
+  return result;
 }

@@ -12,6 +12,14 @@ export const PlayerStateSchema = z.object({
 });
 export type PlayerState = z.infer<typeof PlayerStateSchema>;
 
+export const HistoryEntrySchema = z.object({
+  actionType: z.string(),
+  player: z.enum(['A', 'B']),
+  description: z.string(),
+  cards: z.array(CardSchema).optional(),
+});
+export type HistoryEntry = z.infer<typeof HistoryEntrySchema>;
+
 export const GameStateSchema = z.object({
   players: z.object({
     A: PlayerStateSchema,
@@ -20,5 +28,6 @@ export const GameStateSchema = z.object({
   settings: z.object({
     allowMulliganWith2or5Lands: z.boolean(),
   }),
+  history: z.array(HistoryEntrySchema),
 });
 export type GameState = z.infer<typeof GameStateSchema>;

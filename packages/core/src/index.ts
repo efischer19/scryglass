@@ -15,8 +15,8 @@ export { exportScryglass } from './export-scryglass.js';
 
 export { cryptoRandomInt, shuffle } from './shuffle.js';
 
-export { PlayerPhaseSchema, PlayerStateSchema, GameStateSchema } from './schemas/state.js';
-export type { PlayerPhase, PlayerState, GameState } from './schemas/state.js';
+export { PlayerPhaseSchema, PlayerStateSchema, GameStateSchema, HistoryEntrySchema } from './schemas/state.js';
+export type { PlayerPhase, PlayerState, GameState, HistoryEntry } from './schemas/state.js';
 
 export { ActionSchema, ActionResultSchema, ScryDecisionSchema, LandTypeSchema } from './schemas/action.js';
 export type { Action, ActionResult, ScryDecision, LandType } from './schemas/action.js';
