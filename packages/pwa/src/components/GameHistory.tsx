@@ -150,8 +150,8 @@ export function GameHistory({ history, open, onClose }: GameHistoryProps) {
               <span class="game-history__description">{entry.description}</span>
               {getCardDetails(entry).length > 0 && (
                 <div class="game-history__cards">
-                  {getCardDetails(entry).map(({ card, destination }: HistoryCardDetail, ci: number) => (
-                    <div key={`${card.setCode}-${card.collectorNumber}-${ci}`} class="game-history__card-thumb">
+                  {getCardDetails(entry).map(({ card, destination }: HistoryCardDetail, cardIndex: number) => (
+                    <div key={`${card.setCode}-${card.collectorNumber}-${cardIndex}`} class="game-history__card-thumb">
                       <CardImage card={card} />
                       <p class="game-history__card-name">{card.name}</p>
                       {destination && <p class="game-history__card-destination">{destination}</p>}

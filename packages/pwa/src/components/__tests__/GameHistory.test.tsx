@@ -14,6 +14,13 @@ function makeEntry(overrides: Partial<HistoryEntry> = {}): HistoryEntry {
 }
 
 describe('<GameHistory />', () => {
+  const solRing = {
+    name: 'Sol Ring',
+    setCode: 'c21',
+    collectorNumber: '263',
+    cardType: 'nonland' as const,
+  };
+
   beforeEach(() => {
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
@@ -60,14 +67,13 @@ describe('<GameHistory />', () => {
   });
 
   it('renders card thumbnails and destinations when card details are present', () => {
-    const card = { name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' as const };
     const entries: HistoryEntry[] = [
-      makeEntry({ cards: [card], cardDetails: [{ card, destination: 'hand' }] }),
+      makeEntry({ cards: [solRing], cardDetails: [{ card: solRing, destination: 'hand' }] }),
     ];
     render(<GameHistory history={entries} open={true} onClose={() => {}} />);
-    const cardThumbContainer = document.querySelector('.game-history__card-thumb');
+    const cardThumbContainer = document.querySelector('.game-history__card-thumb') as HTMLElement | null;
     expect(cardThumbContainer).toBeTruthy();
-    expect(screen.getAllByText('Sol Ring')).toHaveLength(2);
+    expect(cardThumbContainer?.querySelector('.game-history__card-name')?.textContent).toBe('Sol Ring');
     expect(screen.getByText('hand')).toBeTruthy();
   });
 
@@ -119,7 +125,7 @@ describe('<GameHistory />', () => {
 
   it('formats the action log as action, card, destination rows', () => {
     const entries: HistoryEntry[] = [
-      makeEntry({ cards: [{ name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' }], cardDetails: [{ card: { name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' }, destination: 'hand' }] }),
+      makeEntry({ cards: [solRing], cardDetails: [{ card: solRing, destination: 'hand' }] }),
       makeEntry({ actionType: 'SHUFFLE_LIBRARY', description: 'Player A shuffled their library' }),
     ];
 
@@ -132,8 +138,8 @@ describe('<GameHistory />', () => {
   it('copies the action log to the clipboard', async () => {
     const entries: HistoryEntry[] = [
       makeEntry({
-        cards: [{ name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' }],
-        cardDetails: [{ card: { name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' }, destination: 'hand' }],
+        cards: [solRing],
+        cardDetails: [{ card: solRing, destination: 'hand' }],
       }),
     ];
 
@@ -149,8 +155,8 @@ describe('<GameHistory />', () => {
   it('downloads the action log', () => {
     const entries: HistoryEntry[] = [
       makeEntry({
-        cards: [{ name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' }],
-        cardDetails: [{ card: { name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' }, destination: 'hand' }],
+        cards: [solRing],
+        cardDetails: [{ card: solRing, destination: 'hand' }],
       }),
     ];
     const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');
