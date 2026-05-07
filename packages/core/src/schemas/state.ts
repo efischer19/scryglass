@@ -17,11 +17,18 @@ export const PlayerStateSchema = z.object({
 });
 export type PlayerState = z.infer<typeof PlayerStateSchema>;
 
+export const HistoryCardDetailSchema = z.object({
+  card: CardSchema,
+  destination: z.string().optional(),
+});
+export type HistoryCardDetail = z.infer<typeof HistoryCardDetailSchema>;
+
 export const HistoryEntrySchema = z.object({
   actionType: z.string(),
-  player: z.enum(['A', 'B']),
+  player: PlayerIdSchema,
   description: z.string(),
   cards: z.array(CardSchema).optional(),
+  cardDetails: z.array(HistoryCardDetailSchema).optional(),
 });
 export type HistoryEntry = z.infer<typeof HistoryEntrySchema>;
 

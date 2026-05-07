@@ -1,6 +1,7 @@
-import { useRef, useEffect } from 'preact/hooks';
-import type { HistoryEntry } from '@scryglass/core';
+import { useEffect, useRef, useState } from 'preact/hooks';
+import type { Card, HistoryEntry } from '@scryglass/core';
 import { CardImage } from './CardDisplay.js';
+import { copyToClipboard } from '../utils/clipboard.js';
 
 interface GameHistoryProps {
   history: HistoryEntry[];
@@ -21,9 +22,65 @@ const ACTION_LABELS: Record<string, string> = {
   TUTOR_CARD: 'Tutor',
 };
 
+type ExportMode = 'copy' | 'download';
+type HistoryCardDetail = { card: Card; destination?: string };
+type HistoryCardDetails = HistoryCardDetail[];
+
+function downloadText(content: string, fileName: string, mimeType: string): void {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function getCardDetails(entry: HistoryEntry): HistoryCardDetails {
+  if (entry.cardDetails && entry.cardDetails.length > 0) {
+    return entry.cardDetails;
+  }
+  return (entry.cards ?? []).map((card: Card): HistoryCardDetail => ({ card }));
+}
+
+export function toHistoryExportText(history: HistoryEntry[]): string {
+  return history.flatMap((entry) => {
+    const cardDetails = getCardDetails(entry);
+    if (cardDetails.length === 0) {
+      return [`${entry.actionType}||`];
+    }
+    return cardDetails.map(({ card, destination }: HistoryCardDetail) => (
+      `${entry.actionType}|${card.name}|${destination ?? ''}`
+    ));
+  }).join('\n');
+}
+
 export function GameHistory({ history, open, onClose }: GameHistoryProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const [message, setMessage] = useState('');
+
+  const canExport = history.length > 0;
+
+  const handleExport = async (mode: ExportMode) => {
+    if (!canExport) return;
+
+    const text = toHistoryExportText(history);
+    if (mode === 'copy') {
+      const copied = await copyToClipboard(text);
+      setMessage(
+        copied
+          ? 'History copied to clipboard.'
+          : 'Failed to copy history. Please use Download instead.',
+      );
+      return;
+    }
+
+    downloadText(text, 'game-history.txt', 'text/plain;charset=utf-8');
+    setMessage('History downloaded.');
+  };
 
   useEffect(() => {
     if (open) {
@@ -65,6 +122,19 @@ export function GameHistory({ history, open, onClose }: GameHistoryProps) {
           Close
         </button>
       </div>
+      <div class="game-history__actions">
+        <button class="action-btn" type="button" disabled={!canExport} onClick={() => handleExport('copy')}>
+          Copy Log
+        </button>
+        <button class="action-btn" type="button" disabled={!canExport} onClick={() => handleExport('download')}>
+          Download Log
+        </button>
+        {message && (
+          <p class="game-history__message" role="status" aria-live="polite">
+            {message}
+          </p>
+        )}
+      </div>
       <ol class="game-history__list" aria-label="Action history">
         {history.length === 0 ? (
           <li class="game-history__empty">No actions yet</li>
@@ -78,11 +148,13 @@ export function GameHistory({ history, open, onClose }: GameHistoryProps) {
                 {ACTION_LABELS[entry.actionType] ?? entry.actionType}
               </span>
               <span class="game-history__description">{entry.description}</span>
-              {entry.cards && entry.cards.length > 0 && (
+              {getCardDetails(entry).length > 0 && (
                 <div class="game-history__cards">
-                  {entry.cards.map((card, ci) => (
+                  {getCardDetails(entry).map(({ card, destination }: HistoryCardDetail, ci: number) => (
                     <div key={`${card.setCode}-${card.collectorNumber}-${ci}`} class="game-history__card-thumb">
                       <CardImage card={card} />
+                      <p class="game-history__card-name">{card.name}</p>
+                      {destination && <p class="game-history__card-destination">{destination}</p>}
                     </div>
                   ))}
                 </div>
