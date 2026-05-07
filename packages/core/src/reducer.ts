@@ -1,7 +1,7 @@
 import { ActionSchema } from './schemas/action.js';
 import type { Action, ActionResult } from './schemas/action.js';
 import { PLAYER_IDS } from './schemas/state.js';
-import type { GameState, HistoryEntry, PlayerId } from './schemas/state.js';
+import type { GameState, HistoryCardDetail, HistoryEntry, PlayerId } from './schemas/state.js';
 import type { Card } from './schemas/card.js';
 import { shuffle, cryptoRandomInt } from './shuffle.js';
 import { isBasicLandOfType } from './helpers/lands.js';
@@ -36,28 +36,11 @@ export function createInitialState(
 /**
  * Build a human-readable history entry for a dispatched action.
  */
-function buildHistoryEntry(action: Action, result: ActionResult): HistoryEntry {
-  const player = action.payload.player as 'A' | 'B';
-  const cards: Card[] = [];
+function buildHistoryEntry(state: GameState, action: Action, result: ActionResult): HistoryEntry {
+  const player = action.payload.player;
+  let description = '';
+  let cardDetails: HistoryCardDetail[] | undefined;
 
-  if (result.card) {
-    cards.push(result.card);
-  }
-  if (result.cards && result.cards.length > 0) {
-    const seen = new Set<string>();
-    for (const c of cards) {
-      seen.add(`${c.setCode}:${c.collectorNumber}:${c.name}`);
-    }
-    for (const c of result.cards) {
-      const key = `${c.setCode}:${c.collectorNumber}:${c.name}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        cards.push(c);
-      }
-    }
-  }
-
-  let description: string;
   switch (action.type) {
     case 'LOAD_DECK':
       description = `Player ${player} loaded a deck (${action.payload.cards.length} cards)`;
@@ -67,35 +50,70 @@ function buildHistoryEntry(action: Action, result: ActionResult): HistoryEntry {
       break;
     case 'DRAW_CARD':
       description = `Player ${player} drew a card`;
+      if (result.card) {
+        cardDetails = [{ card: result.card, destination: 'hand' }];
+      }
       break;
     case 'RETURN_TO_LIBRARY':
       description = `Player ${player} returned ${action.payload.card.name} to ${action.payload.position} of library`;
+      cardDetails = [{ card: action.payload.card, destination: action.payload.position }];
       break;
     case 'DEAL_OPENING_HAND':
       description = `Player ${player} was dealt an opening hand`;
+      cardDetails = result.state.players[player].mulliganHand.map((card) => ({
+        card,
+        destination: 'opening hand',
+      }));
       break;
     case 'MULLIGAN':
       description = `Player ${player} took a mulligan`;
+      cardDetails = result.state.players[player].mulliganHand.map((card) => ({
+        card,
+        destination: 'mulligan hand',
+      }));
       break;
     case 'KEEP_HAND':
       description = `Player ${player} kept their hand`;
+      cardDetails = state.players[player].mulliganHand.map((card) => ({
+        card,
+        destination: 'kept hand',
+      }));
       break;
     case 'SCRY_RESOLVE': {
       const count = action.payload.decisions.length;
       description = `Player ${player} resolved scry (${count} card${count !== 1 ? 's' : ''})`;
+      cardDetails = action.payload.decisions.map((decision) => ({
+        card: state.players[player].library[decision.cardIndex],
+        destination: decision.destination,
+      }));
       break;
     }
     case 'FETCH_BASIC_LAND':
       description = `Player ${player} fetched a ${action.payload.landType}`;
+      if (result.card) {
+        cardDetails = [{ card: result.card, destination: 'fetched' }];
+      }
       break;
     case 'TUTOR_CARD':
       description = `Player ${player} tutored for ${action.payload.cardName}`;
+      if (result.card) {
+        cardDetails = [{ card: result.card, destination: 'tutored' }];
+      }
       break;
   }
 
   const entry: HistoryEntry = { actionType: action.type, player, description };
-  if (cards.length > 0) {
-    entry.cards = cards;
+  if (cardDetails && cardDetails.length > 0) {
+    entry.cardDetails = cardDetails;
+    const seen = new Set<string>();
+    entry.cards = cardDetails.reduce<Card[]>((cards, detail) => {
+      const key = `${detail.card.setCode}:${detail.card.collectorNumber}:${detail.card.name}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        cards.push(detail.card);
+      }
+      return cards;
+    }, []);
   }
   return entry;
 }
@@ -436,7 +454,7 @@ export function dispatch(state: GameState, action: Action): ActionResult {
       break;
   }
 
-  const entry = buildHistoryEntry(parsed, result);
+  const entry = buildHistoryEntry(state, parsed, result);
   result.state = {
     ...result.state,
     history: [...state.history, entry],

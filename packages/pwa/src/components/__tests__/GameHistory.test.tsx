@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/preact';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
-import { GameHistory } from '../GameHistory.js';
+import { GameHistory, toHistoryExportText } from '../GameHistory.js';
 import type { HistoryEntry } from '@scryglass/core';
 
 function makeEntry(overrides: Partial<HistoryEntry> = {}): HistoryEntry {
@@ -14,6 +14,20 @@ function makeEntry(overrides: Partial<HistoryEntry> = {}): HistoryEntry {
 }
 
 describe('<GameHistory />', () => {
+  const solRing = {
+    name: 'Sol Ring',
+    setCode: 'c21',
+    collectorNumber: '263',
+    cardType: 'nonland' as const,
+  };
+
+  beforeEach(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: vi.fn().mockResolvedValue(undefined) },
+    });
+  });
+
   it('renders nothing when closed', () => {
     const { container } = render(
       <GameHistory history={[]} open={false} onClose={() => {}} />,
@@ -52,15 +66,15 @@ describe('<GameHistory />', () => {
     expect(screen.getByText('Tutor')).toBeTruthy();
   });
 
-  it('renders card thumbnails when cards are present', () => {
-    const card = { name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' as const };
+  it('renders card thumbnails and destinations when card details are present', () => {
     const entries: HistoryEntry[] = [
-      makeEntry({ cards: [card] }),
+      makeEntry({ cards: [solRing], cardDetails: [{ card: solRing, destination: 'hand' }] }),
     ];
     render(<GameHistory history={entries} open={true} onClose={() => {}} />);
-    // The CardImage component renders loading state or name
-    const cardThumbContainer = document.querySelector('.game-history__card-thumb');
+    const cardThumbContainer = document.querySelector('.game-history__card-thumb') as HTMLElement | null;
     expect(cardThumbContainer).toBeTruthy();
+    expect(cardThumbContainer?.querySelector('.game-history__card-name')?.textContent).toBe('Sol Ring');
+    expect(screen.getByText('hand')).toBeTruthy();
   });
 
   it('calls onClose when Close button is clicked', () => {
@@ -107,5 +121,54 @@ describe('<GameHistory />', () => {
     );
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+
+  it('formats the action log as action, card, destination rows', () => {
+    const entries: HistoryEntry[] = [
+      makeEntry({ cards: [solRing], cardDetails: [{ card: solRing, destination: 'hand' }] }),
+      makeEntry({ actionType: 'SHUFFLE_LIBRARY', description: 'Player A shuffled their library' }),
+    ];
+
+    expect(toHistoryExportText(entries)).toBe([
+      'DRAW_CARD|Sol Ring|hand',
+      'SHUFFLE_LIBRARY||',
+    ].join('\n'));
+  });
+
+  it('copies the action log to the clipboard', async () => {
+    const entries: HistoryEntry[] = [
+      makeEntry({
+        cards: [solRing],
+        cardDetails: [{ card: solRing, destination: 'hand' }],
+      }),
+    ];
+
+    render(<GameHistory history={entries} open={true} onClose={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Copy Log' }));
+
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('DRAW_CARD|Sol Ring|hand');
+      expect(screen.getByText('History copied to clipboard.')).toBeTruthy();
+    });
+  });
+
+  it('downloads the action log', () => {
+    const entries: HistoryEntry[] = [
+      makeEntry({
+        cards: [solRing],
+        cardDetails: [{ card: solRing, destination: 'hand' }],
+      }),
+    ];
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');
+    const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    render(<GameHistory history={entries} open={true} onClose={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Download Log' }));
+
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    expect(revokeObjectURL).toHaveBeenCalledTimes(1);
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('History downloaded.')).toBeTruthy();
   });
 });

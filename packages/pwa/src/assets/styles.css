@@ -1177,6 +1177,21 @@ textarea:focus-visible,
   font-size: var(--font-size-sm);
 }
 
+.game-history__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.game-history__message {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
 .game-history__list {
   list-style: none;
   padding: 0;
@@ -1235,8 +1250,24 @@ textarea:focus-visible,
 }
 
 .game-history__card-thumb {
-  width: 60px;
+  width: 84px;
   flex-shrink: 0;
+}
+
+.game-history__card-name,
+.game-history__card-destination {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-size-xs);
+  line-height: 1.3;
+}
+
+.game-history__card-name {
+  font-weight: 600;
+}
+
+.game-history__card-destination {
+  color: var(--color-text-muted);
+  text-transform: capitalize;
 }
 
 .game-history__card-thumb .card-display__image {
@@ -1245,10 +1276,17 @@ textarea:focus-visible,
   border-radius: var(--radius-sm);
 }
 
+.game-history__card-thumb .card-display__name {
+  display: none;
+}
+
 .game-history__card-thumb .card-display__loading {
   padding: var(--space-xs);
   gap: var(--space-xs);
   font-size: var(--font-size-sm);
+  min-height: 118px;
+  justify-content: center;
+}
 
 /* ===================================================================
   Pre-Game Settings

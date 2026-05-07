@@ -1003,6 +1003,7 @@ describe('dispatch — history entries', () => {
     expect(entry.actionType).toBe('DRAW_CARD');
     expect(entry.description).toBe('Player A drew a card');
     expect(entry.cards).toEqual([cards[0]]);
+    expect(entry.cardDetails).toEqual([{ card: cards[0], destination: 'hand' }]);
   });
 
   it('appends a history entry for DEAL_OPENING_HAND', () => {
@@ -1089,6 +1090,11 @@ describe('dispatch — history entries', () => {
     const entry = result.state.history[1];
     expect(entry.actionType).toBe('SCRY_RESOLVE');
     expect(entry.description).toBe('Player A resolved scry (2 cards)');
+    expect(entry.cards).toEqual([cards[0], cards[1]]);
+    expect(entry.cardDetails).toEqual([
+      { card: cards[0], destination: 'top' },
+      { card: cards[1], destination: 'bottom' },
+    ]);
   });
 
   it('appends a history entry for RETURN_TO_LIBRARY', () => {
@@ -1107,6 +1113,8 @@ describe('dispatch — history entries', () => {
     const entry = result.state.history[2];
     expect(entry.actionType).toBe('RETURN_TO_LIBRARY');
     expect(entry.description).toBe(`Player A returned ${drawnCard.name} to top of library`);
+    expect(entry.cards).toEqual([drawnCard]);
+    expect(entry.cardDetails).toEqual([{ card: drawnCard, destination: 'top' }]);
   });
 
   it('accumulates history entries across multiple dispatches', () => {
