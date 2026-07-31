@@ -1,6 +1,6 @@
 ---
 title: "ADR-009: Client-Side Routing Strategy"
-status: "Accepted"
+status: "Superseded"
 date: "2026-04-05"
 tags:
   - "frontend"

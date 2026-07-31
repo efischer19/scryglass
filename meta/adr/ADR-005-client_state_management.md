@@ -1,6 +1,6 @@
 ---
 title: "ADR-005: Action/Reducer State Management — Agent-Ready Game Engine"
-status: "Accepted"
+status: "Superseded"
 date: "2026-04-04"
 tags:
   - "state-management"
