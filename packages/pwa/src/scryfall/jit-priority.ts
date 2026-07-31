@@ -87,9 +87,9 @@ export async function priorityFetchArtCrop(
   collectorNumber: string,
   setCode: string,
 ): Promise<string | null> {
-  // Check cache first (use a separate cache key for art_crop)
-  const cacheKey = `${collectorNumber}_art_crop`;
-  const cached = await getCachedImage(cacheKey, setCode);
+  // Use a modified collector number to differentiate art_crop cache from normal images
+  const artCropKey = `${collectorNumber}_art_crop`;
+  const cached = await getCachedImage(artCropKey, setCode);
   if (cached) {
     return URL.createObjectURL(cached);
   }
@@ -111,7 +111,7 @@ export async function priorityFetchArtCrop(
     }
 
     // Cache with a different key for art_crop
-    await cacheImage(cacheKey, setCode, blob);
+    await cacheImage(artCropKey, setCode, blob);
     return URL.createObjectURL(blob);
   } catch {
     return null;
