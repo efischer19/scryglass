@@ -8,6 +8,8 @@ export const CardSchema = z.object({
   setCode: z.string(),
   collectorNumber: z.string(),
   cardType: CardTypeEnum,
+  tapped: z.boolean().optional().default(false),
+  faceDown: z.boolean().optional().default(false),
 });
 
 export type Card = z.infer<typeof CardSchema>;

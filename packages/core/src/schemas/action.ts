@@ -2,6 +2,18 @@ import { z } from 'zod';
 import { CardSchema } from './card.js';
 import { GameStateSchema, PlayerIdSchema } from './state.js';
 
+// --- Zone Types ---
+export const ZoneSchema = z.enum([
+  'library',
+  'hand',
+  'battlefield',
+  'graveyard',
+  'exile',
+  'commandZone',
+  'mulliganHand',
+]);
+export type Zone = z.infer<typeof ZoneSchema>;
+
 const LoadDeckActionSchema = z.object({
   type: z.literal('LOAD_DECK'),
   payload: z.object({
@@ -12,13 +24,6 @@ const LoadDeckActionSchema = z.object({
 
 const ShuffleLibraryActionSchema = z.object({
   type: z.literal('SHUFFLE_LIBRARY'),
-  payload: z.object({
-    player: PlayerIdSchema,
-  }),
-});
-
-const DrawCardActionSchema = z.object({
-  type: z.literal('DRAW_CARD'),
   payload: z.object({
     player: PlayerIdSchema,
   }),
@@ -54,9 +59,6 @@ const KeepHandActionSchema = z.object({
   }),
 });
 
-export const LandTypeSchema = z.enum(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest']);
-export type LandType = z.infer<typeof LandTypeSchema>;
-
 export const ScryDecisionSchema = z.object({
   cardIndex: z.number(),
   destination: z.enum(['top', 'bottom', 'remove']),
@@ -71,33 +73,37 @@ const ScryResolveActionSchema = z.object({
   }),
 });
 
-const FetchBasicLandActionSchema = z.object({
-  type: z.literal('FETCH_BASIC_LAND'),
-  payload: z.object({
-    player: PlayerIdSchema,
-    landType: LandTypeSchema,
-  }),
-});
-
-const TutorCardActionSchema = z.object({
-  type: z.literal('TUTOR_CARD'),
+const MoveCardActionSchema = z.object({
+  type: z.literal('MOVE_CARD'),
   payload: z.object({
     player: PlayerIdSchema,
     cardName: z.string(),
+    fromZone: ZoneSchema,
+    toZone: ZoneSchema,
+  }),
+});
+
+const ChangeCardStateActionSchema = z.object({
+  type: z.literal('CHANGE_CARD_STATE'),
+  payload: z.object({
+    player: PlayerIdSchema,
+    cardName: z.string(),
+    zone: ZoneSchema,
+    tapped: z.boolean().optional(),
+    faceDown: z.boolean().optional(),
   }),
 });
 
 export const ActionSchema = z.discriminatedUnion('type', [
   LoadDeckActionSchema,
   ShuffleLibraryActionSchema,
-  DrawCardActionSchema,
   ReturnToLibraryActionSchema,
   DealOpeningHandActionSchema,
   MulliganActionSchema,
   KeepHandActionSchema,
   ScryResolveActionSchema,
-  FetchBasicLandActionSchema,
-  TutorCardActionSchema,
+  MoveCardActionSchema,
+  ChangeCardStateActionSchema,
 ]);
 export type Action = z.infer<typeof ActionSchema>;
 

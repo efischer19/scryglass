@@ -33,6 +33,18 @@ export const GameStateSchema = z.object({
 });
 export type GameState = z.infer<typeof GameStateSchema>;
 
+// --- Zone Types ---
+export const ZoneSchema = z.enum([
+  'library',
+  'hand',
+  'battlefield',
+  'graveyard',
+  'exile',
+  'commandZone',
+  'mulliganHand',
+]);
+export type Zone = z.infer<typeof ZoneSchema>;
+
 // --- Actions ---
 const LoadDeckActionSchema = z.object({
   type: z.literal('LOAD_DECK'),
@@ -49,29 +61,6 @@ const ShuffleLibraryActionSchema = z.object({
   }),
 });
 
-const DrawCardActionSchema = z.object({
-  type: z.literal('DRAW_CARD'),
-  payload: z.object({
-    player: PlayerIdSchema,
-  }),
-});
-
-const TutorCardActionSchema = z.object({
-  type: z.literal('TUTOR_CARD'),
-  payload: z.object({
-    player: PlayerIdSchema,
-    cardName: z.string(),
-  }),
-});
-
-const FetchBasicLandActionSchema = z.object({
-  type: z.literal('FETCH_BASIC_LAND'),
-  payload: z.object({
-    player: PlayerIdSchema,
-    landType: z.string(),
-  }),
-});
-
 const ScryResolveActionSchema = z.object({
   type: z.literal('SCRY_RESOLVE'),
   payload: z.object({
@@ -85,13 +74,33 @@ const ScryResolveActionSchema = z.object({
   }),
 });
 
+const MoveCardActionSchema = z.object({
+  type: z.literal('MOVE_CARD'),
+  payload: z.object({
+    player: PlayerIdSchema,
+    cardName: z.string(),
+    fromZone: ZoneSchema,
+    toZone: ZoneSchema,
+  }),
+});
+
+const ChangeCardStateActionSchema = z.object({
+  type: z.literal('CHANGE_CARD_STATE'),
+  payload: z.object({
+    player: PlayerIdSchema,
+    cardName: z.string(),
+    zone: ZoneSchema,
+    tapped: z.boolean().optional(),
+    faceDown: z.boolean().optional(),
+  }),
+});
+
 export const ActionSchema = z.discriminatedUnion('type', [
   LoadDeckActionSchema,
   ShuffleLibraryActionSchema,
-  DrawCardActionSchema,
-  TutorCardActionSchema,
-  FetchBasicLandActionSchema,
   ScryResolveActionSchema,
+  MoveCardActionSchema,
+  ChangeCardStateActionSchema,
 ]);
 
 export type Action = z.infer<typeof ActionSchema>;
@@ -166,61 +175,6 @@ export function dispatch(state: GameState, action: Action): ActionResult {
       return { state: updatePlayer(state, player, { library }) };
     }
 
-    case 'DRAW_CARD': {
-      if (playerState.library.length === 0) {
-        throw new Error(
-          `Cannot draw: Player ${player}'s library is empty (0 cards remaining)`,
-        );
-      }
-      const [drawnCard, ...remaining] = playerState.library;
-      return {
-        state: updatePlayer(state, player, { library: remaining }),
-        drawnCards: [drawnCard],
-      };
-    }
-
-    case 'TUTOR_CARD': {
-      const idx = playerState.library.findIndex(
-        (c) => c.name === parsed.payload.cardName,
-      );
-      if (idx === -1) {
-        throw new Error(
-          `Cannot tutor: "${parsed.payload.cardName}" not found in Player ${player}'s library`,
-        );
-      }
-      const tutored = playerState.library[idx];
-      const library = [
-        ...playerState.library.slice(0, idx),
-        ...playerState.library.slice(idx + 1),
-      ];
-      return {
-        state: updatePlayer(state, player, { library }),
-        drawnCards: [tutored],
-      };
-    }
-
-    case 'FETCH_BASIC_LAND': {
-      const idx = playerState.library.findIndex(
-        (c) =>
-          c.cardType === 'land' &&
-          c.name.toLowerCase() === parsed.payload.landType.toLowerCase(),
-      );
-      if (idx === -1) {
-        throw new Error(
-          `Cannot fetch: no "${parsed.payload.landType}" found in Player ${player}'s library`,
-        );
-      }
-      const fetched = playerState.library[idx];
-      const library = [
-        ...playerState.library.slice(0, idx),
-        ...playerState.library.slice(idx + 1),
-      ];
-      return {
-        state: updatePlayer(state, player, { library }),
-        drawnCards: [fetched],
-      };
-    }
-
     case 'SCRY_RESOLVE': {
       const library = [...playerState.library];
       const topCards: Card[] = [];
@@ -246,6 +200,79 @@ export function dispatch(state: GameState, action: Action): ActionResult {
         state: updatePlayer(state, player, {
           library: [...topCards, ...remaining, ...bottomCards],
         }),
+      };
+    }
+
+    case 'MOVE_CARD': {
+      const { cardName, fromZone, toZone } = parsed.payload;
+      const fromZoneCards = playerState[fromZone as keyof PlayerState];
+      
+      if (!Array.isArray(fromZoneCards)) {
+        throw new Error(`Zone "${fromZone}" is not a valid zone for this operation`);
+      }
+
+      const cardIndex = fromZoneCards.findIndex((c) => c.name === cardName);
+      if (cardIndex === -1) {
+        throw new Error(
+          `Cannot move card: "${cardName}" not found in ${fromZone} of Player ${player}`,
+        );
+      }
+
+      const card = fromZoneCards[cardIndex];
+      const updatedFromZone = [
+        ...fromZoneCards.slice(0, cardIndex),
+        ...fromZoneCards.slice(cardIndex + 1),
+      ];
+      
+      const toZoneCards = playerState[toZone as keyof PlayerState];
+      if (!Array.isArray(toZoneCards)) {
+        throw new Error(`Zone "${toZone}" is not a valid zone for this operation`);
+      }
+
+      const updatedToZone = [...toZoneCards, card];
+
+      const updates: Record<string, any> = {};
+      updates[fromZone] = updatedFromZone;
+      updates[toZone] = updatedToZone;
+
+      return {
+        state: updatePlayer(state, player, updates as Partial<PlayerState>),
+      };
+    }
+
+    case 'CHANGE_CARD_STATE': {
+      const { cardName, zone, tapped, faceDown } = parsed.payload;
+      const zoneCards = playerState[zone as keyof PlayerState];
+
+      if (!Array.isArray(zoneCards)) {
+        throw new Error(`Zone "${zone}" is not a valid zone for this operation`);
+      }
+
+      const cardIndex = zoneCards.findIndex((c) => c.name === cardName);
+      if (cardIndex === -1) {
+        throw new Error(
+          `Cannot change card state: "${cardName}" not found in ${zone} of Player ${player}`,
+        );
+      }
+
+      const card = zoneCards[cardIndex];
+      const updatedCard: Card = {
+        ...card,
+        ...(tapped !== undefined && { tapped }),
+        ...(faceDown !== undefined && { faceDown }),
+      };
+
+      const updatedZoneCards = [
+        ...zoneCards.slice(0, cardIndex),
+        updatedCard,
+        ...zoneCards.slice(cardIndex + 1),
+      ];
+
+      const updates: Record<string, any> = {};
+      updates[zone] = updatedZoneCards;
+
+      return {
+        state: updatePlayer(state, player, updates as Partial<PlayerState>),
       };
     }
   }

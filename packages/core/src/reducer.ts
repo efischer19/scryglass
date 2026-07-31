@@ -58,12 +58,6 @@ function buildHistoryEntry(state: GameState, action: Action, result: ActionResul
     case 'SHUFFLE_LIBRARY':
       description = `Player ${player} shuffled their library`;
       break;
-    case 'DRAW_CARD':
-      description = `Player ${player} drew a card`;
-      if (result.card) {
-        cardDetails = [{ card: result.card, destination: 'hand' }];
-      }
-      break;
     case 'RETURN_TO_LIBRARY':
       description = `Player ${player} returned ${action.payload.card.name} to ${action.payload.position} of library`;
       cardDetails = [{ card: action.payload.card, destination: action.payload.position }];
@@ -98,18 +92,23 @@ function buildHistoryEntry(state: GameState, action: Action, result: ActionResul
       }));
       break;
     }
-    case 'FETCH_BASIC_LAND':
-      description = `Player ${player} fetched a ${action.payload.landType}`;
+    case 'MOVE_CARD':
+      description = `Player ${player} moved ${action.payload.cardName} from ${action.payload.fromZone} to ${action.payload.toZone}`;
       if (result.card) {
-        cardDetails = [{ card: result.card, destination: 'fetched' }];
+        cardDetails = [{ card: result.card, destination: action.payload.toZone }];
       }
       break;
-    case 'TUTOR_CARD':
-      description = `Player ${player} tutored for ${action.payload.cardName}`;
-      if (result.card) {
-        cardDetails = [{ card: result.card, destination: 'tutored' }];
+    case 'CHANGE_CARD_STATE': {
+      const states: string[] = [];
+      if (action.payload.tapped !== undefined) {
+        states.push(`tapped: ${action.payload.tapped}`);
       }
+      if (action.payload.faceDown !== undefined) {
+        states.push(`faceDown: ${action.payload.faceDown}`);
+      }
+      description = `Player ${player} changed state of ${action.payload.cardName} (${states.join(', ')})`;
       break;
+    }
   }
 
   const entry: HistoryEntry = { actionType: action.type, player, description };
@@ -160,32 +159,6 @@ function handleShuffleLibrary(state: GameState, action: Extract<Action, { type: 
       },
     },
     card: null,
-  };
-}
-
-function handleDrawCard(state: GameState, action: Extract<Action, { type: 'DRAW_CARD' }>): ActionResult {
-  const { player } = action.payload;
-  const library = state.players[player].library;
-
-  if (library.length === 0) {
-    throw new Error(
-      `Cannot draw: Player ${player}'s library is empty (0 cards remaining)`,
-    );
-  }
-
-  const [drawn, ...rest] = library;
-  return {
-    state: {
-      ...state,
-      players: {
-        ...state.players,
-        [player]: {
-          ...state.players[player],
-          library: rest,
-        },
-      },
-    },
-    card: drawn,
   };
 }
 
@@ -361,72 +334,107 @@ function handleScryResolve(state: GameState, action: Extract<Action, { type: 'SC
   };
 }
 
-function handleFetchBasicLand(state: GameState, action: Extract<Action, { type: 'FETCH_BASIC_LAND' }>): ActionResult {
-  const { player, landType } = action.payload;
-  const library = state.players[player].library;
-
-  const landIndex = library.findIndex(card => isBasicLandOfType(card, landType));
-
-  if (landIndex === -1) {
-    throw new Error(`Cannot fetch: no ${landType} found in Player ${player}'s library`);
-  }
-
-  const fetchedCard = library[landIndex];
-  const remaining = library.filter((_, i) => i !== landIndex);
-  const shuffled = shuffle(remaining);
-
-  return {
-    state: {
-      ...state,
-      players: {
-        ...state.players,
-        [player]: {
-          ...state.players[player],
-          library: shuffled,
-        },
-      },
-    },
-    card: fetchedCard,
-  };
-}
-
-function handleTutorCard(state: GameState, action: Extract<Action, { type: 'TUTOR_CARD' }>): ActionResult {
-  const { player, cardName } = action.payload;
-  const library = state.players[player].library;
-
-  const cardIndex = library.findIndex(
-    card => card.name.toLowerCase() === cardName.toLowerCase(),
-  );
-
-  if (cardIndex === -1) {
-    throw new Error(`Cannot tutor: '${cardName}' not found in Player ${player}'s library`);
-  }
-
-  const tutoredCard = library[cardIndex];
-  const remaining = library.filter((_, i) => i !== cardIndex);
-  const shuffled = shuffle(remaining);
-
-  return {
-    state: {
-      ...state,
-      players: {
-        ...state.players,
-        [player]: {
-          ...state.players[player],
-          library: shuffled,
-        },
-      },
-    },
-    card: tutoredCard,
-  };
-}
-
 /**
  * Dispatch an action against the current game state, returning a new
  * immutable state and any output (e.g., a drawn card).
  *
  * @see ADR-005: Action/Reducer State Management
  */
+function handleMoveCard(state: GameState, action: Extract<Action, { type: 'MOVE_CARD' }>): ActionResult {
+  const { player, cardName, fromZone, toZone } = action.payload;
+  const playerState = state.players[player];
+  const fromZoneCards = playerState[fromZone as keyof GameState['players'][PlayerId]];
+
+  if (!Array.isArray(fromZoneCards)) {
+    throw new Error(`Zone "${fromZone}" is not a valid zone for this operation`);
+  }
+
+  const cardIndex = fromZoneCards.findIndex((c) => c.name === cardName);
+  if (cardIndex === -1) {
+    throw new Error(
+      `Cannot move card: "${cardName}" not found in ${fromZone} of Player ${player}`,
+    );
+  }
+
+  const card = fromZoneCards[cardIndex];
+  const updatedFromZone = [
+    ...fromZoneCards.slice(0, cardIndex),
+    ...fromZoneCards.slice(cardIndex + 1),
+  ];
+
+  const toZoneCards = playerState[toZone as keyof GameState['players'][PlayerId]];
+  if (!Array.isArray(toZoneCards)) {
+    throw new Error(`Zone "${toZone}" is not a valid zone for this operation`);
+  }
+
+  const updatedToZone = [...toZoneCards, card];
+
+  const updates: Record<string, any> = {};
+  updates[fromZone] = updatedFromZone;
+  updates[toZone] = updatedToZone;
+
+  return {
+    state: {
+      ...state,
+      players: {
+        ...state.players,
+        [player]: {
+          ...playerState,
+          ...updates,
+        },
+      },
+    },
+    card: card,
+  };
+}
+
+function handleChangeCardState(state: GameState, action: Extract<Action, { type: 'CHANGE_CARD_STATE' }>): ActionResult {
+  const { player, cardName, zone, tapped, faceDown } = action.payload;
+  const playerState = state.players[player];
+  const zoneCards = playerState[zone as keyof GameState['players'][PlayerId]];
+
+  if (!Array.isArray(zoneCards)) {
+    throw new Error(`Zone "${zone}" is not a valid zone for this operation`);
+  }
+
+  const cardIndex = zoneCards.findIndex((c) => c.name === cardName);
+  if (cardIndex === -1) {
+    throw new Error(
+      `Cannot change card state: "${cardName}" not found in ${zone} of Player ${player}`,
+    );
+  }
+
+  const card = zoneCards[cardIndex];
+  const updatedCard: Card = {
+    ...card,
+    ...(tapped !== undefined && { tapped }),
+    ...(faceDown !== undefined && { faceDown }),
+  };
+
+  const updatedZoneCards = [
+    ...zoneCards.slice(0, cardIndex),
+    updatedCard,
+    ...zoneCards.slice(cardIndex + 1),
+  ];
+
+  const updates: Record<string, any> = {};
+  updates[zone] = updatedZoneCards;
+
+  return {
+    state: {
+      ...state,
+      players: {
+        ...state.players,
+        [player]: {
+          ...playerState,
+          ...updates,
+        },
+      },
+    },
+    card: null,
+  };
+}
+
 export function dispatch(state: GameState, action: Action): ActionResult {
   const parsed = ActionSchema.parse(action);
 
@@ -437,9 +445,6 @@ export function dispatch(state: GameState, action: Action): ActionResult {
       break;
     case 'SHUFFLE_LIBRARY':
       result = handleShuffleLibrary(state, parsed);
-      break;
-    case 'DRAW_CARD':
-      result = handleDrawCard(state, parsed);
       break;
     case 'RETURN_TO_LIBRARY':
       result = handleReturnToLibrary(state, parsed);
@@ -456,11 +461,11 @@ export function dispatch(state: GameState, action: Action): ActionResult {
     case 'SCRY_RESOLVE':
       result = handleScryResolve(state, parsed);
       break;
-    case 'FETCH_BASIC_LAND':
-      result = handleFetchBasicLand(state, parsed);
+    case 'MOVE_CARD':
+      result = handleMoveCard(state, parsed);
       break;
-    case 'TUTOR_CARD':
-      result = handleTutorCard(state, parsed);
+    case 'CHANGE_CARD_STATE':
+      result = handleChangeCardState(state, parsed);
       break;
   }
 
