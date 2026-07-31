@@ -61,6 +61,29 @@ const ShuffleLibraryActionSchema = z.object({
   }),
 });
 
+const DrawCardActionSchema = z.object({
+  type: z.literal('DRAW_CARD'),
+  payload: z.object({
+    player: PlayerIdSchema,
+  }),
+});
+
+const TutorCardActionSchema = z.object({
+  type: z.literal('TUTOR_CARD'),
+  payload: z.object({
+    player: PlayerIdSchema,
+    cardName: z.string(),
+  }),
+});
+
+const FetchBasicLandActionSchema = z.object({
+  type: z.literal('FETCH_BASIC_LAND'),
+  payload: z.object({
+    player: PlayerIdSchema,
+    landType: z.string(),
+  }),
+});
+
 const ScryResolveActionSchema = z.object({
   type: z.literal('SCRY_RESOLVE'),
   payload: z.object({
@@ -98,6 +121,9 @@ const ChangeCardStateActionSchema = z.object({
 export const ActionSchema = z.discriminatedUnion('type', [
   LoadDeckActionSchema,
   ShuffleLibraryActionSchema,
+  DrawCardActionSchema,
+  TutorCardActionSchema,
+  FetchBasicLandActionSchema,
   ScryResolveActionSchema,
   MoveCardActionSchema,
   ChangeCardStateActionSchema,
@@ -173,6 +199,61 @@ export function dispatch(state: GameState, action: Action): ActionResult {
         [library[i], library[j]] = [library[j], library[i]];
       }
       return { state: updatePlayer(state, player, { library }) };
+    }
+
+    case 'DRAW_CARD': {
+      if (playerState.library.length === 0) {
+        throw new Error(
+          `Cannot draw: Player ${player}'s library is empty (0 cards remaining)`,
+        );
+      }
+      const [drawnCard, ...remaining] = playerState.library;
+      return {
+        state: updatePlayer(state, player, { library: remaining }),
+        drawnCards: [drawnCard],
+      };
+    }
+
+    case 'TUTOR_CARD': {
+      const idx = playerState.library.findIndex(
+        (c) => c.name === parsed.payload.cardName,
+      );
+      if (idx === -1) {
+        throw new Error(
+          `Cannot tutor: "${parsed.payload.cardName}" not found in Player ${player}'s library`,
+        );
+      }
+      const tutored = playerState.library[idx];
+      const library = [
+        ...playerState.library.slice(0, idx),
+        ...playerState.library.slice(idx + 1),
+      ];
+      return {
+        state: updatePlayer(state, player, { library }),
+        drawnCards: [tutored],
+      };
+    }
+
+    case 'FETCH_BASIC_LAND': {
+      const idx = playerState.library.findIndex(
+        (c) =>
+          c.cardType === 'land' &&
+          c.name.toLowerCase() === parsed.payload.landType.toLowerCase(),
+      );
+      if (idx === -1) {
+        throw new Error(
+          `Cannot fetch: no "${parsed.payload.landType}" found in Player ${player}'s library`,
+        );
+      }
+      const fetched = playerState.library[idx];
+      const library = [
+        ...playerState.library.slice(0, idx),
+        ...playerState.library.slice(idx + 1),
+      ];
+      return {
+        state: updatePlayer(state, player, { library }),
+        drawnCards: [fetched],
+      };
     }
 
     case 'SCRY_RESOLVE': {

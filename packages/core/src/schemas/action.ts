@@ -29,6 +29,13 @@ const ShuffleLibraryActionSchema = z.object({
   }),
 });
 
+const DrawCardActionSchema = z.object({
+  type: z.literal('DRAW_CARD'),
+  payload: z.object({
+    player: PlayerIdSchema,
+  }),
+});
+
 const ReturnToLibraryActionSchema = z.object({
   type: z.literal('RETURN_TO_LIBRARY'),
   payload: z.object({
@@ -73,6 +80,25 @@ const ScryResolveActionSchema = z.object({
   }),
 });
 
+export const LandTypeSchema = z.enum(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest']);
+export type LandType = z.infer<typeof LandTypeSchema>;
+
+const FetchBasicLandActionSchema = z.object({
+  type: z.literal('FETCH_BASIC_LAND'),
+  payload: z.object({
+    player: PlayerIdSchema,
+    landType: LandTypeSchema,
+  }),
+});
+
+const TutorCardActionSchema = z.object({
+  type: z.literal('TUTOR_CARD'),
+  payload: z.object({
+    player: PlayerIdSchema,
+    cardName: z.string(),
+  }),
+});
+
 const MoveCardActionSchema = z.object({
   type: z.literal('MOVE_CARD'),
   payload: z.object({
@@ -97,11 +123,14 @@ const ChangeCardStateActionSchema = z.object({
 export const ActionSchema = z.discriminatedUnion('type', [
   LoadDeckActionSchema,
   ShuffleLibraryActionSchema,
+  DrawCardActionSchema,
   ReturnToLibraryActionSchema,
   DealOpeningHandActionSchema,
   MulliganActionSchema,
   KeepHandActionSchema,
   ScryResolveActionSchema,
+  FetchBasicLandActionSchema,
+  TutorCardActionSchema,
   MoveCardActionSchema,
   ChangeCardStateActionSchema,
 ]);

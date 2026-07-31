@@ -15,6 +15,8 @@ describe('parseDeck', () => {
         setCode: 'm21',
         collectorNumber: '219',
         cardType: 'nonland',
+        tapped: false,
+        faceDown: false,
       });
     });
 
@@ -28,6 +30,8 @@ describe('parseDeck', () => {
         setCode: 'ltr',
         collectorNumber: '715',
         cardType: 'land',
+        tapped: false,
+        faceDown: false,
       });
     });
 
@@ -155,6 +159,8 @@ describe('parseDeck', () => {
         setCode: 'ltr',
         collectorNumber: '715',
         cardType: 'land',
+        tapped: false,
+        faceDown: false,
       });
     });
 

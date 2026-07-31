@@ -8,12 +8,14 @@ const COMMANDER: Card = {
   setCode: 'ltc',
   collectorNumber: '498',
   cardType: 'commander',
+  tapped: false,
+  faceDown: false,
 };
 
 const CARDS: Card[] = [
-  { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land' },
-  { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land' },
-  { name: 'Andúril, Flame of the West', setCode: 'ltr', collectorNumber: '687', cardType: 'nonland' },
+  { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land', tapped: false, faceDown: false },
+  { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land', tapped: false, faceDown: false },
+  { name: 'Andúril, Flame of the West', setCode: 'ltr', collectorNumber: '687', cardType: 'nonland', tapped: false, faceDown: false },
 ];
 
 describe('exportScryglass', () => {
@@ -34,9 +36,9 @@ describe('exportScryglass', () => {
 
     expect(parsed.errors).toEqual([]);
     expect(parsed.cards).toEqual([
-      { name: 'Andúril, Flame of the West', setCode: 'ltr', collectorNumber: '687', cardType: 'nonland' },
-      { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land' },
-      { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land' },
+      { name: 'Andúril, Flame of the West', setCode: 'ltr', collectorNumber: '687', cardType: 'nonland', tapped: false, faceDown: false },
+      { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land', tapped: false, faceDown: false },
+      { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land', tapped: false, faceDown: false },
     ]);
     expect(parsed.warnings).toEqual([
       'Row 1: commander "Galadriel, Light of Valinor" recognized but excluded from shuffleable deck',
