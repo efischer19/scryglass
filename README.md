@@ -62,6 +62,10 @@ All significant decisions are documented as [Architecture Decision Records](./me
 | [ADR-009](./meta/adr/ADR-009-client_side_routing.md) | Client-side routing strategy |
 | [ADR-010](./meta/adr/ADR-010-local_storage_strategy.md) | Local storage strategy for decklists |
 | [ADR-011](./meta/adr/ADR-011-e2e_testing_strategy.md) | End-to-end testing strategy |
+| [ADR-012](./meta/adr/ADR-012-expand_state_engine_to_full_playmat.md) | Expand state engine to full playmat |
+| [ADR-013](./meta/adr/ADR-013-deterministic_seeded_prng_for_shared_shuffling.md) | Deterministic seeded PRNG for shared shuffling |
+| [ADR-014](./meta/adr/ADR-014-webrtc_data_channels_and_stateless_signaling.md) | WebRTC data channels & stateless signaling |
+| [ADR-015](./meta/adr/ADR-015-url_based_match_routing.md) | URL-based match routing |
 
 ## Architecture
 

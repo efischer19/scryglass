@@ -1,6 +1,6 @@
 ---
 title: "ADR-004: Fisher-Yates Shuffle with Web Crypto API"
-status: "Accepted"
+status: "Superseded"
 date: "2026-04-04"
 tags:
   - "algorithm"
