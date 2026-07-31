@@ -21,7 +21,17 @@ export function createInitialState(
   }
   const players: Record<string, GameState['players'][PlayerId]> = {};
   for (let i = 0; i < playerCount; i++) {
-    players[PLAYER_IDS[i]] = { library: [], phase: 'loading', mulliganHand: [], mulliganCount: 0 };
+    players[PLAYER_IDS[i]] = {
+      library: [],
+      hand: [],
+      battlefield: [],
+      graveyard: [],
+      exile: [],
+      commandZone: [],
+      phase: 'loading',
+      mulliganHand: [],
+      mulliganCount: 0,
+    };
   }
   return {
     players: players as GameState['players'],

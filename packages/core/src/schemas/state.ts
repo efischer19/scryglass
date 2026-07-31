@@ -11,6 +11,11 @@ export const PLAYER_IDS: readonly PlayerId[] = ['A', 'B', 'C', 'D'] as const;
 
 export const PlayerStateSchema = z.object({
   library: z.array(CardSchema),
+  hand: z.array(CardSchema),
+  battlefield: z.array(CardSchema),
+  graveyard: z.array(CardSchema),
+  exile: z.array(CardSchema),
+  commandZone: z.array(CardSchema),
   phase: PlayerPhaseSchema,
   mulliganHand: z.array(CardSchema),
   mulliganCount: z.number(),

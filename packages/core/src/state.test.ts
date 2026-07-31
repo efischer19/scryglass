@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createInitialState, dispatch } from './state.js';
+import { createInitialState, dispatch, GameStateSchema, PlayerStateSchema } from './state.js';
 import type { GameState, Action } from './state.js';
 import type { Card } from './schemas/card.js';
 
@@ -20,10 +20,34 @@ describe('createInitialState', () => {
     expect(state.players.B.library).toEqual([]);
   });
 
+  it('returns state with empty playmat zones', () => {
+    const state = createInitialState();
+    for (const player of [state.players.A, state.players.B]) {
+      expect(player.hand).toEqual([]);
+      expect(player.battlefield).toEqual([]);
+      expect(player.graveyard).toEqual([]);
+      expect(player.exile).toEqual([]);
+      expect(player.commandZone).toEqual([]);
+    }
+  });
+
   it('returns state with null mulliganHand', () => {
     const state = createInitialState();
     expect(state.players.A.mulliganHand).toBeNull();
     expect(state.players.B.mulliganHand).toBeNull();
+  });
+
+  it('validates the initial player and game state schemas', () => {
+    const state = createInitialState();
+    expect(PlayerStateSchema.parse(state.players.A)).toEqual(state.players.A);
+    expect(PlayerStateSchema.parse(state.players.B)).toEqual(state.players.B);
+    expect(GameStateSchema.parse(state)).toEqual(state);
+  });
+
+  it('round-trips the game state through JSON serialization', () => {
+    const state = createInitialState();
+    const roundTripped = JSON.parse(JSON.stringify(state));
+    expect(GameStateSchema.parse(roundTripped)).toEqual(state);
   });
 });
 
