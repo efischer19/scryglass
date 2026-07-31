@@ -1,6 +1,6 @@
 # Plans Directory
 
-This directory contains planning documents, roadmaps, and implementation plans for the `scryglass` project.
+This directory contains planning documents, roadmaps, and implementation plans for the `scrymat` project.
 
 ## Purpose
 

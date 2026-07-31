@@ -1,6 +1,6 @@
 # Example Deck Lists
 
-Place deck list files in this directory using the scryglass semicolon-delimited format.
+Place deck list files in this directory using the scrymat semicolon-delimited format.
 
 ## Format
 

@@ -1,6 +1,6 @@
 # AWS Deployment Guide
 
-This guide walks through deploying Scryglass to **Amazon S3 + CloudFront** using
+This guide walks through deploying Scrymat to **Amazon S3 + CloudFront** using
 the GitHub Actions workflow in `.github/workflows/deploy-aws.yml`.
 
 By the end of this guide you will have a production deployment that:
@@ -15,7 +15,7 @@ By the end of this guide you will have a production deployment that:
 ## Prerequisites
 
 - An **AWS account** with permissions to create the resources below
-- A **GitHub repository** (fork or clone of Scryglass)
+- A **GitHub repository** (fork or clone of Scrymat)
 - The [AWS CLI](https://aws.amazon.com/cli/) installed locally (helpful for
   verification, not strictly required)
 
@@ -24,7 +24,7 @@ By the end of this guide you will have a production deployment that:
 ## Step 1 — Create an S3 Bucket
 
 1. Open the [S3 console](https://s3.console.aws.amazon.com/s3/) and create a new
-   bucket (e.g. `scryglass-prod`).
+   bucket (e.g. `scrymat-prod`).
 2. **Block all public access** — CloudFront will serve the files; the bucket does
    not need to be public.
 3. Enable **static website hosting** under the bucket properties (set the index
@@ -135,7 +135,7 @@ Variables** and add:
 | :----------------------------- | :---------------------------------------- | :------------------------------------------------|
 | `AWS_ROLE_ARN`                 | ARN of the IAM deploy role                | `arn:aws:iam::123456789012:role/scryglass-deploy`|
 | `AWS_REGION`                   | AWS region of the S3 bucket               | `us-east-1`                                      |
-| `S3_BUCKET_NAME`               | Name of the S3 bucket                     | `scryglass-prod`                                 |
+| `S3_BUCKET_NAME`               | Name of the S3 bucket                     | `scrymat-prod`                                 |
 | `CLOUDFRONT_DISTRIBUTION_ID`   | CloudFront distribution ID                | `E1234567890ABC`                                 |
 | `CLOUDFRONT_DOMAIN` (optional) | CloudFront domain for the smoke test step | `d1234567890abc.cloudfront.net`                  |
 

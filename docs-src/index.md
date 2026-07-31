@@ -1,58 +1,35 @@
-# scryglass Documentation
+# Scrymat Documentation
 
-Welcome to the official documentation for **scryglass** — a free, open-source Progressive Web App (PWA) for goldfishing and casual play of Magic: The Gathering decks offline, at the table, no account required.
+Welcome to the Scrymat documentation. The project is pivoting from the old single-player deck utility experience toward a lightweight, shared virtual playmat for asynchronous, peer-to-peer card play.
 
-## Overview
+## Vision
 
-scryglass is built as a **Preact + Vite monorepo** consisting of two packages:
+Scrymat is being designed as a shared-state sandbox for tabletop card play. The platform will provide the table, the cards, and the zones, while players drive the rules through coordinated actions.
 
-- **`@scryglass/core`** — Pure game logic: deck parsing, cryptographic shuffle, state management, mulligan rules, and library manipulation. No DOM or browser dependencies.
-- **`@scryglass/pwa`** — Preact + Vite frontend: UI rendering, Scryfall API integration, IndexedDB caching, and Service Worker.
+## Planned Work
 
-## Getting Started
+The following sections are intentionally lightweight placeholders while the pivot is still being implemented.
 
-1. **Install dependencies:** `npm install` from the repository root.
-2. **Build:** `npm run build` (compiles `@scryglass/core` then builds `@scryglass/pwa` with Vite).
-3. **Run the dev server:** `npm run dev --workspace=packages/pwa` then open `http://localhost:5173`.
+### Virtual Playmat Core
 
-## Project Structure
+Please update this section when the shared playmat experience is implemented.
 
-```text
-scryglass/
-├── packages/
-│   ├── core/             # @scryglass/core — game logic library
-│   │   ├── src/
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   └── pwa/              # @scryglass/pwa — Preact + Vite frontend
-│       ├── src/
-│       ├── package.json
-│       └── tsconfig.json
-├── meta/             # Development philosophy, ADRs, and plans
-├── docs-src/         # Documentation source files (MkDocs)
-├── scripts/          # Utility and automation scripts
-└── .github/          # GitHub-specific configuration
-```
+### Peer-to-peer Sync
 
-## Development Philosophy
+Please update this section when WebRTC-based room setup and state synchronization are implemented.
 
-All work in this project follows the
-[Development Philosophy](DEVELOPMENT_PHILOSOPHY.md), which emphasizes:
+### AI Agent Extensibility
 
-- **Code is for Humans First** — Clarity over cleverness
-- **Favor Simplicity** — Static-first design with minimal complexity
-- **Confidence Through Testing** — Comprehensive automated tests
-- **Clean Commit History** — Atomic commits with descriptive messages
+Please update this section when local AI agents can interact with the state model.
+
+### Trust and Security Model
+
+Please update this section when the commit-reveal and trust model for remote play are fully documented.
+
+## Architecture & Planning
+
+For the current direction, see the [Scrymat North Star plan](../meta/plans/Scrymat%20North%20Star.md). Significant decisions continue to be captured in the [ADR directory](../meta/adr/).
 
 ## Contributing
 
-For information on contributing to this project, see the
-[Contributing Guidelines](CONTRIBUTING.md).
-
-## Getting Help
-
-- Check the documentation pages listed in the navigation
-- Review the [Architecture Decision Records](https://github.com/efischer19/scryglass/tree/main/meta/adr)
-  for context on past decisions
-- [Open an issue](https://github.com/efischer19/scryglass/issues)
-  if you find a bug or want to suggest a feature
+For information on contributing to this project, see the [Contributing Guidelines](CONTRIBUTING.md).

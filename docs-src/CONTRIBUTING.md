@@ -1,6 +1,6 @@
-# Contributing to scryglass
+# Contributing to scrymat
 
-First off, thank you for your interest in scryglass! We're excited
+First off, thank you for your interest in scrymat! We're excited
 you're here.
 
 This project is currently in a very early and experimental stage. The primary
@@ -12,7 +12,7 @@ different for now.
 
 ## Our Current Development Workflow
 
-scryglass follows a specific, AI-assisted workflow:
+scrymat follows a specific, AI-assisted workflow:
 
 1. An **Issue** is created that clearly defines a bug or a feature.
 2. An **AI assistant** (like GitHub Copilot) is used to generate the code to

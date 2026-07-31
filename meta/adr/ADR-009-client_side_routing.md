@@ -11,7 +11,7 @@ tags:
 
 ## Context
 
-* **Problem:** Scryglass requires at least two distinct views: a **deck input page** (where users paste or upload their deck list) and a **main shuffler page** (where gameplay actions like draw, tutor, scry, and mulligan occur). The application needs a strategy for navigating between these views that supports deep-linking, browser history (back button), and screen-reader accessibility.
+* **Problem:** Scrymat requires at least two distinct views: a **deck input page** (where users paste or upload their deck list) and a **main shuffler page** (where gameplay actions like draw, tutor, scry, and mulligan occur). The application needs a strategy for navigating between these views that supports deep-linking, browser history (back button), and screen-reader accessibility.
 * **Constraints:**
   * The PWA is deployed as static files to S3 ([ADR-007](./ADR-007-monorepo_structure.md)), which has **no server-side rewrite rules**. Any routing strategy that requires `index.html` to be served for arbitrary paths (e.g., `/app`, `/input`) would need S3-specific redirect rules or a CloudFront function — complexity we want to avoid.
   * The UI is built with Preact + Vite ([ADR-002](./ADR-002-ui_framework_choice.md)). The routing solution must integrate cleanly with Preact's component model and Vite's build pipeline.
@@ -53,7 +53,7 @@ If the `LOAD_DECK` action fails (invalid deck data), the hash does not change an
       * **Accessible with intent** — focus management and `aria-live` announcements can be implemented directly in the router component without fighting a library's abstraction.
     * *Cons:*
       * Hash URLs (`example.com/#/app`) look less clean than path-based URLs (`example.com/app`), though this is cosmetic for a PWA that users primarily interact with full-screen.
-      * If the application grows to many routes in the future, managing them manually becomes more tedious (mitigated by the fact that scryglass has only two views for the foreseeable future).
+      * If the application grows to many routes in the future, managing them manually becomes more tedious (mitigated by the fact that scrymat has only two views for the foreseeable future).
 
 2. **Option 2: Lightweight Client-Side Router Library (`preact-router`)**
 
@@ -81,7 +81,7 @@ If the `LOAD_DECK` action fails (invalid deck data), the hash does not change an
       * **No deep-linking** — users cannot bookmark or share a link directly to the shuffler view. Refreshing the page always returns to the input view, which is disruptive during gameplay.
       * **No browser history** — the back button does not navigate between views, violating standard web application expectations.
       * Both views exist in the DOM simultaneously (even if hidden), increasing memory usage and complicating lifecycle management.
-      * Does not satisfy the issue's stated preference for separate paths (`scryglass/app` and `scryglass/input`).
+      * Does not satisfy the issue's stated preference for separate paths (`scrymat/app` and `scrymat/input`).
 
 ## Consequences
 

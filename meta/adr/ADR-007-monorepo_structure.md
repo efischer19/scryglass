@@ -11,7 +11,7 @@ tags:
 
 ## Context
 
-* **Problem:** Scryglass needs to be built as a stepping stone, not throwaway code. The v0 deliverable must cleanly separate domain logic (MTG rules, deck state) from the presentation layer (UI, DOM, browser APIs) so that future consumers — including AI agents via MCP, LangChain, or direct tool-calling — can hook into the core game logic without importing browser-specific code.
+* **Problem:** Scrymat needs to be built as a stepping stone, not throwaway code. The v0 deliverable must cleanly separate domain logic (MTG rules, deck state) from the presentation layer (UI, DOM, browser APIs) so that future consumers — including AI agents via MCP, LangChain, or direct tool-calling — can hook into the core game logic without importing browser-specific code.
 * **Constraints:** The project must remain deployable as a static PWA to S3. The separation must not introduce excessive build complexity. All packages must be testable independently.
 
 ## Decision

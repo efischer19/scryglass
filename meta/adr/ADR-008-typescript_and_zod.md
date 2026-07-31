@@ -11,7 +11,7 @@ tags:
 
 ## Context
 
-* **Problem:** Scryglass's `@scryglass/core` package must be consumable not only by the PWA frontend but also by future AI agents (via MCP, LangChain, or direct tool-calling). AI agents are terrible at guessing data structures but excellent at following JSON schemas. All inputs and outputs of the core library must have predictable, machine-readable schemas to enable agent integration. Additionally, strict typing catches bugs at compile time and serves as living documentation.
+* **Problem:** Scrymat's `@scryglass/core` package must be consumable not only by the PWA frontend but also by future AI agents (via MCP, LangChain, or direct tool-calling). AI agents are terrible at guessing data structures but excellent at following JSON schemas. All inputs and outputs of the core library must have predictable, machine-readable schemas to enable agent integration. Additionally, strict typing catches bugs at compile time and serves as living documentation.
 * **Constraints:** The typing solution must work for both `@scryglass/core` (pure logic, platform-agnostic) and `@scryglass/pwa` (browser-specific). It must not add excessive bundle size to the PWA. Schemas must be derivable at runtime (not just compile-time) so agents can introspect them.
 
 ## Decision

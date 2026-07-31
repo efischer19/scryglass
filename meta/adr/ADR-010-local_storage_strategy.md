@@ -11,7 +11,7 @@ tags:
 
 ## Context
 
-* **Problem:** Scryglass needs to persist user decklists in the browser so that users can save, name, list, load, and delete decklists without a server. Currently, a user must re-paste their deck list every session. A persistence layer would let users build a personal library of saved decks that survives browser refreshes and returns.
+* **Problem:** Scrymat needs to persist user decklists in the browser so that users can save, name, list, load, and delete decklists without a server. Currently, a user must re-paste their deck list every session. A persistence layer would let users build a personal library of saved decks that survives browser refreshes and returns.
 * **Constraints:**
   * The application is entirely client-side — there is no backend to store data ([ADR-007](./ADR-007-monorepo_structure.md)).
   * Decklists are text-based semicolon-delimited strings ([ADR-006](./ADR-006-deck_import_format.md)). A typical 100-card deck is under 5 KB of raw text.
@@ -26,7 +26,7 @@ We will use **`localStorage` with JSON serialization** (Option 1) to persist dec
 
 ### Storage key
 
-All decklists are stored under a single `localStorage` key: `scryglass:decklists`. The value is a JSON-serialized array of deck objects.
+All decklists are stored under a single `localStorage` key: `scrymat:decklists`. The value is a JSON-serialized array of deck objects.
 
 ### Data schema
 

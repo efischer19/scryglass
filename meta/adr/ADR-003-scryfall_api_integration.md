@@ -11,7 +11,7 @@ tags:
 
 ## Context
 
-* **Problem:** Scryglass needs to display card images sourced from the Scryfall API. Scryfall is a free community resource with published [API guidelines](https://scryfall.com/docs/api) that require respectful usage: a maximum of 10 requests per second, a descriptive `User-Agent`, and aggressive caching. Our ROBOT_ETHICS.md policy also mandates rate limiting, caching, and ToS compliance. We need a formal strategy for how the app interacts with Scryfall.
+* **Problem:** Scrymat needs to display card images sourced from the Scryfall API. Scryfall is a free community resource with published [API guidelines](https://scryfall.com/docs/api) that require respectful usage: a maximum of 10 requests per second, a descriptive `User-Agent`, and aggressive caching. Our ROBOT_ETHICS.md policy also mandates rate limiting, caching, and ToS compliance. We need a formal strategy for how the app interacts with Scryfall.
 * **Constraints:** The app is purely client-side (no backend proxy). All API calls originate from the user's browser. We must never overload Scryfall's servers, even if many users run the app simultaneously. Per [ADR-007](./ADR-007-monorepo_structure.md), Scryfall integration lives in `@scryglass/pwa` (not `@scryglass/core`) because it depends on browser APIs (IndexedDB, Web Workers, `fetch` with CORS).
 
 ## Decision
@@ -24,7 +24,7 @@ We will implement a **three-tier Scryfall integration strategy**:
 
 3. **Background Prefetch with JIT Priority:** A Web Worker slowly prefetches images for cards in the library at a conservative rate of 1 request per second. If a player action (Draw, Tutor) needs an image that hasn't been cached yet, that request jumps to the front of the queue with priority.
 
-All requests will include the `User-Agent` header: `Scryglass/0.1 (+https://github.com/efischer19/scryglass)` as required by both Scryfall's guidelines and our own ROBOT_ETHICS.md.
+All requests will include the `User-Agent` header: `Scrymat/0.1 (+https://github.com/efischer19/scryglass)` as required by both Scryfall's guidelines and our own ROBOT_ETHICS.md.
 
 ## Considered Options
 
@@ -42,6 +42,6 @@ All requests will include the `User-Agent` header: `Scryglass/0.1 (+https://gith
 
 ## Consequences
 
-* **Positive:** Scryglass will be a model citizen of the Scryfall API ecosystem. Users get fast image loads after the first session with a deck. Background prefetching means most cards are cached before they're needed.
+* **Positive:** Scrymat will be a model citizen of the Scryfall API ecosystem. Users get fast image loads after the first session with a deck. Background prefetching means most cards are cached before they're needed.
 * **Negative:** First-time use with a new deck will have some image loading latency. IndexedDB storage is browser-specific and can be cleared by the user.
 * **Future Implications:** If Scryfall changes their API or image URLs, we only need to update the fetch wrapper. The cache layer is decoupled from the API layer.

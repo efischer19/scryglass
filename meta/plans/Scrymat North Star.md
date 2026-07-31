@@ -2,7 +2,7 @@
 
 ## **1\. The Vision**
 
-**Scrymat** (formerly Scryglass) is pivoting from a localized, single-player deck utility into a lightweight, synchronized virtual playmat designed for asynchronous and peer-to-peer (P2P) card play. Scrymat acts as a shared-state sandbox that provides the table, the cards, and the zones, while relying entirely on the players to provide the rules.
+**Scrymat** (formerly Scrymat) is pivoting from a localized, single-player deck utility into a lightweight, synchronized virtual playmat designed for asynchronous and peer-to-peer (P2P) card play. Scrymat acts as a shared-state sandbox that provides the table, the cards, and the zones, while relying entirely on the players to provide the rules.
 
 ## **2\. Core Philosophy: The "Dumb Table"**
 

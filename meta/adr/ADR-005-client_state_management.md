@@ -11,7 +11,7 @@ tags:
 
 ## Context
 
-* **Problem:** Scryglass must track the state of two players' card libraries simultaneously. The app needs to support shuffling, drawing, tutoring, scrying, and the mulligan phase. The state engine must be consumable by both the PWA frontend *and* future AI agents (via MCP, LangChain, or direct tool-calling). This means state mutations must accept structured JSON inputs and return structured JSON outputs — exactly how LLMs produce tool calls.
+* **Problem:** Scrymat must track the state of two players' card libraries simultaneously. The app needs to support shuffling, drawing, tutoring, scrying, and the mulligan phase. The state engine must be consumable by both the PWA frontend *and* future AI agents (via MCP, LangChain, or direct tool-calling). This means state mutations must accept structured JSON inputs and return structured JSON outputs — exactly how LLMs produce tool calls.
 * **Constraints:** All game logic lives in `@scryglass/core` (see [ADR-007](./ADR-007-monorepo_structure.md)) and must be platform-agnostic (no DOM, no browser APIs). State must be easy to reason about for contributors. The issue specification states: "The state manager only tracks the ordered array of the Library. It does not track hand, graveyard, or exile."
 
 ## Decision

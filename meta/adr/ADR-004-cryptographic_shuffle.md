@@ -10,7 +10,7 @@ tags:
 
 ## Context
 
-* **Problem:** Scryglass replaces the physical act of shuffling a Magic: The Gathering deck. Players must trust that the digital shuffle is truly random and unbiased. Using `Math.random()` is insufficient because it is a PRNG (pseudorandom number generator) with predictable seeding in some browser implementations, and it does not provide uniform distribution guarantees when used naively for shuffling.
+* **Problem:** Scrymat replaces the physical act of shuffling a Magic: The Gathering deck. Players must trust that the digital shuffle is truly random and unbiased. Using `Math.random()` is insufficient because it is a PRNG (pseudorandom number generator) with predictable seeding in some browser implementations, and it does not provide uniform distribution guarantees when used naively for shuffling.
 * **Constraints:** The solution must be platform-agnostic — it lives in `@scryglass/core` (see [ADR-007](./ADR-007-monorepo_structure.md)) and must work in both browser and Node.js environments. It must be fast enough to shuffle a 100-card deck without perceptible delay. The `crypto` API is available as `globalThis.crypto` in modern browsers and Node.js 19+.
 
 ## Decision

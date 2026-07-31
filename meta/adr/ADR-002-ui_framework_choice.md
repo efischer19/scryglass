@@ -1,5 +1,5 @@
 ---
-title: "ADR-002: UI Framework Choice for Scryglass PWA"
+title: "ADR-002: UI Framework Choice for Scrymat PWA"
 status: "Accepted"
 date: "2026-04-04"
 tags:

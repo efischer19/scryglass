@@ -10,7 +10,7 @@ tags:
 
 ## Context
 
-* **Problem:** Scryglass currently has strong unit test coverage for `@scryglass/core` (shuffle, mulligan, reducer, import/export) and component-level tests for `@scryglass/pwa`, but lacks end-to-end (E2E) tests that simulate a complete multi-turn game between two players. Since the app is the "source of truth" for physical, high-value Magic: The Gathering games, a bug that only manifests during a full game flow (e.g., a state corruption after a shuffle → tutor → scry sequence) could silently undermine gameplay integrity.
+* **Problem:** Scrymat currently has strong unit test coverage for `@scryglass/core` (shuffle, mulligan, reducer, import/export) and component-level tests for `@scryglass/pwa`, but lacks end-to-end (E2E) tests that simulate a complete multi-turn game between two players. Since the app is the "source of truth" for physical, high-value Magic: The Gathering games, a bug that only manifests during a full game flow (e.g., a state corruption after a shuffle → tutor → scry sequence) could silently undermine gameplay integrity.
 * **Constraints:** The app is a static PWA with no backend. E2E tests must run against the built PWA in a headless browser. Tests must complete in a reasonable time (<60s) to run on every push to `main`. The test framework must integrate with the existing GitHub Actions CI pipeline.
 
 ## Decision

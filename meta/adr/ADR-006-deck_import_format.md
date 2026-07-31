@@ -11,7 +11,7 @@ tags:
 
 ## Context
 
-* **Problem:** Scryglass needs a way for users to import their deck lists. The original version of this ADR specified a comma-separated format (`card_name,set_code,card_type,mana_cost`), but real-world use revealed two critical issues: (1) commas appear frequently in MTG card names (e.g., "Galadriel, Light of Valinor"), breaking naive `split(',')` parsing, and (2) the full type line is unnecessary — only the land/nonland distinction matters for the mulligan engine.
+* **Problem:** Scrymat needs a way for users to import their deck lists. The original version of this ADR specified a comma-separated format (`card_name,set_code,card_type,mana_cost`), but real-world use revealed two critical issues: (1) commas appear frequently in MTG card names (e.g., "Galadriel, Light of Valinor"), breaking naive `split(',')` parsing, and (2) the full type line is unnecessary — only the land/nonland distinction matters for the mulligan engine.
 * **Constraints:** The app is client-side only — parsing must happen in the browser. The format must be simple enough for casual MTG players to create in a spreadsheet or text editor. Card images are fetched from Scryfall's [`/cards/:set/:number/:lang`](https://scryfall.com/docs/api/cards/collector) endpoint, so each row must supply the `set_code` and `collector_number` needed for that lookup. The `card_type` field is critical because the mulligan engine uses it to count lands.
 
 ## Decision
@@ -44,7 +44,7 @@ We will support a **single semicolon-delimited import format** with the followin
     Andúril, Flame of the West;LTR;687;nonland
     ```
 
-11. **Example deck lists:** The `examples/decklists/` directory in the repository root contains sample deck list files in the scryglass format for testing and reference.
+11. **Example deck lists:** The `examples/decklists/` directory in the repository root contains sample deck list files in the scrymat format for testing and reference.
 
 ## Considered Options
 
@@ -68,4 +68,4 @@ We will support a **single semicolon-delimited import format** with the followin
 
 * **Positive:** The format is simple, human-readable, and contains exactly the data the app needs: a display name, Scryfall image lookup keys (`set_code` + `collector_number`), and land/nonland classification. No additional API lookups are needed at import time beyond image fetching. Commander cards are gracefully handled.
 * **Negative:** Users must prepare their deck lists in this specific format, including looking up collector numbers. The semicolon delimiter is less conventional than commas.
-* **Future Implications:** Conversion utilities from popular deck list formats (MTGO/Arena text, Moxfield export, etc.) to scryglass format would be valuable follow-up work — each converter would be a separate ticket. The scryglass format remains the canonical, self-contained format that the parser consumes.
+* **Future Implications:** Conversion utilities from popular deck list formats (MTGO/Arena text, Moxfield export, etc.) to scrymat format would be valuable follow-up work — each converter would be a separate ticket. The scrymat format remains the canonical, self-contained format that the parser consumes.
