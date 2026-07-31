@@ -20,3 +20,4 @@ config:
 ignores:
   - LICENSE.md
   - node_modules/**
+  - meta/plans/
