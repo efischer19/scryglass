@@ -13,6 +13,11 @@ export type PlayerId = z.infer<typeof PlayerIdSchema>;
 // --- Player State ---
 export const PlayerStateSchema = z.object({
   library: z.array(CardSchema),
+  hand: z.array(CardSchema),
+  battlefield: z.array(CardSchema),
+  graveyard: z.array(CardSchema),
+  exile: z.array(CardSchema),
+  commandZone: z.array(CardSchema),
   phase: PlayerPhaseSchema,
   mulliganHand: z.array(CardSchema).nullable(),
 });
@@ -101,6 +106,11 @@ export interface ActionResult {
 function createPlayerState(): PlayerState {
   return {
     library: [],
+    hand: [],
+    battlefield: [],
+    graveyard: [],
+    exile: [],
+    commandZone: [],
     phase: 'loading',
     mulliganHand: null,
   };
