@@ -77,6 +77,52 @@ export async function priorityFetch(
   }
 }
 
+/**
+ * Fetch a card's art_crop image with JIT priority. Similar to priorityFetch
+ * but fetches the art_crop image format instead of normal.
+ *
+ * Returns an object URL string on success, or `null` on failure.
+ */
+export async function priorityFetchArtCrop(
+  collectorNumber: string,
+  setCode: string,
+): Promise<string | null> {
+  // Check cache first (use a separate cache key for art_crop)
+  const cacheKey = `${collectorNumber}_art_crop`;
+  const cached = await getCachedImage(cacheKey, setCode);
+  if (cached) {
+    return URL.createObjectURL(cached);
+  }
+
+  // Pause background prefetch while JIT fetch is in progress
+  activeJitCount++;
+  if (activeJitCount === 1) {
+    pausePrefetch();
+  }
+
+  try {
+    const blob = await fetchCardImage(
+      { setCode, collectorNumber, imageFormat: 'art_crop' },
+      'jit',
+    );
+
+    if (!blob) {
+      return null;
+    }
+
+    // Cache with a different key for art_crop
+    await cacheImage(cacheKey, setCode, blob);
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  } finally {
+    activeJitCount--;
+    if (activeJitCount === 0) {
+      resumePrefetch();
+    }
+  }
+}
+
 /** Reset internal state — only for use in tests. */
 export function _resetForTesting(): void {
   activeJitCount = 0;

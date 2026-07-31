@@ -17,7 +17,10 @@ const DEFAULT_PARAMS: FetchCardImageParams = {
 
 function mockCardJson(imageUrl = 'https://cards.scryfall.io/normal/test.jpg') {
   return {
-    image_uris: { normal: imageUrl },
+    image_uris: { 
+      normal: imageUrl,
+      art_crop: 'https://cards.scryfall.io/art_crop/test.jpg',
+    },
   };
 }
 
@@ -191,5 +194,25 @@ describe('fetchCardImage', () => {
 
     await Promise.all([p1, p2]);
     expect(getQueueLength()).toBe(0);
+  });
+
+  it('fetches art_crop image when imageFormat is specified', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(mockCardJson()))
+      .mockResolvedValueOnce(blobResponse());
+
+    const promise = fetchCardImage(
+      { ...DEFAULT_PARAMS, imageFormat: 'art_crop' },
+    );
+    await vi.runAllTimersAsync();
+    const result = await promise;
+
+    expect(result).not.toBeNull();
+    expect(result).toMatchObject({ size: 10, type: 'image/jpeg' });
+    // Should fetch card data and then the art_crop image
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    // Second call should be to the art_crop URL
+    expect(fetchMock.mock.calls[1]![0]).toContain('art_crop');
   });
 });

@@ -3,6 +3,7 @@
 export interface FetchCardImageParams {
   setCode: string;
   collectorNumber: string;
+  imageFormat?: 'normal' | 'art_crop';
 }
 
 export type FetchCardImageResult = Blob | null;
@@ -98,12 +99,16 @@ async function executeFetch(
   }
 
   const cardData = (await cardResponse.json()) as {
-    image_uris?: { normal?: string };
+    image_uris?: { normal?: string; art_crop?: string };
   };
 
-  const imageUrl = cardData.image_uris?.normal;
+  const imageFormat = params.imageFormat ?? 'normal';
+  const imageUrl = imageFormat === 'art_crop'
+    ? cardData.image_uris?.art_crop
+    : cardData.image_uris?.normal;
+
   if (!imageUrl) {
-    throw new Error('No image_uris.normal in Scryfall response');
+    throw new Error(`No image_uris.${imageFormat} in Scryfall response`);
   }
 
   const imageResponse = await fetchWithBackoff(imageUrl);
