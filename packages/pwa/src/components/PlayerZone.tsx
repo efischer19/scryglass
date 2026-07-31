@@ -6,6 +6,7 @@ import { DrawButton } from './DrawButton.js';
 import { ScryModal } from './ScryModal.js';
 import { FetchLandModal } from './FetchLandModal.js';
 import { TutorModal } from './TutorModal.js';
+import { GameZone } from './GameZone.js';
 
 interface PlayerZoneProps {
   player: PlayerId;
@@ -131,6 +132,13 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, ga
         >
           Scry
         </button>
+      </div>
+      <div class="game-zones">
+        <GameZone zoneName="Battlefield" cards={playerState.battlefield} />
+        <GameZone zoneName="Hand" cards={playerState.hand} />
+        <GameZone zoneName="Graveyard" cards={playerState.graveyard} />
+        <GameZone zoneName="Exile" cards={playerState.exile} />
+        <GameZone zoneName="Command Zone" cards={playerState.commandZone} />
       </div>
       {showScry && (
         <ScryModal

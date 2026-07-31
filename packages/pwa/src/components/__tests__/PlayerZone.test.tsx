@@ -7,6 +7,11 @@ import type { PlayerState, PlayerPhase, Action, ActionResult, GameState, PlayerI
 function makePlayerState(overrides: Partial<PlayerState> = {}): PlayerState {
   return {
     library: [],
+    hand: [],
+    battlefield: [],
+    graveyard: [],
+    exile: [],
+    commandZone: [],
     phase: 'loading',
     mulliganHand: [],
     mulliganCount: 0,
