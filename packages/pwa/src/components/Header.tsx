@@ -1,3 +1,5 @@
+import { ThemeToggle } from './ThemeToggle.js';
+
 interface HeaderProps {
   onLoadDecks: () => void;
   onNewGame?: () => void;
@@ -26,6 +28,7 @@ export function Header({ onLoadDecks, onNewGame }: HeaderProps) {
         >
           Load Decks
         </button>
+        <ThemeToggle />
       </div>
     </header>
   );

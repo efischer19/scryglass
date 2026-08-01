@@ -6,6 +6,8 @@
   /* Player accent colors */
   --player-a-accent: #2563eb;
   --player-b-accent: #dc2626;
+  --player-c-accent: #16a34a;
+  --player-d-accent: #9333ea;
 
   /* Neutral palette */
   --color-bg: #f8fafc;
@@ -13,6 +15,9 @@
   --color-text: #0f172a;
   --color-text-muted: #64748b;
   --color-border: #e2e8f0;
+
+  /* Shadow */
+  --shadow-md: -2px 0 8px rgba(0, 0, 0, 0.1);
 
   /* Spacing scale */
   --space-xs: 0.25rem;
@@ -53,6 +58,91 @@
   --color-new-game: #166534;
 }
 
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Player accent colors (maintained for readability) */
+    --player-a-accent: #3b82f6;
+    --player-b-accent: #ef4444;
+    --player-c-accent: #22c55e;
+    --player-d-accent: #a855f7;
+
+    /* Neutral palette for dark mode */
+    --color-bg: #0f172a;
+    --color-surface: #1e293b;
+    --color-text: #f1f5f9;
+    --color-text-muted: #cbd5e1;
+    --color-border: #334155;
+
+    /* Shadow for dark mode */
+    --shadow-md: -2px 0 8px rgba(0, 0, 0, 0.3);
+
+    /* Feedback colors for dark mode */
+    --color-warning-bg: #78350f;
+    --color-warning-text: #fef3c7;
+    --color-error-bg: #7f1d1d;
+    --color-error-text: #fee2e2;
+
+    --color-disabled: #94a3b8;
+    --color-new-game: #166534;
+  }
+}
+
+/* Manual theme override using data-theme attribute */
+[data-theme="dark"] {
+  /* Player accent colors (maintained for readability) */
+  --player-a-accent: #3b82f6;
+  --player-b-accent: #ef4444;
+  --player-c-accent: #22c55e;
+  --player-d-accent: #a855f7;
+
+  /* Neutral palette for dark mode */
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-text: #f1f5f9;
+  --color-text-muted: #cbd5e1;
+  --color-border: #334155;
+
+  /* Shadow for dark mode */
+  --shadow-md: -2px 0 8px rgba(0, 0, 0, 0.3);
+
+  /* Feedback colors for dark mode */
+  --color-warning-bg: #78350f;
+  --color-warning-text: #fef3c7;
+  --color-error-bg: #7f1d1d;
+  --color-error-text: #fee2e2;
+
+  --color-disabled: #94a3b8;
+  --color-new-game: #166534;
+}
+
+[data-theme="light"] {
+  /* Player accent colors */
+  --player-a-accent: #2563eb;
+  --player-b-accent: #dc2626;
+  --player-c-accent: #16a34a;
+  --player-d-accent: #9333ea;
+
+  /* Neutral palette */
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+
+  /* Shadow */
+  --shadow-md: -2px 0 8px rgba(0, 0, 0, 0.1);
+
+  /* Feedback colors */
+  --color-warning-bg: #fef3c7;
+  --color-warning-text: #92400e;
+  --color-error-bg: #fee2e2;
+  --color-error-text: #991b1b;
+
+  --color-disabled: #64748b;
+  --color-new-game: #166534;
+}
+
 /* ===================================================================
    Reset & Base
    =================================================================== */
@@ -71,6 +161,7 @@ body {
   color: var(--color-text);
   background-color: var(--color-bg);
   line-height: 1.5;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ===================================================================
@@ -1152,7 +1243,7 @@ textarea:focus-visible,
   height: 100vh;
   background: var(--color-surface);
   border-left: 1px solid var(--color-border);
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   z-index: 50;
   display: flex;
   flex-direction: column;
@@ -1358,7 +1449,7 @@ textarea:focus-visible,
   padding: var(--space-sm) var(--space-lg);
   font-size: var(--font-size-base);
   font-weight: 600;
-  color: #fff;
+  color: var(--color-surface);
   background: var(--player-a-accent);
   border: none;
   border-radius: 0.375rem;
@@ -1548,40 +1639,66 @@ textarea:focus-visible,
    =================================================================== */
 
 .player-zone--c {
-  border-color: #16a34a;
+  border-color: var(--player-c-accent);
 }
 
 .player-zone--c .player-zone__name {
-  color: #16a34a;
+  color: var(--player-c-accent);
 }
 
 .player-zone--c .action-btn {
-  background-color: #16a34a;
+  background-color: var(--player-c-accent);
 }
 
 .player-zone--d {
-  border-color: #9333ea;
+  border-color: var(--player-d-accent);
 }
 
 .player-zone--d .player-zone__name {
-  color: #9333ea;
+  color: var(--player-d-accent);
 }
 
 .player-zone--d .action-btn {
-  background-color: #9333ea;
+  background-color: var(--player-d-accent);
 }
 
 .player-zone--c .action-btn:disabled,
 .player-zone--d .action-btn:disabled {
-  background-color: #94a3b8;
+  background-color: var(--color-disabled);
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 .player-zone--c .action-btn:not(:disabled):focus-visible {
-  outline-color: #16a34a;
+  outline-color: var(--player-c-accent);
 }
 
 .player-zone--d .action-btn:not(:disabled):focus-visible {
-  outline-color: #9333ea;
+  outline-color: var(--player-d-accent);
+}
+
+/* ===================================================================
+   Theme Toggle Button
+   =================================================================== */
+
+.theme-toggle {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: var(--space-xs);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background-color: var(--color-border);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
 }
