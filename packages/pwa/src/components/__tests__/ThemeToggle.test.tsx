@@ -1,21 +1,27 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/preact';
 import userEvent from '@testing-library/user-event';
-import { ThemeToggle } from '../ThemeToggle.js';
 
 // Mock the useDarkMode hook
+const mockToggle = vi.fn();
 vi.mock('../../utils/useDarkMode.js', () => ({
   useDarkMode: vi.fn(() => ({
     isDark: false,
-    toggle: vi.fn(),
+    toggle: mockToggle,
   })),
 }));
 
+import { ThemeToggle } from '../ThemeToggle.js';
+
 describe('ThemeToggle', () => {
-  it('should render a button with accessible label', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should render a button with accessible label when light mode is active', () => {
     render(<ThemeToggle />);
     const button = screen.getByRole('button', { name: /switch to dark mode/i });
-    expect(button).toBeInTheDocument();
+    expect(button).toBeDefined();
   });
 
   it('should show moon emoji when light mode is active', () => {
@@ -24,20 +30,17 @@ describe('ThemeToggle', () => {
     expect(button.textContent).toBe('🌙');
   });
 
-  it('should call toggle when clicked', async () => {
-    const user = userEvent.setup();
-    const mockToggle = vi.fn();
-    
-    vi.doMock('../../utils/useDarkMode.js', () => ({
-      useDarkMode: vi.fn(() => ({
-        isDark: false,
-        toggle: mockToggle,
-      })),
-    }));
-
+  it('should have correct title attribute', () => {
     render(<ThemeToggle />);
     const button = screen.getByRole('button');
-    
+    expect(button.title).toBe('Switch to dark mode');
+  });
+
+  it('should call toggle when clicked', async () => {
+    const user = userEvent.setup();
+    render(<ThemeToggle />);
+    const button = screen.getByRole('button');
+
     await user.click(button);
     expect(mockToggle).toHaveBeenCalled();
   });
