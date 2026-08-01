@@ -17,7 +17,7 @@ const DEFAULT_PARAMS: FetchCardImageParams = {
 
 function mockCardJson(imageUrl = 'https://cards.scryfall.io/normal/test.jpg') {
   return {
-    image_uris: { 
+    image_uris: {
       normal: imageUrl,
       art_crop: 'https://cards.scryfall.io/art_crop/test.jpg',
     },
