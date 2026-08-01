@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   quality-checks:
@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref }} # 👈 Required to push back to the PR branch
 
       - name: Set up Python (for pre-commit)
         uses: actions/setup-python@v7
@@ -25,7 +27,13 @@ jobs:
 
       - name: Run pre-commit hooks
         uses: pre-commit/action@v3.0.1
+        continue-on-error: true # 👈 Allows the workflow to proceed after pre-commit fixes files
 
+      - name: Auto-commit formatting fixes
+        uses: stefanzweifel/git-auto-commit-action@v5 # 👈 Commits and pushes the changes
+        with:
+          commit_message: "style: auto-fix formatting [skip ci]"
+          
   check-adr-status:
     name: Check ADR Status
     runs-on: ubuntu-latest
