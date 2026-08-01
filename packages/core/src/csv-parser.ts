@@ -75,7 +75,7 @@ export function parseDeck(input: string): ParseResult {
       continue;
     }
 
-    cards.push({ name, setCode, collectorNumber, cardType });
+    cards.push({ name, setCode, collectorNumber, cardType, tapped: false, faceDown: false });
   }
 
   return { cards, warnings, errors };

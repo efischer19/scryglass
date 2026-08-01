@@ -47,9 +47,9 @@ describe('exportArchidekt', () => {
     expect(converted.errors).toHaveLength(0);
     expect(parsed.errors).toHaveLength(0);
     expect(parsed.cards).toEqual([
-      { name: 'Aragorn, the Uniter', setCode: 'ltr', collectorNumber: '193', cardType: 'nonland' },
-      { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land' },
-      { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land' },
+      { name: 'Aragorn, the Uniter', setCode: 'ltr', collectorNumber: '193', cardType: 'nonland', tapped: false, faceDown: false },
+      { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land', tapped: false, faceDown: false },
+      { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land', tapped: false, faceDown: false },
     ]);
     expect(parsed.warnings).toEqual([
       'Row 1: commander "Galadriel, Light of Valinor" recognized but excluded from shuffleable deck',

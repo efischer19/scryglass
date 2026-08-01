@@ -9,18 +9,20 @@ const COMMANDER: Card = {
   setCode: 'ltc',
   collectorNumber: '498',
   cardType: 'commander',
+  tapped: false,
+  faceDown: false,
 };
 
 const CARDS: Card[] = [
-  { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land' },
-  { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land' },
-  { name: 'Andúril, Flame of the West', setCode: 'ltr', collectorNumber: '687', cardType: 'nonland' },
+  { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land', tapped: false, faceDown: false },
+  { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land', tapped: false, faceDown: false },
+  { name: 'Andúril, Flame of the West', setCode: 'ltr', collectorNumber: '687', cardType: 'nonland', tapped: false, faceDown: false },
 ];
 
 const ROUNDTRIP_CARDS: Card[] = [
-  { name: 'Sol Ring', setCode: 'cmr', collectorNumber: '472', cardType: 'nonland' },
-  { name: 'Sol Ring', setCode: 'cmr', collectorNumber: '472', cardType: 'nonland' },
-  { name: 'Andúril, Flame of the West', setCode: 'ltr', collectorNumber: '687', cardType: 'nonland' },
+  { name: 'Sol Ring', setCode: 'cmr', collectorNumber: '472', cardType: 'nonland', tapped: false, faceDown: false },
+  { name: 'Sol Ring', setCode: 'cmr', collectorNumber: '472', cardType: 'nonland', tapped: false, faceDown: false },
+  { name: 'Andúril, Flame of the West', setCode: 'ltr', collectorNumber: '687', cardType: 'nonland', tapped: false, faceDown: false },
 ];
 
 describe('exportMoxfield', () => {

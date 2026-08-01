@@ -4,7 +4,7 @@ import type { GameState, Action } from './state.js';
 import type { Card } from './schemas/card.js';
 
 function makeCard(name: string, cardType: 'land' | 'nonland' = 'nonland'): Card {
-  return { name, setCode: 'test', collectorNumber: '1', cardType };
+  return { name, setCode: 'test', collectorNumber: '1', cardType, tapped: false, faceDown: false };
 }
 
 describe('createInitialState', () => {
@@ -161,6 +161,164 @@ describe('dispatch', () => {
       });
       expect(result.drawnCards).toEqual([makeCard('Mountain', 'land')]);
       expect(result.state.players.A.library).toHaveLength(1);
+    });
+  });
+
+  describe('MOVE_CARD', () => {
+    it('moves a card from one zone to another', () => {
+      let state = createInitialState();
+      const cards = [makeCard('Sol Ring'), makeCard('Forest', 'land')];
+      state = dispatch(state, {
+        type: 'LOAD_DECK',
+        payload: { player: 'A', cards },
+      }).state;
+
+      const result = dispatch(state, {
+        type: 'MOVE_CARD',
+        payload: {
+          player: 'A',
+          cardName: 'Sol Ring',
+          fromZone: 'library',
+          toZone: 'hand',
+        },
+      });
+
+      expect(result.state.players.A.library).toHaveLength(1);
+      expect(result.state.players.A.hand).toHaveLength(1);
+      expect(result.state.players.A.hand[0].name).toBe('Sol Ring');
+    });
+
+    it('throws when card is not found in source zone', () => {
+      let state = createInitialState();
+      state = dispatch(state, {
+        type: 'LOAD_DECK',
+        payload: { player: 'A', cards: [makeCard('Forest', 'land')] },
+      }).state;
+
+      expect(() =>
+        dispatch(state, {
+          type: 'MOVE_CARD',
+          payload: {
+            player: 'A',
+            cardName: 'Missing Card',
+            fromZone: 'library',
+            toZone: 'hand',
+          },
+        }),
+      ).toThrow('Cannot move card: "Missing Card" not found');
+    });
+  });
+
+  describe('CHANGE_CARD_STATE', () => {
+    it('sets tapped flag on a card', () => {
+      let state = createInitialState();
+      const cards = [makeCard('Sol Ring')];
+      state = dispatch(state, {
+        type: 'LOAD_DECK',
+        payload: { player: 'A', cards },
+      }).state;
+
+      state = dispatch(state, {
+        type: 'MOVE_CARD',
+        payload: {
+          player: 'A',
+          cardName: 'Sol Ring',
+          fromZone: 'library',
+          toZone: 'battlefield',
+        },
+      }).state;
+
+      const result = dispatch(state, {
+        type: 'CHANGE_CARD_STATE',
+        payload: {
+          player: 'A',
+          cardName: 'Sol Ring',
+          zone: 'battlefield',
+          tapped: true,
+        },
+      });
+
+      expect(result.state.players.A.battlefield[0].tapped).toBe(true);
+    });
+
+    it('sets faceDown flag on a card', () => {
+      let state = createInitialState();
+      const cards = [makeCard('Forest', 'land')];
+      state = dispatch(state, {
+        type: 'LOAD_DECK',
+        payload: { player: 'A', cards },
+      }).state;
+
+      state = dispatch(state, {
+        type: 'MOVE_CARD',
+        payload: {
+          player: 'A',
+          cardName: 'Forest',
+          fromZone: 'library',
+          toZone: 'hand',
+        },
+      }).state;
+
+      const result = dispatch(state, {
+        type: 'CHANGE_CARD_STATE',
+        payload: {
+          player: 'A',
+          cardName: 'Forest',
+          zone: 'hand',
+          faceDown: true,
+        },
+      });
+
+      expect(result.state.players.A.hand[0].faceDown).toBe(true);
+    });
+
+    it('sets both tapped and faceDown flags', () => {
+      let state = createInitialState();
+      const cards = [makeCard('Sol Ring')];
+      state = dispatch(state, {
+        type: 'LOAD_DECK',
+        payload: { player: 'A', cards },
+      }).state;
+
+      state = dispatch(state, {
+        type: 'MOVE_CARD',
+        payload: {
+          player: 'A',
+          cardName: 'Sol Ring',
+          fromZone: 'library',
+          toZone: 'hand',
+        },
+      }).state;
+
+      const result = dispatch(state, {
+        type: 'CHANGE_CARD_STATE',
+        payload: {
+          player: 'A',
+          cardName: 'Sol Ring',
+          zone: 'hand',
+          tapped: true,
+          faceDown: true,
+        },
+      });
+
+      expect(result.state.players.A.hand[0].tapped).toBe(true);
+      expect(result.state.players.A.hand[0].faceDown).toBe(true);
+    });
+
+    it('throws when card is not found in zone', () => {
+      const state = createInitialState();
+
+      expect(() =>
+        dispatch(state, {
+          type: 'CHANGE_CARD_STATE',
+          payload: {
+            player: 'A',
+            cardName: 'Missing Card',
+            zone: 'hand',
+            tapped: true,
+          },
+        }),
+      ).toThrow('Cannot change card state: "Missing Card" not found');
     });
   });
 

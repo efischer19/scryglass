@@ -33,6 +33,18 @@ export const GameStateSchema = z.object({
 });
 export type GameState = z.infer<typeof GameStateSchema>;
 
+// --- Zone Types ---
+export const ZoneSchema = z.enum([
+  'library',
+  'hand',
+  'battlefield',
+  'graveyard',
+  'exile',
+  'commandZone',
+  'mulliganHand',
+]);
+export type Zone = z.infer<typeof ZoneSchema>;
+
 // --- Actions ---
 const LoadDeckActionSchema = z.object({
   type: z.literal('LOAD_DECK'),
@@ -85,6 +97,27 @@ const ScryResolveActionSchema = z.object({
   }),
 });
 
+const MoveCardActionSchema = z.object({
+  type: z.literal('MOVE_CARD'),
+  payload: z.object({
+    player: PlayerIdSchema,
+    cardName: z.string(),
+    fromZone: ZoneSchema,
+    toZone: ZoneSchema,
+  }),
+});
+
+const ChangeCardStateActionSchema = z.object({
+  type: z.literal('CHANGE_CARD_STATE'),
+  payload: z.object({
+    player: PlayerIdSchema,
+    cardName: z.string(),
+    zone: ZoneSchema,
+    tapped: z.boolean().optional(),
+    faceDown: z.boolean().optional(),
+  }),
+});
+
 export const ActionSchema = z.discriminatedUnion('type', [
   LoadDeckActionSchema,
   ShuffleLibraryActionSchema,
@@ -92,6 +125,8 @@ export const ActionSchema = z.discriminatedUnion('type', [
   TutorCardActionSchema,
   FetchBasicLandActionSchema,
   ScryResolveActionSchema,
+  MoveCardActionSchema,
+  ChangeCardStateActionSchema,
 ]);
 
 export type Action = z.infer<typeof ActionSchema>;
@@ -246,6 +281,79 @@ export function dispatch(state: GameState, action: Action): ActionResult {
         state: updatePlayer(state, player, {
           library: [...topCards, ...remaining, ...bottomCards],
         }),
+      };
+    }
+
+    case 'MOVE_CARD': {
+      const { cardName, fromZone, toZone } = parsed.payload;
+      const fromZoneCards = playerState[fromZone as keyof PlayerState];
+
+      if (!Array.isArray(fromZoneCards)) {
+        throw new Error(`Zone "${fromZone}" is not a valid zone for this operation`);
+      }
+
+      const cardIndex = fromZoneCards.findIndex((c) => c.name === cardName);
+      if (cardIndex === -1) {
+        throw new Error(
+          `Cannot move card: "${cardName}" not found in ${fromZone} of Player ${player}`,
+        );
+      }
+
+      const card = fromZoneCards[cardIndex];
+      const updatedFromZone = [
+        ...fromZoneCards.slice(0, cardIndex),
+        ...fromZoneCards.slice(cardIndex + 1),
+      ];
+
+      const toZoneCards = playerState[toZone as keyof PlayerState];
+      if (!Array.isArray(toZoneCards)) {
+        throw new Error(`Zone "${toZone}" is not a valid zone for this operation`);
+      }
+
+      const updatedToZone = [...toZoneCards, card];
+
+      const updates: Record<string, any> = {};
+      updates[fromZone] = updatedFromZone;
+      updates[toZone] = updatedToZone;
+
+      return {
+        state: updatePlayer(state, player, updates as Partial<PlayerState>),
+      };
+    }
+
+    case 'CHANGE_CARD_STATE': {
+      const { cardName, zone, tapped, faceDown } = parsed.payload;
+      const zoneCards = playerState[zone as keyof PlayerState];
+
+      if (!Array.isArray(zoneCards)) {
+        throw new Error(`Zone "${zone}" is not a valid zone for this operation`);
+      }
+
+      const cardIndex = zoneCards.findIndex((c) => c.name === cardName);
+      if (cardIndex === -1) {
+        throw new Error(
+          `Cannot change card state: "${cardName}" not found in ${zone} of Player ${player}`,
+        );
+      }
+
+      const card = zoneCards[cardIndex];
+      const updatedCard: Card = {
+        ...card,
+        ...(tapped !== undefined && { tapped }),
+        ...(faceDown !== undefined && { faceDown }),
+      };
+
+      const updatedZoneCards = [
+        ...zoneCards.slice(0, cardIndex),
+        updatedCard,
+        ...zoneCards.slice(cardIndex + 1),
+      ];
+
+      const updates: Record<string, any> = {};
+      updates[zone] = updatedZoneCards;
+
+      return {
+        state: updatePlayer(state, player, updates as Partial<PlayerState>),
       };
     }
   }

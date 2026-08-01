@@ -5,7 +5,7 @@ import type { Card } from './schemas/card.js';
 import type { Action } from './schemas/action.js';
 
 function makeCard(name: string): Card {
-  return { name, setCode: 'TST', collectorNumber: '1', cardType: 'nonland' };
+  return { name, setCode: 'TST', collectorNumber: '1', cardType: 'nonland', tapped: false, faceDown: false };
 }
 
 function makeCards(count: number): Card[] {
@@ -699,7 +699,7 @@ describe('dispatch — validation', () => {
 });
 
 function makeBasicLand(name: string): Card {
-  return { name, setCode: 'TST', collectorNumber: '1', cardType: 'land' };
+  return { name, setCode: 'TST', collectorNumber: '1', cardType: 'land', tapped: false, faceDown: false };
 }
 
 describe('dispatch — FETCH_BASIC_LAND', () => {
@@ -1056,7 +1056,7 @@ describe('dispatch — history entries', () => {
 
   it('appends a history entry for FETCH_BASIC_LAND with the fetched card', () => {
     let state = createInitialState();
-    const mountain = { name: 'Mountain', setCode: 'TST', collectorNumber: '1', cardType: 'land' as const };
+    const mountain = { name: 'Mountain', setCode: 'TST', collectorNumber: '1', cardType: 'land' as const, tapped: false, faceDown: false };
     const cards = [makeCard('Sol Ring'), mountain];
     state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
 
@@ -1133,5 +1133,232 @@ describe('dispatch — history entries', () => {
     const state = createInitialState();
     const result = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards: makeCards(3) } });
     expect(result.state.history[0].cards).toBeUndefined();
+  });
+});
+
+describe('dispatch — MOVE_CARD', () => {
+  it('moves a card from library to hand', () => {
+    let state = createInitialState();
+    const cards = [makeCard('Sol Ring'), makeCard('Forest')];
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, {
+      type: 'MOVE_CARD',
+      payload: { player: 'A', cardName: 'Sol Ring', fromZone: 'library', toZone: 'hand' },
+    });
+
+    expect(result.state.players.A.library).toHaveLength(1);
+    expect(result.state.players.A.library[0].name).toBe('Forest');
+    expect(result.state.players.A.hand).toHaveLength(1);
+    expect(result.state.players.A.hand[0].name).toBe('Sol Ring');
+  });
+
+  it('moves a card from library to battlefield', () => {
+    let state = createInitialState();
+    const cards = [makeCard('Sol Ring'), makeCard('Forest'), makeCard('Mountain')];
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, {
+      type: 'MOVE_CARD',
+      payload: { player: 'A', cardName: 'Forest', fromZone: 'library', toZone: 'battlefield' },
+    });
+
+    expect(result.state.players.A.library).toHaveLength(2);
+    expect(result.state.players.A.battlefield).toHaveLength(1);
+    expect(result.state.players.A.battlefield[0].name).toBe('Forest');
+  });
+
+  it('moves a card from battlefield to graveyard', () => {
+    let state = createInitialState();
+    const cards = [makeCard('Sol Ring'), makeCard('Forest'), makeCard('Mountain')];
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    state = dispatch(state, {
+      type: 'MOVE_CARD',
+      payload: { player: 'A', cardName: 'Forest', fromZone: 'library', toZone: 'battlefield' },
+    }).state;
+
+    const result = dispatch(state, {
+      type: 'MOVE_CARD',
+      payload: { player: 'A', cardName: 'Forest', fromZone: 'battlefield', toZone: 'graveyard' },
+    });
+
+    expect(result.state.players.A.battlefield).toHaveLength(0);
+    expect(result.state.players.A.graveyard).toHaveLength(1);
+    expect(result.state.players.A.graveyard[0].name).toBe('Forest');
+  });
+
+  it('moves a card to exile', () => {
+    let state = createInitialState();
+    const cards = makeCards(3);
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, {
+      type: 'MOVE_CARD',
+      payload: { player: 'A', cardName: 'Card 1', fromZone: 'library', toZone: 'exile' },
+    });
+
+    expect(result.state.players.A.library).toHaveLength(2);
+    expect(result.state.players.A.exile).toHaveLength(1);
+    expect(result.state.players.A.exile[0].name).toBe('Card 1');
+  });
+
+  it('throws error if card is not found in source zone', () => {
+    let state = createInitialState();
+    const cards = makeCards(3);
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    expect(() => {
+      dispatch(state, {
+        type: 'MOVE_CARD',
+        payload: { player: 'A', cardName: 'Nonexistent Card', fromZone: 'library', toZone: 'hand' },
+      });
+    }).toThrow(/Cannot move card/);
+  });
+
+  it('appends a history entry for MOVE_CARD', () => {
+    let state = createInitialState();
+    const cards = [makeCard('Sol Ring'), makeCard('Forest')];
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, {
+      type: 'MOVE_CARD',
+      payload: { player: 'A', cardName: 'Sol Ring', fromZone: 'library', toZone: 'hand' },
+    });
+
+    expect(result.state.history).toHaveLength(2);
+    const entry = result.state.history[1];
+    expect(entry.actionType).toBe('MOVE_CARD');
+    expect(entry.description).toContain('Sol Ring');
+    expect(entry.description).toContain('library');
+    expect(entry.description).toContain('hand');
+  });
+});
+
+describe('dispatch — CHANGE_CARD_STATE', () => {
+  it('changes tapped property of a card on the battlefield', () => {
+    let state = createInitialState();
+    const cards = makeCards(3);
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    state = dispatch(state, {
+      type: 'MOVE_CARD',
+      payload: { player: 'A', cardName: 'Card 1', fromZone: 'library', toZone: 'battlefield' },
+    }).state;
+
+    const result = dispatch(state, {
+      type: 'CHANGE_CARD_STATE',
+      payload: { player: 'A', cardName: 'Card 1', zone: 'battlefield', tapped: true },
+    });
+
+    expect(result.state.players.A.battlefield[0].tapped).toBe(true);
+  });
+
+  it('changes faceDown property of a card on the battlefield', () => {
+    let state = createInitialState();
+    const cards = makeCards(3);
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    state = dispatch(state, {
+      type: 'MOVE_CARD',
+      payload: { player: 'A', cardName: 'Card 2', fromZone: 'library', toZone: 'battlefield' },
+    }).state;
+
+    const result = dispatch(state, {
+      type: 'CHANGE_CARD_STATE',
+      payload: { player: 'A', cardName: 'Card 2', zone: 'battlefield', faceDown: true },
+    });
+
+    expect(result.state.players.A.battlefield[0].faceDown).toBe(true);
+  });
+
+  it('changes both tapped and faceDown properties', () => {
+    let state = createInitialState();
+    const cards = makeCards(3);
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    state = dispatch(state, {
+      type: 'MOVE_CARD',
+      payload: { player: 'A', cardName: 'Card 3', fromZone: 'library', toZone: 'battlefield' },
+    }).state;
+
+    const result = dispatch(state, {
+      type: 'CHANGE_CARD_STATE',
+      payload: {
+        player: 'A',
+        cardName: 'Card 3',
+        zone: 'battlefield',
+        tapped: true,
+        faceDown: true,
+      },
+    });
+
+    expect(result.state.players.A.battlefield[0].tapped).toBe(true);
+    expect(result.state.players.A.battlefield[0].faceDown).toBe(true);
+  });
+
+  it('unsets tapped property', () => {
+    let state = createInitialState();
+    const tappedCard = { name: 'Sol Ring', setCode: 'TST', collectorNumber: '1', cardType: 'nonland' as const, tapped: true, faceDown: false };
+    const cards = [tappedCard, makeCard('Forest')];
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+    state = dispatch(state, {
+      type: 'MOVE_CARD',
+      payload: { player: 'A', cardName: 'Sol Ring', fromZone: 'library', toZone: 'battlefield' },
+    }).state;
+
+    const result = dispatch(state, {
+      type: 'CHANGE_CARD_STATE',
+      payload: { player: 'A', cardName: 'Sol Ring', zone: 'battlefield', tapped: false },
+    });
+
+    expect(result.state.players.A.battlefield[0].tapped).toBe(false);
+  });
+
+  it('changes card state in the library zone', () => {
+    let state = createInitialState();
+    const cards = makeCards(3);
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    const result = dispatch(state, {
+      type: 'CHANGE_CARD_STATE',
+      payload: { player: 'A', cardName: 'Card 1', zone: 'library', faceDown: true },
+    });
+
+    expect(result.state.players.A.library[0].faceDown).toBe(true);
+  });
+
+  it('appends a history entry for CHANGE_CARD_STATE', () => {
+    let state = createInitialState();
+    const cards = makeCards(3);
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    state = dispatch(state, {
+      type: 'MOVE_CARD',
+      payload: { player: 'A', cardName: 'Card 2', fromZone: 'library', toZone: 'battlefield' },
+    }).state;
+
+    const result = dispatch(state, {
+      type: 'CHANGE_CARD_STATE',
+      payload: { player: 'A', cardName: 'Card 2', zone: 'battlefield', tapped: true },
+    });
+
+    expect(result.state.history).toHaveLength(3);
+    const entry = result.state.history[2];
+    expect(entry.actionType).toBe('CHANGE_CARD_STATE');
+    expect(entry.description).toContain('Card 2');
+  });
+
+  it('throws error if card is not found in zone', () => {
+    let state = createInitialState();
+    const cards = makeCards(3);
+    state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
+
+    expect(() => {
+      dispatch(state, {
+        type: 'CHANGE_CARD_STATE',
+        payload: { player: 'A', cardName: 'Nonexistent Card', zone: 'library', tapped: true },
+      });
+    }).toThrow(/Cannot change card state/);
   });
 });
