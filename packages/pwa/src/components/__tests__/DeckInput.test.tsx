@@ -133,9 +133,9 @@ describe('<DeckInput />', () => {
     fireEvent.click(btn);
     expect(handleLoad).toHaveBeenCalledTimes(1);
     expect(handleLoad).toHaveBeenCalledWith([
-      { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land' },
-      { name: 'Forest', setCode: 'm21', collectorNumber: '313', cardType: 'land' },
-      { name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' },
+      { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land', tapped: false, faceDown: false },
+      { name: 'Forest', setCode: 'm21', collectorNumber: '313', cardType: 'land', tapped: false, faceDown: false },
+      { name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland', tapped: false, faceDown: false },
     ]);
   });
 
