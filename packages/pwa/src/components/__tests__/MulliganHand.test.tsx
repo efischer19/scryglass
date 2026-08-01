@@ -21,6 +21,11 @@ const defaultSettings: GameState['settings'] = { allowMulliganWith2or5Lands: fal
 function makePlayerState(overrides: Partial<PlayerState> = {}): PlayerState {
   return {
     library: [],
+    hand: [],
+    battlefield: [],
+    graveyard: [],
+    exile: [],
+    commandZone: [],
     phase: 'mulligan',
     mulliganHand: [],
     mulliganCount: 0,
@@ -61,7 +66,7 @@ describe('<MulliganHand />', () => {
     render(
       <MulliganHand
         player="A"
-        playerState={makePlayerState({ mulliganHand: hand })}
+        playerState={makePlayerState({ hand: hand })}
         settings={defaultSettings}
         onDispatch={() => {}}
       />,
@@ -78,7 +83,7 @@ describe('<MulliganHand />', () => {
     render(
       <MulliganHand
         player="A"
-        playerState={makePlayerState({ mulliganHand: hand })}
+        playerState={makePlayerState({ hand: hand })}
         settings={defaultSettings}
         onDispatch={() => {}}
       />,
@@ -91,7 +96,7 @@ describe('<MulliganHand />', () => {
     render(
       <MulliganHand
         player="A"
-        playerState={makePlayerState({ mulliganHand: hand })}
+        playerState={makePlayerState({ hand: hand })}
         settings={defaultSettings}
         onDispatch={() => {}}
       />,
@@ -117,7 +122,7 @@ describe('<MulliganHand />', () => {
     render(
       <MulliganHand
         player="B"
-        playerState={makePlayerState({ mulliganHand: hand })}
+        playerState={makePlayerState({ hand: hand })}
         settings={defaultSettings}
         onDispatch={onDispatch}
       />,
@@ -135,7 +140,7 @@ describe('<MulliganHand />', () => {
     render(
       <MulliganHand
         player="A"
-        playerState={makePlayerState({ mulliganHand: hand })}
+        playerState={makePlayerState({ hand: hand })}
         settings={defaultSettings}
         onDispatch={onDispatch}
       />,
@@ -152,7 +157,7 @@ describe('<MulliganHand />', () => {
     render(
       <MulliganHand
         player="A"
-        playerState={makePlayerState({ mulliganHand: hand })}
+        playerState={makePlayerState({ hand: hand })}
         settings={defaultSettings}
         onDispatch={() => {}}
       />,
@@ -166,7 +171,7 @@ describe('<MulliganHand />', () => {
     render(
       <MulliganHand
         player="A"
-        playerState={makePlayerState({ mulliganHand: hand })}
+        playerState={makePlayerState({ hand: hand })}
         settings={defaultSettings}
         onDispatch={() => {}}
       />,
@@ -180,7 +185,7 @@ describe('<MulliganHand />', () => {
     render(
       <MulliganHand
         player="A"
-        playerState={makePlayerState({ mulliganHand: hand })}
+        playerState={makePlayerState({ hand: hand })}
         settings={{ allowMulliganWith2or5Lands: true }}
         onDispatch={() => {}}
       />,
@@ -195,7 +200,7 @@ describe('<MulliganHand />', () => {
       render(
         <MulliganHand
           player="A"
-          playerState={makePlayerState({ mulliganHand: hand })}
+          playerState={makePlayerState({ hand: hand })}
           settings={defaultSettings}
           onDispatch={() => {}}
         />,
@@ -209,7 +214,7 @@ describe('<MulliganHand />', () => {
       render(
         <MulliganHand
           player="A"
-          playerState={makePlayerState({ mulliganHand: hand })}
+          playerState={makePlayerState({ hand: hand })}
           settings={defaultSettings}
           onDispatch={() => {}}
         />,
@@ -224,7 +229,7 @@ describe('<MulliganHand />', () => {
       render(
         <MulliganHand
           player="A"
-          playerState={makePlayerState({ mulliganHand: hand })}
+          playerState={makePlayerState({ hand: hand })}
           settings={defaultSettings}
           onDispatch={() => {}}
         />,
@@ -241,7 +246,7 @@ describe('<MulliganHand />', () => {
       render(
         <MulliganHand
           player="A"
-          playerState={makePlayerState({ mulliganHand: hand })}
+          playerState={makePlayerState({ hand: hand })}
           settings={defaultSettings}
           onDispatch={() => {}}
         />,
@@ -257,7 +262,7 @@ describe('<MulliganHand />', () => {
     render(
       <MulliganHand
         player="A"
-        playerState={makePlayerState({ mulliganHand: hand })}
+        playerState={makePlayerState({ hand: hand })}
         settings={defaultSettings}
         onDispatch={() => {}}
       />,
@@ -303,7 +308,7 @@ describe('<MulliganHand />', () => {
     render(
       <MulliganHand
         player="B"
-        playerState={makePlayerState({ mulliganHand: hand })}
+        playerState={makePlayerState({ hand: hand })}
         settings={defaultSettings}
         onDispatch={() => {}}
       />,
@@ -329,7 +334,7 @@ describe('<MulliganHand />', () => {
     const { container } = render(
       <MulliganHand
         player="A"
-        playerState={makePlayerState({ mulliganHand: makeHand(3, 4) })}
+        playerState={makePlayerState({ hand: makeHand(3, 4) })}
         settings={defaultSettings}
         onDispatch={() => {}}
       />,
@@ -342,7 +347,7 @@ describe('<MulliganHand />', () => {
     const { container } = render(
       <MulliganHand
         player="A"
-        playerState={makePlayerState({ mulliganHand: makeHand(3, 4) })}
+        playerState={makePlayerState({ hand: makeHand(3, 4) })}
         settings={defaultSettings}
         onDispatch={() => {}}
       />,

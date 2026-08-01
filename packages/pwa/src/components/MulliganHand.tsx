@@ -23,9 +23,9 @@ const VERDICT_DESCRIPTIONS: Record<string, string> = {
 export function MulliganHand({ player, playerState, settings, onDispatch }: MulliganHandProps) {
   const [revealed, setRevealed] = useState(false);
   const label = playerLabel(player);
-  const isPreDeal = playerState.mulliganHand.length === 0;
+  const isPreDeal = playerState.hand.length === 0;
 
-  const landCount = isPreDeal ? 0 : countLands(playerState.mulliganHand);
+  const landCount = isPreDeal ? 0 : countLands(playerState.hand);
   const verdict = isPreDeal ? 'must_keep' : getMulliganVerdict(landCount, settings);
   const mulliganDisabled = isPreDeal || verdict === 'must_keep';
 
@@ -44,7 +44,7 @@ export function MulliganHand({ player, playerState, settings, onDispatch }: Mull
       {!isPreDeal && (revealed ? (
         <div class="mulligan-hand__revealed">
           <ul class="mulligan-hand__card-list" aria-label={`${label}'s hand cards`}>
-            {playerState.mulliganHand.map((card: Card, i: number) => (
+            {playerState.hand.map((card: Card, i: number) => (
               <li key={i} class="mulligan-hand__card-item">
                 <CardImage card={card} />
               </li>
