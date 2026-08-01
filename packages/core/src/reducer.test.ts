@@ -326,14 +326,14 @@ function loadDeckForPlayer(player: 'A' | 'B', count: number): GameState {
 }
 
 describe('dispatch — DEAL_OPENING_HAND', () => {
-  it('moves exactly 7 cards from library to mulliganHand', () => {
+  it('moves exactly 7 cards from library to hand', () => {
     const state = loadDeckForPlayer('A', 20);
     const result = dispatch(state, {
       type: 'DEAL_OPENING_HAND',
       payload: { player: 'A' },
     });
 
-    expect(result.state.players.A.mulliganHand).toHaveLength(7);
+    expect(result.state.players.A.hand).toHaveLength(7);
     expect(result.state.players.A.library).toHaveLength(13);
     expect(result.card).toBeNull();
   });
@@ -346,7 +346,7 @@ describe('dispatch — DEAL_OPENING_HAND', () => {
       payload: { player: 'A' },
     });
 
-    expect(result.state.players.A.mulliganHand).toEqual(originalLibrary.slice(0, 7));
+    expect(result.state.players.A.hand).toEqual(originalLibrary.slice(0, 7));
     expect(result.state.players.A.library).toEqual(originalLibrary.slice(7));
   });
 
@@ -357,7 +357,7 @@ describe('dispatch — DEAL_OPENING_HAND', () => {
       payload: { player: 'A' },
     });
 
-    expect(result.state.players.A.mulliganHand).toHaveLength(3);
+    expect(result.state.players.A.hand).toHaveLength(3);
     expect(result.state.players.A.library).toHaveLength(0);
   });
 
@@ -368,7 +368,7 @@ describe('dispatch — DEAL_OPENING_HAND', () => {
       payload: { player: 'A' },
     });
 
-    expect(result.state.players.A.mulliganHand).toHaveLength(0);
+    expect(result.state.players.A.hand).toHaveLength(0);
     expect(result.state.players.A.library).toHaveLength(0);
   });
 
@@ -436,7 +436,7 @@ describe('dispatch — MULLIGAN', () => {
       payload: { player: 'A' },
     });
 
-    expect(result.state.players.A.mulliganHand).toHaveLength(7);
+    expect(result.state.players.A.hand).toHaveLength(7);
     expect(result.state.players.A.library).toHaveLength(13);
     expect(result.card).toBeNull();
   });
@@ -448,12 +448,12 @@ describe('dispatch — MULLIGAN', () => {
       payload: { player: 'A' },
     }).state;
 
-    const totalBefore = state.players.A.mulliganHand.length + state.players.A.library.length;
+    const totalBefore = state.players.A.hand.length + state.players.A.library.length;
     const result = dispatch(state, {
       type: 'MULLIGAN',
       payload: { player: 'A' },
     });
-    const totalAfter = result.state.players.A.mulliganHand.length + result.state.players.A.library.length;
+    const totalAfter = result.state.players.A.hand.length + result.state.players.A.library.length;
 
     expect(totalAfter).toBe(totalBefore);
   });
@@ -465,14 +465,14 @@ describe('dispatch — MULLIGAN', () => {
       payload: { player: 'A' },
     }).state;
 
-    const allCardsBefore = [...state.players.A.mulliganHand, ...state.players.A.library]
+    const allCardsBefore = [...state.players.A.hand, ...state.players.A.library]
       .map(c => c.name).sort();
 
     const result = dispatch(state, {
       type: 'MULLIGAN',
       payload: { player: 'A' },
     });
-    const allCardsAfter = [...result.state.players.A.mulliganHand, ...result.state.players.A.library]
+    const allCardsAfter = [...result.state.players.A.hand, ...result.state.players.A.library]
       .map(c => c.name).sort();
 
     expect(allCardsAfter).toEqual(allCardsBefore);
@@ -515,7 +515,7 @@ describe('dispatch — MULLIGAN', () => {
     }
 
     expect(state.players.A.mulliganCount).toBe(10);
-    expect(state.players.A.mulliganHand).toHaveLength(7);
+    expect(state.players.A.hand).toHaveLength(7);
     expect(state.players.A.library).toHaveLength(13);
   });
 
@@ -562,19 +562,20 @@ describe('dispatch — MULLIGAN', () => {
 });
 
 describe('dispatch — KEEP_HAND', () => {
-  it('clears mulliganHand and transitions phase to playing', () => {
+  it('preserves hand and transitions phase to playing', () => {
     let state = loadDeckForPlayer('A', 20);
     state = dispatch(state, {
       type: 'DEAL_OPENING_HAND',
       payload: { player: 'A' },
     }).state;
+    const handBefore = [...state.players.A.hand];
 
     const result = dispatch(state, {
       type: 'KEEP_HAND',
       payload: { player: 'A' },
     });
 
-    expect(result.state.players.A.mulliganHand).toEqual([]);
+    expect(result.state.players.A.hand).toEqual(handBefore);
     expect(result.state.players.A.phase).toBe('playing');
     expect(result.card).toBeNull();
   });
@@ -1360,5 +1361,241 @@ describe('dispatch — CHANGE_CARD_STATE', () => {
         payload: { player: 'A', cardName: 'Nonexistent Card', zone: 'library', tapped: true },
       });
     }).toThrow(/Cannot change card state/);
+  });
+});
+
+describe('Smart Dealer Macro — Setup Phase Hand-Off', () => {
+  it('hands off hand array to playing phase after dealing opening hand', () => {
+    let state = createInitialState();
+    const cards = makeCards(20);
+    state = dispatch(state, {
+      type: 'LOAD_DECK',
+      payload: { player: 'A', cards },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'KEEP_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    expect(state.players.A.phase).toBe('playing');
+    expect(state.players.A.hand).toHaveLength(7);
+    expect(state.players.A.hand.map((c) => c.name)).toEqual([
+      'Card 1',
+      'Card 2',
+      'Card 3',
+      'Card 4',
+      'Card 5',
+      'Card 6',
+      'Card 7',
+    ]);
+  });
+
+  it('hands off hand array to playing phase after mulligan', () => {
+    let state = createInitialState();
+    const cards = makeCards(20);
+    state = dispatch(state, {
+      type: 'LOAD_DECK',
+      payload: { player: 'A', cards },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'MULLIGAN',
+      payload: { player: 'A' },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'KEEP_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    expect(state.players.A.phase).toBe('playing');
+    expect(state.players.A.hand).toHaveLength(7);
+    expect(state.players.A.library).toHaveLength(13);
+  });
+
+  it('preserves mulliganCount when transitioning to playing phase', () => {
+    let state = createInitialState();
+    const cards = makeCards(20);
+    state = dispatch(state, {
+      type: 'LOAD_DECK',
+      payload: { player: 'A', cards },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'MULLIGAN',
+      payload: { player: 'A' },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'MULLIGAN',
+      payload: { player: 'A' },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'KEEP_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    expect(state.players.A.mulliganCount).toBe(2);
+    expect(state.players.A.phase).toBe('playing');
+  });
+
+  it('creates proper history entries for complete setup sequence', () => {
+    let state = createInitialState();
+    const cards = makeCards(20);
+    state = dispatch(state, {
+      type: 'LOAD_DECK',
+      payload: { player: 'A', cards },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'MULLIGAN',
+      payload: { player: 'A' },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'KEEP_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    expect(state.history).toHaveLength(4);
+    expect(state.history[0].actionType).toBe('LOAD_DECK');
+    expect(state.history[1].actionType).toBe('DEAL_OPENING_HAND');
+    expect(state.history[2].actionType).toBe('MULLIGAN');
+    expect(state.history[3].actionType).toBe('KEEP_HAND');
+
+    // Verify history entries contain card details
+    expect(state.history[1].cardDetails).toBeDefined();
+    expect(state.history[1].cardDetails?.length).toBe(7);
+    expect(state.history[3].cardDetails).toBeDefined();
+    expect(state.history[3].cardDetails?.length).toBe(7);
+  });
+
+  it('maintains LOCAL_MODE setting throughout setup sequence', () => {
+    let state = createInitialState(2, { localMode: true });
+    expect(state.settings.localMode).toBe(true);
+
+    const cards = makeCards(20);
+    state = dispatch(state, {
+      type: 'LOAD_DECK',
+      payload: { player: 'A', cards },
+    }).state;
+
+    expect(state.settings.localMode).toBe(true);
+
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    expect(state.settings.localMode).toBe(true);
+  });
+
+  it('allows independent player setup sequences', () => {
+    let state = createInitialState();
+    const cardsA = makeCards(20);
+    const cardsB = makeCards(20);
+
+    state = dispatch(state, {
+      type: 'LOAD_DECK',
+      payload: { player: 'A', cards: cardsA },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'LOAD_DECK',
+      payload: { player: 'B', cards: cardsB },
+    }).state;
+
+    // Player A completes setup
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'KEEP_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    expect(state.players.A.phase).toBe('playing');
+    expect(state.players.A.hand).toHaveLength(7);
+
+    // Player B still in mulligan phase
+    expect(state.players.B.phase).toBe('mulligan');
+
+    // Player B completes setup
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'B' },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'KEEP_HAND',
+      payload: { player: 'B' },
+    }).state;
+
+    expect(state.players.B.phase).toBe('playing');
+    expect(state.players.B.hand).toHaveLength(7);
+  });
+
+  it('provides clean sandbox state for playing phase', () => {
+    let state = createInitialState();
+    const cards = makeCards(20);
+
+    state = dispatch(state, {
+      type: 'LOAD_DECK',
+      payload: { player: 'A', cards },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    state = dispatch(state, {
+      type: 'KEEP_HAND',
+      payload: { player: 'A' },
+    }).state;
+
+    const playerA = state.players.A;
+
+    // Verify playing phase has clean state with correct arrays
+    expect(playerA.phase).toBe('playing');
+    expect(playerA.hand).toHaveLength(7);
+    expect(playerA.library).toHaveLength(13);
+    expect(playerA.battlefield).toEqual([]);
+    expect(playerA.graveyard).toEqual([]);
+    expect(playerA.exile).toEqual([]);
+    expect(playerA.commandZone).toEqual([]);
+
+    // Verify can draw from library in playing phase
+    const drawnCardResult = dispatch(state, {
+      type: 'DRAW_CARD',
+      payload: { player: 'A' },
+    });
+
+    expect(drawnCardResult.state.players.A.library).toHaveLength(12);
+    expect(drawnCardResult.card).toBe(state.players.A.library[0]);
   });
 });

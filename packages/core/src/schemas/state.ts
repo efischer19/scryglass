@@ -41,6 +41,7 @@ export const GameStateSchema = z.object({
   players: z.record(PlayerIdSchema, PlayerStateSchema),
   settings: z.object({
     allowMulliganWith2or5Lands: z.boolean(),
+    localMode: z.boolean(),
   }),
   history: z.array(HistoryEntrySchema),
 });

@@ -37,6 +37,7 @@ export function createInitialState(
     players: players as GameState['players'],
     settings: {
       allowMulliganWith2or5Lands: false,
+      localMode: false,
       ...settings,
     },
     history: [],
@@ -70,21 +71,21 @@ function buildHistoryEntry(state: GameState, action: Action, result: ActionResul
       break;
     case 'DEAL_OPENING_HAND':
       description = `Player ${player} was dealt an opening hand`;
-      cardDetails = result.state.players[player].mulliganHand.map((card) => ({
+      cardDetails = result.state.players[player].hand.map((card) => ({
         card,
         destination: 'opening hand',
       }));
       break;
     case 'MULLIGAN':
       description = `Player ${player} took a mulligan`;
-      cardDetails = result.state.players[player].mulliganHand.map((card) => ({
+      cardDetails = result.state.players[player].hand.map((card) => ({
         card,
         destination: 'mulligan hand',
       }));
       break;
     case 'KEEP_HAND':
       description = `Player ${player} kept their hand`;
-      cardDetails = state.players[player].mulliganHand.map((card) => ({
+      cardDetails = state.players[player].hand.map((card) => ({
         card,
         destination: 'kept hand',
       }));
@@ -235,7 +236,7 @@ function handleDealOpeningHand(state: GameState, action: Extract<Action, { type:
         ...state.players,
         [player]: {
           ...state.players[player],
-          mulliganHand: library.slice(0, dealCount),
+          hand: library.slice(0, dealCount),
           library: library.slice(dealCount),
         },
       },
@@ -248,7 +249,7 @@ function handleMulligan(state: GameState, action: Extract<Action, { type: 'MULLI
   const { player } = action.payload;
   requireMulliganPhase(state, player, 'MULLIGAN');
 
-  const combined = [...state.players[player].mulliganHand, ...state.players[player].library];
+  const combined = [...state.players[player].hand, ...state.players[player].library];
   const shuffled = shuffle(combined);
   const dealCount = Math.min(7, shuffled.length);
 
@@ -260,7 +261,7 @@ function handleMulligan(state: GameState, action: Extract<Action, { type: 'MULLI
         [player]: {
           ...state.players[player],
           library: shuffled.slice(dealCount),
-          mulliganHand: shuffled.slice(0, dealCount),
+          hand: shuffled.slice(0, dealCount),
           mulliganCount: state.players[player].mulliganCount + 1,
         },
       },
@@ -280,7 +281,6 @@ function handleKeepHand(state: GameState, action: Extract<Action, { type: 'KEEP_
         ...state.players,
         [player]: {
           ...state.players[player],
-          mulliganHand: [],
           phase: 'playing' as const,
         },
       },

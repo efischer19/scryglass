@@ -123,6 +123,7 @@ test('scry 2 cards: one to top, one to bottom - library size unchanged and top c
   await page.getByRole('button', { name: 'Yes' }).click();
 
   // The drawn card should be the one placed on top during scry
-  const drawnCardName = await playerAZone.locator('.card-display__name').textContent();
+  // Use the card display area to get the drawn card name (not the hand cards)
+  const drawnCardName = await page.locator('[aria-label="Player A card display area"] .card-display__name').textContent();
   expect(drawnCardName).toBe(topCardName);
 });
