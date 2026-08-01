@@ -287,7 +287,7 @@ export function dispatch(state: GameState, action: Action): ActionResult {
     case 'MOVE_CARD': {
       const { cardName, fromZone, toZone } = parsed.payload;
       const fromZoneCards = playerState[fromZone as keyof PlayerState];
-      
+
       if (!Array.isArray(fromZoneCards)) {
         throw new Error(`Zone "${fromZone}" is not a valid zone for this operation`);
       }
@@ -304,7 +304,7 @@ export function dispatch(state: GameState, action: Action): ActionResult {
         ...fromZoneCards.slice(0, cardIndex),
         ...fromZoneCards.slice(cardIndex + 1),
       ];
-      
+
       const toZoneCards = playerState[toZone as keyof PlayerState];
       if (!Array.isArray(toZoneCards)) {
         throw new Error(`Zone "${toZone}" is not a valid zone for this operation`);

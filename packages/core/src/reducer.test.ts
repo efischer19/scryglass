@@ -1172,7 +1172,7 @@ describe('dispatch — MOVE_CARD', () => {
     let state = createInitialState();
     const cards = [makeCard('Sol Ring'), makeCard('Forest'), makeCard('Mountain')];
     state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
-    
+
     state = dispatch(state, {
       type: 'MOVE_CARD',
       payload: { player: 'A', cardName: 'Forest', fromZone: 'library', toZone: 'battlefield' },
@@ -1240,7 +1240,7 @@ describe('dispatch — CHANGE_CARD_STATE', () => {
     let state = createInitialState();
     const cards = makeCards(3);
     state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
-    
+
     state = dispatch(state, {
       type: 'MOVE_CARD',
       payload: { player: 'A', cardName: 'Card 1', fromZone: 'library', toZone: 'battlefield' },
@@ -1258,7 +1258,7 @@ describe('dispatch — CHANGE_CARD_STATE', () => {
     let state = createInitialState();
     const cards = makeCards(3);
     state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
-    
+
     state = dispatch(state, {
       type: 'MOVE_CARD',
       payload: { player: 'A', cardName: 'Card 2', fromZone: 'library', toZone: 'battlefield' },
@@ -1276,7 +1276,7 @@ describe('dispatch — CHANGE_CARD_STATE', () => {
     let state = createInitialState();
     const cards = makeCards(3);
     state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
-    
+
     state = dispatch(state, {
       type: 'MOVE_CARD',
       payload: { player: 'A', cardName: 'Card 3', fromZone: 'library', toZone: 'battlefield' },
@@ -1332,7 +1332,7 @@ describe('dispatch — CHANGE_CARD_STATE', () => {
     let state = createInitialState();
     const cards = makeCards(3);
     state = dispatch(state, { type: 'LOAD_DECK', payload: { player: 'A', cards } }).state;
-    
+
     state = dispatch(state, {
       type: 'MOVE_CARD',
       payload: { player: 'A', cardName: 'Card 2', fromZone: 'library', toZone: 'battlefield' },

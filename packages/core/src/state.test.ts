@@ -175,8 +175,8 @@ describe('dispatch', () => {
 
       const result = dispatch(state, {
         type: 'MOVE_CARD',
-        payload: { 
-          player: 'A', 
+        payload: {
+          player: 'A',
           cardName: 'Sol Ring',
           fromZone: 'library',
           toZone: 'hand',
@@ -198,8 +198,8 @@ describe('dispatch', () => {
       expect(() =>
         dispatch(state, {
           type: 'MOVE_CARD',
-          payload: { 
-            player: 'A', 
+          payload: {
+            player: 'A',
             cardName: 'Missing Card',
             fromZone: 'library',
             toZone: 'hand',
@@ -220,8 +220,8 @@ describe('dispatch', () => {
 
       state = dispatch(state, {
         type: 'MOVE_CARD',
-        payload: { 
-          player: 'A', 
+        payload: {
+          player: 'A',
           cardName: 'Sol Ring',
           fromZone: 'library',
           toZone: 'battlefield',
@@ -230,8 +230,8 @@ describe('dispatch', () => {
 
       const result = dispatch(state, {
         type: 'CHANGE_CARD_STATE',
-        payload: { 
-          player: 'A', 
+        payload: {
+          player: 'A',
           cardName: 'Sol Ring',
           zone: 'battlefield',
           tapped: true,
@@ -251,8 +251,8 @@ describe('dispatch', () => {
 
       state = dispatch(state, {
         type: 'MOVE_CARD',
-        payload: { 
-          player: 'A', 
+        payload: {
+          player: 'A',
           cardName: 'Forest',
           fromZone: 'library',
           toZone: 'hand',
@@ -261,8 +261,8 @@ describe('dispatch', () => {
 
       const result = dispatch(state, {
         type: 'CHANGE_CARD_STATE',
-        payload: { 
-          player: 'A', 
+        payload: {
+          player: 'A',
           cardName: 'Forest',
           zone: 'hand',
           faceDown: true,
@@ -282,8 +282,8 @@ describe('dispatch', () => {
 
       state = dispatch(state, {
         type: 'MOVE_CARD',
-        payload: { 
-          player: 'A', 
+        payload: {
+          player: 'A',
           cardName: 'Sol Ring',
           fromZone: 'library',
           toZone: 'hand',
@@ -292,8 +292,8 @@ describe('dispatch', () => {
 
       const result = dispatch(state, {
         type: 'CHANGE_CARD_STATE',
-        payload: { 
-          player: 'A', 
+        payload: {
+          player: 'A',
           cardName: 'Sol Ring',
           zone: 'hand',
           tapped: true,
@@ -307,12 +307,12 @@ describe('dispatch', () => {
 
     it('throws when card is not found in zone', () => {
       const state = createInitialState();
-      
+
       expect(() =>
         dispatch(state, {
           type: 'CHANGE_CARD_STATE',
-          payload: { 
-            player: 'A', 
+          payload: {
+            player: 'A',
             cardName: 'Missing Card',
             zone: 'hand',
             tapped: true,
