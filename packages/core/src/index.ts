@@ -14,6 +14,7 @@ export { exportMtgoArena } from './export-mtgo-arena.js';
 export { exportScryglass } from './export-scryglass.js';
 
 export { cryptoRandomInt, shuffle } from './shuffle.js';
+export type { ShuffleSeed } from './shuffle.js';
 
 export { PlayerPhaseSchema, PlayerIdSchema, PlayerStateSchema, GameStateSchema, HistoryEntrySchema, PLAYER_IDS } from './schemas/state.js';
 export type { PlayerPhase, PlayerId, PlayerState, GameState, HistoryEntry } from './schemas/state.js';

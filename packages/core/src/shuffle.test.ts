@@ -113,6 +113,28 @@ describe('shuffle', () => {
     expect(shuffle(single)).not.toBe(single);
   });
 
+  it('produces the same order for the same seed', () => {
+    const deck = ['a', 'b', 'c', 'd', 'e'];
+
+    expect(shuffle(deck, 'shared-match-key')).toEqual(shuffle(deck, 'shared-match-key'));
+    expect(shuffle(deck, 123456)).toEqual(shuffle(deck, 123456));
+  });
+
+  it('produces different deterministic orders for different seeds', () => {
+    const deck = ['a', 'b', 'c', 'd', 'e'];
+    const permutations = new Set([
+      shuffle(deck, 'seed-one').join(','),
+      shuffle(deck, 'seed-two').join(','),
+      shuffle(deck, 'seed-three').join(','),
+    ]);
+
+    expect(permutations.size).toBeGreaterThan(1);
+  });
+
+  it('throws when a numeric seed is not an integer', () => {
+    expect(() => shuffle([1, 2, 3], 1.5)).toThrow(RangeError);
+  });
+
   it('produces a roughly uniform distribution', () => {
     // Shuffle [0, 1, 2] 10,000 times and tally each permutation
     const counts = new Map<string, number>();
@@ -131,6 +153,28 @@ describe('shuffle', () => {
       const deviation = Math.abs(count - expected) / expected;
       expect(deviation, `Permutation ${perm} appeared ${count} times (expected ~${expected})`).toBeLessThan(0.15);
     }
+  });
+
+  it('produces uniform permutation frequencies for deterministic seeds (chi-squared)', () => {
+    const counts = new Map<string, number>();
+    const iterations = 12_000;
+
+    for (let i = 0; i < iterations; i++) {
+      const key = shuffle([0, 1, 2], `shared-seed-${i}`).join(',');
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+
+    const expected = iterations / 6;
+    let chiSquared = 0;
+
+    expect(counts.size).toBe(6);
+
+    for (const count of counts.values()) {
+      chiSquared += (count - expected) ** 2 / expected;
+    }
+
+    // df=5, p=0.001 → critical value 20.515
+    expect(chiSquared).toBeLessThan(20.515);
   });
 
   it('produces uniform positional frequencies (chi-squared per-position test)', () => {
@@ -159,6 +203,32 @@ describe('shuffle', () => {
       expect(
         chiSquared,
         `Element ${elem} positional chi-squared ${chiSquared.toFixed(2)} exceeds critical value`,
+      ).toBeLessThan(16.266);
+    }
+  });
+
+  it('produces uniform positional frequencies for deterministic seeds', () => {
+    const n = 4;
+    const iterations = 20_000;
+    const positionCounts: number[][] = Array.from({ length: n }, () => new Array(n).fill(0));
+
+    for (let i = 0; i < iterations; i++) {
+      const result = shuffle([0, 1, 2, 3], `position-seed-${i}`);
+      for (let pos = 0; pos < n; pos++) {
+        positionCounts[result[pos]][pos]++;
+      }
+    }
+
+    const expected = iterations / n;
+    for (let elem = 0; elem < n; elem++) {
+      let chiSquared = 0;
+      for (let pos = 0; pos < n; pos++) {
+        chiSquared += (positionCounts[elem][pos] - expected) ** 2 / expected;
+      }
+      // df=3, p=0.001 → critical value 16.266
+      expect(
+        chiSquared,
+        `Deterministic element ${elem} positional chi-squared ${chiSquared.toFixed(2)} exceeds critical value`,
       ).toBeLessThan(16.266);
     }
   });
