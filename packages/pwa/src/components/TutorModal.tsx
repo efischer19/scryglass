@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
-import type { Action, ActionResult, Card, PlayerId } from '@scryglass/core';
-import { searchLibrary } from '@scryglass/core';
+import type { Action, ActionResult, Card, HiddenCard, PlayerId } from '@scryglass/core';
+import { searchLibrary, isCard } from '@scryglass/core';
 import { ConfirmationGate } from './ConfirmationGate.js';
 import { CardDisplay } from './CardDisplay.js';
 
 interface TutorModalProps {
   player: PlayerId;
-  library: Card[];
+  library: HiddenCard[];
   onDispatch: (action: Action) => ActionResult;
   onClose: () => void;
 }
@@ -47,7 +47,8 @@ export function TutorModal({ player, library, onDispatch, onClose }: TutorModalP
       type: 'TUTOR_CARD',
       payload: { player, cardName: selectedCard.name },
     });
-    setTutoredCard(result.card ?? null);
+    // Only set tutoredCard if the result is a full card, not a hash
+    setTutoredCard((result.card && isCard(result.card)) ? result.card : null);
     setPhase('done');
   };
 

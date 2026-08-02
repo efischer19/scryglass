@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
-import type { Action, ActionResult, Card, LandType, PlayerId } from '@scryglass/core';
-import { getBasicLandCounts, BASIC_LAND_TYPES } from '@scryglass/core';
+import type { Action, ActionResult, Card, HiddenCard, LandType, PlayerId } from '@scryglass/core';
+import { getBasicLandCounts, BASIC_LAND_TYPES, isCard } from '@scryglass/core';
 import { ConfirmationGate } from './ConfirmationGate.js';
 import { CardDisplay } from './CardDisplay.js';
 
 interface FetchLandModalProps {
   player: PlayerId;
-  library: Card[];
+  library: HiddenCard[];
   onDispatch: (action: Action) => ActionResult;
   onClose: () => void;
 }
@@ -37,7 +37,8 @@ export function FetchLandModal({ player, library, onDispatch, onClose }: FetchLa
       type: 'FETCH_BASIC_LAND',
       payload: { player, landType: selectedLandType },
     });
-    setFetchedCard(result.card ?? null);
+    // Only set fetchedCard if the result is a full card, not a hash
+    setFetchedCard((result.card && isCard(result.card)) ? result.card : null);
     setPhase('done');
   };
 

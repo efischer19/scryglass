@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
-import type { Action, ActionResult, Card, ScryDecision, PlayerId } from '@scryglass/core';
-import { peekTop } from '@scryglass/core';
+import type { Action, ActionResult, Card, HiddenCard, ScryDecision, PlayerId } from '@scryglass/core';
+import { peekTop, isCard } from '@scryglass/core';
 import type { GameState } from '@scryglass/core';
 import { ConfirmationGate } from './ConfirmationGate.js';
 import { CardDisplay, CardImage } from './CardDisplay.js';
@@ -41,8 +41,10 @@ export function ScryModal({ player, libraryLength, gameState, onDispatch, onClos
   };
 
   const handleCountSubmit = () => {
-    const cards = peekTop(gameState, player, count);
-    setPeekedCards(cards);
+    const allCards = peekTop(gameState, player, count);
+    // Filter to only visible cards, not hashes
+    const visibleCards: Card[] = allCards.filter(isCard) as Card[];
+    setPeekedCards(visibleCards);
     setDestinations(new Map());
     setTopOrder([]);
     setPhase('decide');
@@ -108,7 +110,7 @@ export function ScryModal({ player, libraryLength, gameState, onDispatch, onClos
       payload: { player, decisions },
     });
 
-    setRemovedCards(result.cards ?? []);
+    setRemovedCards((result.cards ?? []).filter(isCard));
     setPhase('done');
   };
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import type { Card, HistoryEntry } from '@scryglass/core';
+import type { Card, HiddenCard, HistoryEntry } from '@scryglass/core';
+import { isCard } from '@scryglass/core';
 import { CardImage } from './CardDisplay.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 
@@ -40,9 +41,11 @@ function downloadText(content: string, fileName: string, mimeType: string): void
 
 function getCardDetails(entry: HistoryEntry): HistoryCardDetails {
   if (entry.cardDetails && entry.cardDetails.length > 0) {
-    return entry.cardDetails;
+    // Filter to only actual cards, not hashes
+    return entry.cardDetails.filter(detail => isCard(detail.card)).map(detail => ({ ...detail, card: detail.card as Card }));
   }
-  return (entry.cards ?? []).map((card: Card): HistoryCardDetail => ({ card }));
+  // Filter to only actual cards, not hashes
+  return (entry.cards ?? []).filter(isCard).map((card: Card): HistoryCardDetail => ({ card }));
 }
 
 export function toHistoryExportText(history: HistoryEntry[]): string {

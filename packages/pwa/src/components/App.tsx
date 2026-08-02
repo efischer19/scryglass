@@ -61,7 +61,7 @@ export function App() {
       allowMulliganWith2or5Lands: settings.allowMulliganWith2or5Lands,
     });
     for (const p of players) {
-      const r1 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: p, cards: allDecks[p] } });
+      const r1 = dispatch(currentState, { type: 'LOAD_DECK', payload: { player: p, cards: allDecks[p], mode: 'local' } });
       currentState = r1.state;
       const r2 = dispatch(currentState, { type: 'SHUFFLE_LIBRARY', payload: { player: p } });
       currentState = r2.state;

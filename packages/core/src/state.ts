@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { CardSchema } from './schemas/card.js';
-import type { Card } from './schemas/card.js';
+import { createCardCommitments } from './commit-reveal.js';
+import { CardSchema, HiddenCardSchema, isCard } from './schemas/card.js';
+import type { Card, HiddenCard } from './schemas/card.js';
 
 // --- Player Phase ---
 export const PlayerPhaseSchema = z.enum(['loading', 'mulligan', 'playing']);
@@ -12,14 +13,14 @@ export type PlayerId = z.infer<typeof PlayerIdSchema>;
 
 // --- Player State ---
 export const PlayerStateSchema = z.object({
-  library: z.array(CardSchema),
-  hand: z.array(CardSchema),
+  library: z.array(HiddenCardSchema),
+  hand: z.array(HiddenCardSchema),
   battlefield: z.array(CardSchema),
   graveyard: z.array(CardSchema),
   exile: z.array(CardSchema),
   commandZone: z.array(CardSchema),
   phase: PlayerPhaseSchema,
-  mulliganHand: z.array(CardSchema).nullable(),
+  mulliganHand: z.array(HiddenCardSchema).nullable(),
 });
 export type PlayerState = z.infer<typeof PlayerStateSchema>;
 
@@ -51,6 +52,7 @@ const LoadDeckActionSchema = z.object({
   payload: z.object({
     player: PlayerIdSchema,
     cards: z.array(CardSchema),
+    mode: z.enum(['local', 'remote']).optional().default('local'),
   }),
 });
 
@@ -134,7 +136,7 @@ export type Action = z.infer<typeof ActionSchema>;
 // --- Action Result ---
 export interface ActionResult {
   state: GameState;
-  drawnCards?: Card[];
+  drawnCards?: HiddenCard[];
 }
 
 // --- Initial State ---
@@ -184,9 +186,12 @@ export function dispatch(state: GameState, action: Action): ActionResult {
 
   switch (parsed.type) {
     case 'LOAD_DECK': {
+      const library = parsed.payload.mode === 'remote'
+        ? createCardCommitments(parsed.payload.cards).map(({ cardHash }) => cardHash)
+        : [...parsed.payload.cards];
       return {
         state: updatePlayer(state, player, {
-          library: [...parsed.payload.cards],
+          library,
           phase: 'playing',
         }),
       };
@@ -216,7 +221,7 @@ export function dispatch(state: GameState, action: Action): ActionResult {
 
     case 'TUTOR_CARD': {
       const idx = playerState.library.findIndex(
-        (c) => c.name === parsed.payload.cardName,
+        (c) => isCard(c) && c.name === parsed.payload.cardName,
       );
       if (idx === -1) {
         throw new Error(
@@ -237,6 +242,7 @@ export function dispatch(state: GameState, action: Action): ActionResult {
     case 'FETCH_BASIC_LAND': {
       const idx = playerState.library.findIndex(
         (c) =>
+          isCard(c) &&
           c.cardType === 'land' &&
           c.name.toLowerCase() === parsed.payload.landType.toLowerCase(),
       );
@@ -258,8 +264,8 @@ export function dispatch(state: GameState, action: Action): ActionResult {
 
     case 'SCRY_RESOLVE': {
       const library = [...playerState.library];
-      const topCards: Card[] = [];
-      const bottomCards: Card[] = [];
+      const topCards: HiddenCard[] = [];
+      const bottomCards: HiddenCard[] = [];
       const usedIndices = new Set<number>();
 
       for (const decision of parsed.payload.decisions) {
@@ -292,7 +298,7 @@ export function dispatch(state: GameState, action: Action): ActionResult {
         throw new Error(`Zone "${fromZone}" is not a valid zone for this operation`);
       }
 
-      const cardIndex = fromZoneCards.findIndex((c) => c.name === cardName);
+      const cardIndex = fromZoneCards.findIndex((c) => isCard(c) && c.name === cardName);
       if (cardIndex === -1) {
         throw new Error(
           `Cannot move card: "${cardName}" not found in ${fromZone} of Player ${player}`,
@@ -329,7 +335,7 @@ export function dispatch(state: GameState, action: Action): ActionResult {
         throw new Error(`Zone "${zone}" is not a valid zone for this operation`);
       }
 
-      const cardIndex = zoneCards.findIndex((c) => c.name === cardName);
+      const cardIndex = zoneCards.findIndex((c) => isCard(c) && c.name === cardName);
       if (cardIndex === -1) {
         throw new Error(
           `Cannot change card state: "${cardName}" not found in ${zone} of Player ${player}`,
@@ -337,6 +343,9 @@ export function dispatch(state: GameState, action: Action): ActionResult {
       }
 
       const card = zoneCards[cardIndex];
+      if (!isCard(card)) {
+        throw new Error('Cannot change card state: hidden card identities are hashed in remote mode');
+      }
       const updatedCard: Card = {
         ...card,
         ...(tapped !== undefined && { tapped }),

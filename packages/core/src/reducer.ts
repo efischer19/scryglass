@@ -2,7 +2,9 @@ import { ActionSchema } from './schemas/action.js';
 import type { Action, ActionResult } from './schemas/action.js';
 import { PLAYER_IDS } from './schemas/state.js';
 import type { GameState, HistoryCardDetail, HistoryEntry, PlayerId } from './schemas/state.js';
-import type { Card } from './schemas/card.js';
+import { createCardCommitments } from './commit-reveal.js';
+import { isCard } from './schemas/card.js';
+import type { Card, HiddenCard } from './schemas/card.js';
 import { shuffle, cryptoRandomInt } from './shuffle.js';
 import { isBasicLandOfType } from './helpers/lands.js';
 
@@ -134,8 +136,10 @@ function buildHistoryEntry(state: GameState, action: Action, result: ActionResul
   if (cardDetails && cardDetails.length > 0) {
     entry.cardDetails = cardDetails;
     const seen = new Set<string>();
-    entry.cards = cardDetails.reduce<Card[]>((cards, detail) => {
-      const key = `${detail.card.setCode}:${detail.card.collectorNumber}:${detail.card.name}`;
+    entry.cards = cardDetails.reduce<HiddenCard[]>((cards, detail) => {
+      const key = isCard(detail.card)
+        ? `${detail.card.setCode}:${detail.card.collectorNumber}:${detail.card.name}`
+        : detail.card.hash;
       if (!seen.has(key)) {
         seen.add(key);
         cards.push(detail.card);
@@ -147,7 +151,10 @@ function buildHistoryEntry(state: GameState, action: Action, result: ActionResul
 }
 
 function handleLoadDeck(state: GameState, action: Extract<Action, { type: 'LOAD_DECK' }>): ActionResult {
-  const { player, cards } = action.payload;
+  const { player, cards, mode = 'local' } = action.payload;
+  const library = mode === 'remote'
+    ? createCardCommitments(cards).map(({ cardHash }) => cardHash)
+    : [...cards];
   return {
     state: {
       ...state,
@@ -155,13 +162,21 @@ function handleLoadDeck(state: GameState, action: Extract<Action, { type: 'LOAD_
         ...state.players,
         [player]: {
           ...state.players[player],
-          library: [...cards],
+          library,
           phase: 'mulligan' as const,
         },
       },
     },
     card: null,
   };
+}
+
+function requireVisibleCard(card: HiddenCard, actionDescription: string): Card {
+  if (!isCard(card)) {
+    throw new Error(`Cannot ${actionDescription}: hidden card identities are hashed in remote mode`);
+  }
+
+  return card;
 }
 
 function handleShuffleLibrary(state: GameState, action: Extract<Action, { type: 'SHUFFLE_LIBRARY' }>): ActionResult {
@@ -388,7 +403,7 @@ function handleFetchBasicLand(state: GameState, action: Extract<Action, { type: 
   const { player, landType } = action.payload;
   const library = state.players[player].library;
 
-  const landIndex = library.findIndex(card => isBasicLandOfType(card, landType));
+  const landIndex = library.findIndex(card => isCard(card) && isBasicLandOfType(card, landType));
 
   if (landIndex === -1) {
     throw new Error(`Cannot fetch: no ${landType} found in Player ${player}'s library`);
@@ -418,7 +433,7 @@ function handleTutorCard(state: GameState, action: Extract<Action, { type: 'TUTO
   const library = state.players[player].library;
 
   const cardIndex = library.findIndex(
-    card => card.name.toLowerCase() === cardName.toLowerCase(),
+    card => isCard(card) && card.name.toLowerCase() === cardName.toLowerCase(),
   );
 
   if (cardIndex === -1) {
@@ -453,7 +468,7 @@ function handleMoveCard(state: GameState, action: Extract<Action, { type: 'MOVE_
     throw new Error(`Zone "${fromZone}" is not a valid zone for this operation`);
   }
 
-  const cardIndex = fromZoneCards.findIndex((c) => c.name === cardName);
+  const cardIndex = fromZoneCards.findIndex((c) => isCard(c) && c.name === cardName);
   if (cardIndex === -1) {
     throw new Error(
       `Cannot move card: "${cardName}" not found in ${fromZone} of Player ${player}`,
@@ -501,14 +516,14 @@ function handleChangeCardState(state: GameState, action: Extract<Action, { type:
     throw new Error(`Zone "${zone}" is not a valid zone for this operation`);
   }
 
-  const cardIndex = zoneCards.findIndex((c) => c.name === cardName);
+  const cardIndex = zoneCards.findIndex((c) => isCard(c) && c.name === cardName);
   if (cardIndex === -1) {
     throw new Error(
       `Cannot change card state: "${cardName}" not found in ${zone} of Player ${player}`,
     );
   }
 
-  const card = zoneCards[cardIndex];
+  const card = requireVisibleCard(zoneCards[cardIndex], 'change card state');
   const updatedCard: Card = {
     ...card,
     ...(tapped !== undefined && { tapped }),

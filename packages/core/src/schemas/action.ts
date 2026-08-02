@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CardSchema } from './card.js';
+import { CardSchema, HiddenCardSchema } from './card.js';
 import { GameStateSchema, PlayerIdSchema } from './state.js';
 
 // --- Zone Types ---
@@ -19,6 +19,7 @@ const LoadDeckActionSchema = z.object({
   payload: z.object({
     player: PlayerIdSchema,
     cards: z.array(CardSchema),
+    mode: z.enum(['local', 'remote']).optional().default('local'),
   }),
 });
 
@@ -138,7 +139,7 @@ export type Action = z.infer<typeof ActionSchema>;
 
 export const ActionResultSchema = z.object({
   state: GameStateSchema,
-  card: CardSchema.nullable(),
-  cards: z.array(CardSchema).optional(),
+  card: HiddenCardSchema.nullable(),
+  cards: z.array(HiddenCardSchema).optional(),
 });
 export type ActionResult = z.infer<typeof ActionResultSchema>;
