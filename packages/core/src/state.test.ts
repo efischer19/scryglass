@@ -64,6 +64,19 @@ describe('dispatch', () => {
       expect(result.state.players.A.phase).toBe('playing');
       expect(result.state.players.B.phase).toBe('loading');
     });
+
+    it('allows hashed cards in hidden zones for remote mode', () => {
+      const state = createInitialState();
+      const cards = [makeCard('Sol Ring'), makeCard('Sol Ring')];
+      const result = dispatch(state, {
+        type: 'LOAD_DECK',
+        payload: { player: 'A', cards, mode: 'remote' },
+      });
+
+      expect(GameStateSchema.parse(result.state)).toEqual(result.state);
+      expect(result.state.players.A.library.every((card) => 'hash' in card)).toBe(true);
+      expect(result.state.players.A.library[0].hash).not.toBe(result.state.players.A.library[1].hash);
+    });
   });
 
   describe('DRAW_CARD', () => {

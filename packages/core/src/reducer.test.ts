@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createInitialState, dispatch } from './reducer.js';
+import { GameStateSchema } from './schemas/state.js';
 import type { GameState } from './schemas/state.js';
 import type { Card } from './schemas/card.js';
 import type { Action } from './schemas/action.js';
@@ -102,6 +103,41 @@ describe('dispatch — LOAD_DECK', () => {
 
     expect(result.state.players.B.library).toEqual([]);
     expect(result.state.players.B.phase).toBe('loading');
+  });
+
+  it('masks hidden cards when loading a remote deck', () => {
+    const state = createInitialState(4);
+    const cards = [makeCard('Island'), makeCard('Island'), makeCard('Counterspell')];
+    const result = dispatch(state, {
+      type: 'LOAD_DECK',
+      payload: { player: 'A', cards, mode: 'remote' },
+    });
+
+    expect(GameStateSchema.parse(result.state)).toEqual(result.state);
+    expect(result.state.players.A.library).toHaveLength(3);
+    expect(result.state.players.A.library).toEqual(
+      result.state.players.A.library.map((card) => expect.objectContaining({ hash: expect.any(String) })),
+    );
+    expect(result.state.players.A.library[0]).not.toHaveProperty('name');
+    expect(result.state.players.A.library[0].hash).not.toBe(result.state.players.A.library[1].hash);
+  });
+
+  it('keeps remote hidden zones masked after dealing an opening hand', () => {
+    let state = createInitialState();
+    state = dispatch(state, {
+      type: 'LOAD_DECK',
+      payload: { player: 'A', cards: makeCards(10), mode: 'remote' },
+    }).state;
+
+    const result = dispatch(state, {
+      type: 'DEAL_OPENING_HAND',
+      payload: { player: 'A' },
+    });
+
+    expect(result.state.players.A.hand).toHaveLength(7);
+    expect(result.state.players.A.library).toHaveLength(3);
+    expect(result.state.players.A.hand.every((card) => 'hash' in card)).toBe(true);
+    expect(result.state.players.A.library.every((card) => 'hash' in card)).toBe(true);
   });
 });
 

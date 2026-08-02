@@ -23,6 +23,8 @@ describe('@scryglass/core', () => {
 
     // Schemas
     expect(core.CardSchema).toBeDefined();
+    expect(core.CardHashSchema).toBeDefined();
+    expect(core.HiddenCardSchema).toBeDefined();
     expect(core.GameStateSchema).toBeDefined();
     expect(core.ActionSchema).toBeDefined();
     expect(core.ActionResultSchema).toBeDefined();
@@ -31,6 +33,8 @@ describe('@scryglass/core', () => {
     // State management
     expect(typeof core.createInitialState).toBe('function');
     expect(typeof core.dispatch).toBe('function');
+    expect(typeof core.createCardCommitment).toBe('function');
+    expect(typeof core.createCardCommitments).toBe('function');
 
     // Mulligan
     expect(typeof core.countLands).toBe('function');

@@ -1,6 +1,9 @@
 // @scryglass/core — barrel export
-export { CardSchema, CardTypeEnum, ParseResultSchema, parseDeck } from './csv-parser.js';
-export type { Card, CardType, ParseResult } from './csv-parser.js';
+export { CardSchema, CardHashSchema, HiddenCardSchema, CardTypeEnum } from './schemas/card.js';
+export type { Card, CardHash, HiddenCard, CardType } from './schemas/card.js';
+
+export { ParseResultSchema, parseDeck } from './csv-parser.js';
+export type { ParseResult } from './csv-parser.js';
 
 export { ConvertResultSchema, UnresolvedCardSchema } from './convert-result.js';
 export type { ConvertResult, UnresolvedCard } from './convert-result.js';
@@ -15,6 +18,9 @@ export { exportScryglass } from './export-scryglass.js';
 
 export { cryptoRandomInt, shuffle } from './shuffle.js';
 export type { ShuffleSeed } from './shuffle.js';
+
+export { createCardCommitment, createCardCommitments, generateSalt, hashCard, sha256Hex } from './commit-reveal.js';
+export type { CardCommitment } from './commit-reveal.js';
 
 export { PlayerPhaseSchema, PlayerIdSchema, PlayerStateSchema, GameStateSchema, HistoryEntrySchema, PLAYER_IDS } from './schemas/state.js';
 export type { PlayerPhase, PlayerId, PlayerState, GameState, HistoryEntry } from './schemas/state.js';
