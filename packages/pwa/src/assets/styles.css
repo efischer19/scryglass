@@ -1467,6 +1467,142 @@ textarea:focus-visible,
 }
 
 /* ===================================================================
+   Remote Match Lobby
+   =================================================================== */
+
+.remote-match-lobby {
+  max-width: 56rem;
+  margin: var(--space-xl) auto 0;
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.remote-match-lobby__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.remote-match-lobby__title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+}
+
+.remote-match-lobby__description,
+.remote-match-lobby__panel-copy,
+.remote-match-lobby__status-copy,
+.remote-match-lobby__last-message {
+  color: var(--color-text-muted);
+}
+
+.remote-match-lobby__grid {
+  display: grid;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+@media (min-width: 768px) {
+  .remote-match-lobby__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.remote-match-lobby__panel,
+.remote-match-lobby__status {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+
+.remote-match-lobby__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.remote-match-lobby__panel-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.remote-match-lobby__join-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.remote-match-lobby__label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.remote-match-lobby__input {
+  padding: var(--space-sm);
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.remote-match-lobby__action,
+.remote-match-lobby__reset {
+  align-self: flex-start;
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-surface);
+  background: var(--player-a-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.remote-match-lobby__action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.remote-match-lobby__reset {
+  margin-top: var(--space-md);
+  background: var(--color-disabled);
+}
+
+.remote-match-lobby__details {
+  display: grid;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.remote-match-lobby__details div {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.remote-match-lobby__details dt {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.remote-match-lobby__details dd {
+  word-break: break-word;
+}
+
+.remote-match-lobby__error {
+  margin-top: var(--space-md);
+  padding: var(--space-sm);
+  color: var(--color-error-text);
+  background: var(--color-error-bg);
+  border-radius: var(--radius-sm);
+}
+
+.remote-match-lobby code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ===================================================================
    Deck Input — Import Format Row
    =================================================================== */
 

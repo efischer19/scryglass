@@ -36,7 +36,7 @@ describe('<App />', () => {
     render(<App />);
     confirmDefaultSettings();
     expect(screen.getByText('Enter Your Decklist')).toBeTruthy();
-    expect(screen.getByRole('textbox')).toBeTruthy();
+    expect(screen.getByLabelText(/paste your decklist/i)).toBeTruthy();
   });
 
   it('renders the shuffler view when hash is #/app', () => {
@@ -46,9 +46,11 @@ describe('<App />', () => {
     expect(screen.getByText('Player B')).toBeTruthy();
   });
 
-  it('renders the Header on the input view', () => {
+  it('renders the Header and remote match lobby on the input view', () => {
     render(<App />);
     expect(screen.getByText('Scryglass')).toBeTruthy();
+    expect(screen.getByText('Remote Match')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /generate room code/i })).toBeTruthy();
   });
 
   it('passes vitest-axe a11y assertions on the settings view', async () => {
@@ -60,14 +62,14 @@ describe('<App />', () => {
   describe('integration: mulligan flow', () => {
     async function loadBothDecks() {
       // Step 1: Load Player A's deck
-      const textareaA = screen.getByRole('textbox');
+      const textareaA = screen.getByLabelText(/paste your decklist/i);
       fireEvent.input(textareaA, { target: { value: makeMinimalDeckText() } });
       await new Promise((r) => setTimeout(r, 300));
       const loadBtnA = await screen.findByRole('button', { name: 'Load Deck' });
       fireEvent.click(loadBtnA);
 
       // Step 2: Load Player B's deck (DeckInput re-mounts for Player B)
-      const textareaB = await screen.findByRole('textbox');
+      const textareaB = await screen.findByLabelText(/paste your decklist/i);
       fireEvent.input(textareaB, { target: { value: makeMinimalDeckText() } });
       await new Promise((r) => setTimeout(r, 300));
       const loadBtnB = await screen.findByRole('button', { name: 'Load Deck' });
