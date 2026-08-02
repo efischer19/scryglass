@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
 import type { Action, ActionResult, Card, HiddenCard, PlayerId } from '@scryglass/core';
-import { searchLibrary, isCard } from '@scryglass/core';
+import { searchLibrary } from '@scryglass/core';
 import { ConfirmationGate } from './ConfirmationGate.js';
 import { CardDisplay } from './CardDisplay.js';
 
@@ -15,7 +15,7 @@ export function TutorModal({ player, library, onDispatch, onClose }: TutorModalP
   const [phase, setPhase] = useState<'search' | 'confirm' | 'done'>('search');
   const [query, setQuery] = useState('');
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
-  const [tutoredCard, setTutoredCard] = useState<Card | null>(null);
+  const [tutoredCard, setTutoredCard] = useState<HiddenCard | null>(null);
   const [activeIndex, setActiveIndex] = useState<number>(-1);
 
   const modalRef = useRef<HTMLDivElement>(null);
@@ -47,8 +47,7 @@ export function TutorModal({ player, library, onDispatch, onClose }: TutorModalP
       type: 'TUTOR_CARD',
       payload: { player, cardName: selectedCard.name },
     });
-    // Only set tutoredCard if the result is a full card, not a hash
-    setTutoredCard((result.card && isCard(result.card)) ? result.card : null);
+    setTutoredCard(result.card ?? null);
     setPhase('done');
   };
 

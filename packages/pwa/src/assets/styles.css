@@ -401,6 +401,35 @@ textarea:focus-visible,
   border-radius: var(--radius-sm);
 }
 
+.card-display__card-back {
+  width: 100%;
+  max-width: 14rem;
+  aspect-ratio: 63 / 88;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.2), transparent 45%),
+    linear-gradient(160deg, var(--player-a-accent), var(--player-b-accent));
+  display: grid;
+  place-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  color: var(--color-surface);
+  text-align: center;
+}
+
+.card-display__card-back-mark {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.card-display__card-back-title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .card-display__loading {
   display: flex;
   flex-direction: column;
@@ -1707,6 +1736,10 @@ textarea:focus-visible,
   max-height: none;
 }
 
+.game-zone__card-item .card-display__card-back {
+  max-width: none;
+}
+
 .game-zone__card-item .card-display__loading {
   padding: var(--space-xs);
   gap: var(--space-xs);
@@ -1717,6 +1750,10 @@ textarea:focus-visible,
   color: var(--color-text-muted);
   text-align: center;
   padding: var(--space-md) 0;
+}
+
+.game-zone__peek-toggle {
+  margin-bottom: var(--space-sm);
 }
 
 .game-zone__battlefield-empty {

@@ -1,14 +1,34 @@
-import type { Card, PlayerId } from '@scryglass/core';
+import type { HiddenCard, PlayerId } from '@scryglass/core';
+import { isCard, isCardHash } from '@scryglass/core';
 import { useCardImage } from '../scryfall/useCardImage';
 
 interface CardDisplayProps {
   player: PlayerId;
-  card?: Card | null;
+  card?: HiddenCard | null;
   onDismiss?: () => void;
   onReturnToLibrary?: () => void;
 }
 
-export function CardImage({ card }: { card: Card }) {
+export function CardBack({ label = 'Hidden card' }: { label?: string }) {
+  return (
+    <div class="card-display__card-back" role="img" aria-label={label}>
+      <span class="card-display__card-back-mark" aria-hidden="true">
+        ✦
+      </span>
+      <span class="card-display__card-back-title" aria-hidden="true">
+        Scryglass
+      </span>
+    </div>
+  );
+}
+
+export function CardImage(
+  { card, obscured = false, hiddenLabel }: { card: HiddenCard; obscured?: boolean; hiddenLabel?: string },
+) {
+  if (obscured || isCardHash(card)) {
+    return <CardBack label={hiddenLabel} />;
+  }
+
   const { status, imageUrl } = useCardImage(card.collectorNumber, card.setCode);
 
   if (status === 'loading') {
@@ -35,6 +55,8 @@ export function CardImage({ card }: { card: Card }) {
 }
 
 export function CardDisplay({ player, card, onDismiss, onReturnToLibrary }: CardDisplayProps) {
+  const canReturnToLibrary = card != null && isCard(card) && onReturnToLibrary != null;
+
   return (
     <div
       class="card-display"
@@ -44,11 +66,11 @@ export function CardDisplay({ player, card, onDismiss, onReturnToLibrary }: Card
       {card ? (
         <div class="card-display__content">
           <CardImage card={card} />
-          {onReturnToLibrary && (
+          {canReturnToLibrary && (
             <button
               class="action-btn card-display__return"
               type="button"
-              onClick={onReturnToLibrary}
+              onClick={onReturnToLibrary!}
               aria-label="Return card to library"
             >
               Return to Library
