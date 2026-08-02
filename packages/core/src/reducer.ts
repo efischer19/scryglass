@@ -1,9 +1,9 @@
 import { ActionSchema } from './schemas/action.js';
-import type { Action, ActionResult } from './schemas/action.js';
+import type { Action, ActionResult, Zone } from './schemas/action.js';
 import { PLAYER_IDS } from './schemas/state.js';
 import type { GameState, HistoryCardDetail, HistoryEntry, PlayerId } from './schemas/state.js';
-import { createCardCommitments } from './commit-reveal.js';
-import { isCard } from './schemas/card.js';
+import { createCardCommitments, hashCard } from './commit-reveal.js';
+import { isCard, isCardHash } from './schemas/card.js';
 import type { Card, HiddenCard } from './schemas/card.js';
 import { shuffle, cryptoRandomInt } from './shuffle.js';
 import { isBasicLandOfType } from './helpers/lands.js';
@@ -177,6 +177,21 @@ function requireVisibleCard(card: HiddenCard, actionDescription: string): Card {
   }
 
   return card;
+}
+
+const HIDDEN_ZONES: readonly Zone[] = ['library', 'hand', 'mulliganHand'];
+const PUBLIC_ZONES: readonly Zone[] = ['battlefield', 'graveyard', 'exile', 'commandZone'];
+
+function isHiddenZone(zone: Zone): boolean {
+  return HIDDEN_ZONES.includes(zone);
+}
+
+function isPublicZone(zone: Zone): boolean {
+  return PUBLIC_ZONES.includes(zone);
+}
+
+function createRevealValidationError(reason: string): Error {
+  return new Error(`Cheat Detected / State Desync: ${reason}`);
 }
 
 function handleShuffleLibrary(state: GameState, action: Extract<Action, { type: 'SHUFFLE_LIBRARY' }>): ActionResult {
@@ -460,7 +475,7 @@ function handleTutorCard(state: GameState, action: Extract<Action, { type: 'TUTO
 }
 
 function handleMoveCard(state: GameState, action: Extract<Action, { type: 'MOVE_CARD' }>): ActionResult {
-  const { player, cardName, fromZone, toZone } = action.payload;
+  const { player, cardName, fromZone, toZone, revealData } = action.payload;
   const playerState = state.players[player];
   const fromZoneCards = playerState[fromZone as keyof GameState['players'][PlayerId]];
 
@@ -468,14 +483,40 @@ function handleMoveCard(state: GameState, action: Extract<Action, { type: 'MOVE_
     throw new Error(`Zone "${fromZone}" is not a valid zone for this operation`);
   }
 
-  const cardIndex = fromZoneCards.findIndex((c) => isCard(c) && c.name === cardName);
+  let cardIndex = fromZoneCards.findIndex((c) => isCard(c) && c.name === cardName);
   if (cardIndex === -1) {
-    throw new Error(
-      `Cannot move card: "${cardName}" not found in ${fromZone} of Player ${player}`,
-    );
+    if (!isHiddenZone(fromZone) || !isPublicZone(toZone)) {
+      throw new Error(
+        `Cannot move card: "${cardName}" not found in ${fromZone} of Player ${player}`,
+      );
+    }
+
+    if (!revealData) {
+      throw createRevealValidationError(`missing reveal data for ${fromZone} to ${toZone} move`);
+    }
+
+    const expectedHash = hashCard(revealData.card, revealData.salt).hash;
+    cardIndex = fromZoneCards.findIndex((c) => isCardHash(c) && c.hash === expectedHash);
+    if (cardIndex === -1) {
+      throw createRevealValidationError(`revealed card does not match committed hash in ${fromZone}`);
+    }
   }
 
   const card = fromZoneCards[cardIndex];
+  const movedCard = isCardHash(card) && isHiddenZone(fromZone) && isPublicZone(toZone)
+    ? (() => {
+        if (!revealData) {
+          throw createRevealValidationError(`missing reveal data for ${fromZone} to ${toZone} move`);
+        }
+
+        const expectedHash = hashCard(revealData.card, revealData.salt).hash;
+        if (card.hash !== expectedHash) {
+          throw createRevealValidationError(`revealed card does not match committed hash in ${fromZone}`);
+        }
+
+        return revealData.card;
+      })()
+    : card;
   const updatedFromZone = [
     ...fromZoneCards.slice(0, cardIndex),
     ...fromZoneCards.slice(cardIndex + 1),
@@ -486,7 +527,7 @@ function handleMoveCard(state: GameState, action: Extract<Action, { type: 'MOVE_
     throw new Error(`Zone "${toZone}" is not a valid zone for this operation`);
   }
 
-  const updatedToZone = [...toZoneCards, card];
+  const updatedToZone = [...toZoneCards, movedCard];
 
   const updates: Record<string, any> = {};
   updates[fromZone] = updatedFromZone;
@@ -503,7 +544,7 @@ function handleMoveCard(state: GameState, action: Extract<Action, { type: 'MOVE_
         },
       },
     },
-    card: card,
+    card: movedCard,
   };
 }
 
