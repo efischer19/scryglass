@@ -1,6 +1,6 @@
-import { useState } from 'preact/hooks';
+import { useCallback, useRef, useState } from 'preact/hooks';
 import { createInitialState, dispatch, PLAYER_IDS } from '@scryglass/core';
-import type { Action, Card, ConvertResult, PlayerId } from '@scryglass/core';
+import type { Action, Card, ConvertResult, GameState, PlayerId } from '@scryglass/core';
 import { Header } from './Header.js';
 import { PlayerZone } from './PlayerZone.js';
 import { Router, navigate, navigateHome, navigateToMatch } from './Router.js';
@@ -13,6 +13,7 @@ import { PreGameSettings } from './PreGameSettings.js';
 import type { GameSettings } from './PreGameSettings.js';
 import { RemoteMatchLobby } from './RemoteMatchLobby.js';
 import { useWebRtcMatch } from '../networking/useWebRtcMatch.js';
+import { createActionSyncMiddleware } from '../networking/actionSync.js';
 
 export function App() {
   const [gameSettings, setGameSettings] = useState<GameSettings | null>(null);
@@ -23,6 +24,36 @@ export function App() {
   const [drawCounts, setDrawCounts] = useState<Partial<Record<PlayerId, number>>>({});
   const [visiblePlayer, setVisiblePlayer] = useState<PlayerId | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const stateRef = useRef(state);
+  const remoteSenderRef = useRef<((message: string) => void) | null>(null);
+  const actionSyncRef = useRef<ReturnType<typeof createActionSyncMiddleware> | null>(null);
+
+  const replaceState = useCallback((nextState: GameState) => {
+    stateRef.current = nextState;
+    setState(nextState);
+  }, []);
+
+  if (actionSyncRef.current == null) {
+    actionSyncRef.current = createActionSyncMiddleware({
+      dispatch,
+      getState: () => stateRef.current,
+      setState: replaceState,
+      broadcast: (message) => remoteSenderRef.current?.(message),
+      onResult: (action) => {
+        if (action.type !== 'DRAW_CARD') {
+          return;
+        }
+
+        const player = action.payload.player as PlayerId;
+        setDrawCounts((prev) => ({ ...prev, [player]: (prev[player] ?? 0) + 1 }));
+      },
+    });
+  }
+
+  const handleRemoteMatchMessage = useCallback((message: string) => {
+    actionSyncRef.current?.handleIncomingMessage(message);
+  }, []);
+
   const {
     status: remoteStatus,
     roomCode: remoteRoomCode,
@@ -32,22 +63,22 @@ export function App() {
     hostMatch,
     joinMatch,
     resetMatch,
-  } = useWebRtcMatch();
+    sendMessage,
+  } = useWebRtcMatch({
+    onMessage: handleRemoteMatchMessage,
+  });
+
+  remoteSenderRef.current = remoteStatus === 'connected' ? sendMessage : null;
 
   const playerCount = gameSettings?.playerCount ?? 2;
   const activePlayers = PLAYER_IDS.slice(0, playerCount);
 
-  const handleDispatch = (action: Action) => {
-    const result = dispatch(state, action);
-    setState(result.state);
-    if (action.type === 'DRAW_CARD') {
-      const player = action.payload.player as PlayerId;
-      setDrawCounts((prev) => ({ ...prev, [player]: (prev[player] ?? 0) + 1 }));
-    }
-    return result;
-  };
+  const handleDispatch = useCallback((action: Action) => (
+    actionSyncRef.current!.dispatchLocal(action)
+  ), []);
 
   const resetToInput = () => {
+    actionSyncRef.current?.reset();
     setGameSettings(null);
     setPlayerLoadingPhase('A');
     setDecks({});
@@ -67,6 +98,7 @@ export function App() {
   };
 
   const startGame = (allDecks: Record<PlayerId, Card[]>, settings: GameSettings) => {
+    actionSyncRef.current?.reset();
     const players = PLAYER_IDS.slice(0, settings.playerCount);
     let currentState = createInitialState(settings.playerCount, {
       allowMulliganWith2or5Lands: settings.allowMulliganWith2or5Lands,
@@ -83,7 +115,7 @@ export function App() {
       });
       currentState = shuffled.state;
     }
-    setState(currentState);
+    replaceState(currentState);
     setEditorResult(null);
     const initialCounts: Partial<Record<PlayerId, number>> = {};
     for (const player of players) {
@@ -149,6 +181,7 @@ export function App() {
   };
 
   const handleResetMatch = () => {
+    actionSyncRef.current?.reset();
     resetMatch();
     navigateHome();
   };
