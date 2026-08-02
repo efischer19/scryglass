@@ -13,7 +13,9 @@ import { PreGameSettings } from './PreGameSettings.js';
 import type { GameSettings } from './PreGameSettings.js';
 import { RemoteMatchLobby } from './RemoteMatchLobby.js';
 import { useWebRtcMatch } from '../networking/useWebRtcMatch.js';
+import { useLocalAgentWebSocket } from '../networking/useLocalAgentWebSocket.js';
 import { createActionSyncMiddleware } from '../networking/actionSync.js';
+import { dispatchLocalAgentMessage } from '../networking/localAgentSync.js';
 import {
   createPresenceMessage,
   parsePresenceMessage,
@@ -93,6 +95,17 @@ export function App() {
     actionSyncRef.current?.handleIncomingMessage(message);
   }, []);
 
+  const handleLocalAgentMessage = useCallback((message: string) => {
+    const result = dispatchLocalAgentMessage(stateRef.current, message);
+    if (result == null) {
+      return;
+    }
+
+    replaceState(result.state);
+  }, [replaceState]);
+
+  const localAgentEnabled = gameSettings?.localMode ?? state.settings.localMode;
+
   const {
     status: remoteStatus,
     roomCode: remoteRoomCode,
@@ -105,6 +118,13 @@ export function App() {
     sendMessage,
   } = useWebRtcMatch({
     onMessage: handleRemoteMatchMessage,
+  });
+  const {
+    status: localAgentStatus,
+    sendMessage: sendLocalAgentMessage,
+  } = useLocalAgentWebSocket({
+    enabled: localAgentEnabled,
+    onMessage: handleLocalAgentMessage,
   });
 
   remoteSenderRef.current = remoteStatus === 'connected' ? sendMessage : null;
@@ -129,6 +149,14 @@ export function App() {
     pendingPresenceMessageRef.current = null;
     setRemotePresence(null);
   }, [clearPresenceFlushTimeout, remoteStatus]);
+
+  useEffect(() => {
+    if (!localAgentEnabled || localAgentStatus !== 'open') {
+      return;
+    }
+
+    sendLocalAgentMessage(JSON.stringify(state));
+  }, [localAgentEnabled, localAgentStatus, sendLocalAgentMessage, state]);
 
   useEffect(() => {
     if (remotePresence == null) {
@@ -185,6 +213,7 @@ export function App() {
     actionSyncRef.current?.reset();
     clearPresenceFlushTimeout();
     pendingPresenceMessageRef.current = null;
+    replaceState(createInitialState());
     setGameSettings(null);
     setPlayerLoadingPhase('A');
     setDecks({});
@@ -197,6 +226,10 @@ export function App() {
     setGameSettings(settings);
     setPlayerLoadingPhase('A');
     setDecks({});
+    replaceState(createInitialState(settings.playerCount, {
+      allowMulliganWith2or5Lands: settings.allowMulliganWith2or5Lands,
+      localMode: settings.localMode,
+    }));
     const initialCounts: Partial<Record<PlayerId, number>> = {};
     for (let i = 0; i < settings.playerCount; i++) {
       initialCounts[PLAYER_IDS[i]] = 0;
@@ -210,6 +243,7 @@ export function App() {
     const players = PLAYER_IDS.slice(0, settings.playerCount);
     let currentState = createInitialState(settings.playerCount, {
       allowMulliganWith2or5Lands: settings.allowMulliganWith2or5Lands,
+      localMode: settings.localMode,
     });
     for (const player of players) {
       const loaded = dispatch(currentState, {
