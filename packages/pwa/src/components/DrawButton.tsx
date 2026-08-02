@@ -1,5 +1,6 @@
 import { useState, useRef } from 'preact/hooks';
-import type { Action, ActionResult, Card, PlayerId } from '@scryglass/core';
+import type { Action, ActionResult, Card, HiddenCard, PlayerId } from '@scryglass/core';
+import { isCard } from '@scryglass/core';
 import { ConfirmationGate } from './ConfirmationGate.js';
 
 interface DrawButtonProps {
@@ -24,7 +25,8 @@ export function DrawButton({ player, disabled, libraryEmpty, onDispatch, onCardD
     setShowGate(false);
     try {
       const result = onDispatch({ type: 'DRAW_CARD', payload: { player } });
-      onCardDrawn(result.card);
+      // Only pass full cards, not hashes
+      onCardDrawn(result.card && isCard(result.card) ? result.card : null);
     } catch {
       // The core reducer throws if the library is empty. The button should
       // already be disabled (via libraryEmpty) to prevent reaching this path.

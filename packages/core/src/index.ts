@@ -1,5 +1,5 @@
 // @scryglass/core — barrel export
-export { CardSchema, CardHashSchema, HiddenCardSchema, CardTypeEnum } from './schemas/card.js';
+export { CardSchema, CardHashSchema, HiddenCardSchema, CardTypeEnum, isCard, isCardHash } from './schemas/card.js';
 export type { Card, CardHash, HiddenCard, CardType } from './schemas/card.js';
 
 export { ParseResultSchema, parseDeck } from './csv-parser.js';

@@ -1,4 +1,5 @@
-import type { Card } from '../schemas/card.js';
+import type { Card, HiddenCard } from '../schemas/card.js';
+import { isCard } from '../schemas/card.js';
 
 export const BASIC_LAND_TYPES = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'] as const;
 export type BasicLandType = typeof BASIC_LAND_TYPES[number];
@@ -25,10 +26,12 @@ export function isBasicLandOfType(card: Card, landType: string): boolean {
  * @returns A record mapping each land type to the number of matching cards.
  *   Only land types with at least one copy present are included.
  */
-export function getBasicLandCounts(library: Card[]): Record<string, number> {
+export function getBasicLandCounts(library: HiddenCard[]): Record<string, number> {
   const counts: Record<string, number> = {};
+  // Filter to only actual cards, not hashes
+  const cards = library.filter(isCard);
   for (const landType of BASIC_LAND_TYPES) {
-    const count = library.filter(card => isBasicLandOfType(card, landType)).length;
+    const count = cards.filter(card => isBasicLandOfType(card, landType)).length;
     if (count > 0) {
       counts[landType] = count;
     }

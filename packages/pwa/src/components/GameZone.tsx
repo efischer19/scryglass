@@ -1,14 +1,17 @@
-import type { Card } from '@scryglass/core';
+import type { Card, HiddenCard } from '@scryglass/core';
+import { isCard } from '@scryglass/core';
 import { CardImage } from './CardDisplay.js';
 import { CommanderAvatar } from './CommanderAvatar.js';
 
 interface GameZoneProps {
   zoneName: string;
-  cards: Card[];
+  cards: HiddenCard[];
 }
 
 export function GameZone({ zoneName, cards }: GameZoneProps) {
   const isCommandZone = zoneName === 'Command Zone';
+  // Filter to only display actual cards, not hashes
+  const visibleCards = cards.filter(isCard);
 
   return (
     <section class="game-zone" aria-label={`${zoneName} zone`}>
@@ -16,10 +19,10 @@ export function GameZone({ zoneName, cards }: GameZoneProps) {
       <p class="game-zone__card-count">
         {cards.length} card{cards.length !== 1 ? 's' : ''}
       </p>
-      {cards.length > 0 ? (
+      {visibleCards.length > 0 ? (
         isCommandZone ? (
           <ul class="game-zone__card-list game-zone__card-list--commanders" aria-label={`Cards in ${zoneName}`}>
-            {cards.map((card: Card, i: number) => (
+            {visibleCards.map((card: Card, i: number) => (
               <li key={i} class="game-zone__card-item game-zone__card-item--commander">
                 <CommanderAvatar card={card} />
               </li>
@@ -27,7 +30,7 @@ export function GameZone({ zoneName, cards }: GameZoneProps) {
           </ul>
         ) : (
           <ul class="game-zone__card-list" aria-label={`Cards in ${zoneName}`}>
-            {cards.map((card: Card, i: number) => (
+            {visibleCards.map((card: Card, i: number) => (
               <li key={i} class="game-zone__card-item">
                 <CardImage card={card} />
               </li>

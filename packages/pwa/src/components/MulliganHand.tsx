@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
-import { countLands, getMulliganVerdict } from '@scryglass/core';
-import type { PlayerState, Action, GameState, Card, PlayerId } from '@scryglass/core';
+import { countLands, getMulliganVerdict, isCard } from '@scryglass/core';
+import type { PlayerState, Action, GameState, PlayerId } from '@scryglass/core';
 import { CardImage } from './CardDisplay.js';
 
 interface MulliganHandProps {
@@ -44,7 +44,7 @@ export function MulliganHand({ player, playerState, settings, onDispatch }: Mull
       {!isPreDeal && (revealed ? (
         <div class="mulligan-hand__revealed">
           <ul class="mulligan-hand__card-list" aria-label={`${label}'s hand cards`}>
-            {playerState.hand.map((card: Card, i: number) => (
+            {playerState.hand.filter(isCard).map((card, i) => (
               <li key={i} class="mulligan-hand__card-item">
                 <CardImage card={card} />
               </li>

@@ -1,8 +1,11 @@
-import type { Card } from './schemas/card.js';
+import type { Card, HiddenCard } from './schemas/card.js';
+import { isCard } from './schemas/card.js';
 import type { MulliganVerdict } from './schemas/mulligan.js';
 
-export function countLands(hand: Card[]): number {
-  return hand.filter((card) => /\bland\b/i.test(card.cardType)).length;
+export function countLands(hand: HiddenCard[]): number {
+  // Filter to only actual cards, not hashes
+  const cards = hand.filter(isCard);
+  return cards.filter((card) => /\bland\b/i.test(card.cardType)).length;
 }
 
 export function getMulliganVerdict(

@@ -3,8 +3,9 @@ import {
   exportMoxfield,
   exportMtgoArena,
   exportScryglass,
+  isCard,
 } from '@scryglass/core';
-import type { Card } from '@scryglass/core';
+import type { Card, HiddenCard } from '@scryglass/core';
 import { useState } from 'preact/hooks';
 import { copyToClipboard } from '../utils/clipboard.js';
 
@@ -13,20 +14,23 @@ type ExportMode = 'copy' | 'download';
 const EXPORT_FORMATS: ExportFormat[] = ['scryglass', 'mtgo-arena', 'moxfield', 'archidekt'];
 
 interface ExportDropdownProps {
-  cards: Card[];
-  commanders?: Card[];
+  cards: HiddenCard[];
+  commanders?: HiddenCard[];
 }
 
-function toExportText(format: ExportFormat, cards: Card[], commanders: Card[]): string {
+function toExportText(format: ExportFormat, cards: HiddenCard[], commanders: HiddenCard[]): string {
+  // Filter to only actual cards, not hashes
+  const fullCards = cards.filter(isCard);
+  const fullCommanders = commanders.filter(isCard);
   switch (format) {
     case 'mtgo-arena':
-      return exportMtgoArena(cards, commanders);
+      return exportMtgoArena(fullCards, fullCommanders);
     case 'moxfield':
-      return exportMoxfield(cards, commanders);
+      return exportMoxfield(fullCards, fullCommanders);
     case 'archidekt':
-      return exportArchidekt(cards, commanders);
+      return exportArchidekt(fullCards, fullCommanders);
     case 'scryglass':
-      return exportScryglass(cards, commanders);
+      return exportScryglass(fullCards, fullCommanders);
   }
 }
 
