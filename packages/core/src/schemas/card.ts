@@ -3,11 +3,19 @@ import { z } from 'zod';
 export const CardTypeEnum = z.enum(['land', 'nonland', 'commander']);
 export type CardType = z.infer<typeof CardTypeEnum>;
 
+export const CardPositionSchema = z.object({
+  x: z.number().finite(),
+  y: z.number().finite(),
+});
+export type CardPosition = z.infer<typeof CardPositionSchema>;
+
 export const CardSchema = z.object({
   name: z.string(),
   setCode: z.string(),
   collectorNumber: z.string(),
   cardType: CardTypeEnum,
+  instanceId: z.string().min(1).optional(),
+  position: CardPositionSchema.optional(),
   tapped: z.boolean().optional(),
   faceDown: z.boolean().optional(),
 });

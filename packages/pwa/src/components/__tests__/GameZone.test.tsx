@@ -1,8 +1,24 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/preact';
+import { DndContext } from '@dnd-kit/core';
 import { axe } from 'vitest-axe';
 import { GameZone } from '../GameZone.js';
 import type { Card } from '@scryglass/core';
+
+vi.mock('@dnd-kit/core', () => ({
+  DndContext: ({ children }: { children: unknown }) => <>{children}</>,
+  useDraggable: () => ({
+    attributes: {},
+    listeners: {},
+    setNodeRef: () => {},
+    transform: null,
+    isDragging: false,
+  }),
+  useDroppable: () => ({
+    setNodeRef: () => {},
+    isOver: false,
+  }),
+}));
 
 // Mock CommanderAvatar component to avoid dependency on useCommanderAvatar hook
 vi.mock('../CommanderAvatar', () => ({
@@ -26,37 +42,45 @@ const testCommander: Card = {
 };
 
 describe('<GameZone />', () => {
+  function renderGameZone(zoneName: string, zone: 'hand' | 'battlefield' | 'graveyard' | 'exile' | 'commandZone', cards: Card[]) {
+    return render(
+      <DndContext>
+        <GameZone player="A" zone={zone} zoneName={zoneName} cards={cards} />
+      </DndContext>,
+    );
+  }
+
   it('renders zone title and card count', () => {
-    render(<GameZone zoneName="Battlefield" cards={[testCard]} />);
+    renderGameZone('Battlefield', 'battlefield', [testCard]);
     expect(screen.getByText('Battlefield')).toBeTruthy();
     expect(screen.getByText('1 card')).toBeTruthy();
   });
 
   it('displays "cards" (plural) when more than one card', () => {
     const cards = [testCard, testCard];
-    render(<GameZone zoneName="Graveyard" cards={cards} />);
+    renderGameZone('Graveyard', 'graveyard', cards);
     expect(screen.getByText('2 cards')).toBeTruthy();
   });
 
   it('displays "card" (singular) when exactly one card', () => {
-    render(<GameZone zoneName="Exile" cards={[testCard]} />);
+    renderGameZone('Exile', 'exile', [testCard]);
     expect(screen.getByText('1 card')).toBeTruthy();
   });
 
   it('renders empty state when no cards', () => {
-    render(<GameZone zoneName="Command Zone" cards={[]} />);
+    renderGameZone('Command Zone', 'commandZone', []);
     expect(screen.getByText('No cards in Command Zone')).toBeTruthy();
   });
 
   it('renders multiple cards in a list', () => {
     const cards = [testCard, testCard, testCard];
-    const { container } = render(<GameZone zoneName="Battlefield" cards={cards} />);
+    const { container } = renderGameZone('Battlefield', 'battlefield', cards);
     const listItems = container.querySelectorAll('.game-zone__card-item');
     expect(listItems.length).toBe(3);
   });
 
   it('uses a semantic section element with aria-label', () => {
-    const { container } = render(<GameZone zoneName="Battlefield" cards={[]} />);
+    const { container } = renderGameZone('Battlefield', 'battlefield', []);
     const section = container.querySelector('section');
     expect(section).toBeTruthy();
     expect(section?.getAttribute('aria-label')).toBe('Battlefield zone');
@@ -64,7 +88,9 @@ describe('<GameZone />', () => {
 
   it('has proper aria-label on card list', () => {
     const { container } = render(
-      <GameZone zoneName="Graveyard" cards={[testCard, testCard]} />
+      <DndContext>
+        <GameZone player="A" zone="graveyard" zoneName="Graveyard" cards={[testCard, testCard]} />
+      </DndContext>
     );
     const ul = container.querySelector('ul');
     expect(ul?.getAttribute('aria-label')).toBe('Cards in Graveyard');
@@ -72,7 +98,9 @@ describe('<GameZone />', () => {
 
   it('displays commanders in command zone with special styling', () => {
     const { container } = render(
-      <GameZone zoneName="Command Zone" cards={[testCommander]} />
+      <DndContext>
+        <GameZone player="A" zone="commandZone" zoneName="Command Zone" cards={[testCommander]} />
+      </DndContext>
     );
     const list = container.querySelector('.game-zone__card-list--commanders');
     expect(list).toBeTruthy();
@@ -81,7 +109,9 @@ describe('<GameZone />', () => {
 
   it('renders commander items with special CSS class', () => {
     const { container } = render(
-      <GameZone zoneName="Command Zone" cards={[testCommander]} />
+      <DndContext>
+        <GameZone player="A" zone="commandZone" zoneName="Command Zone" cards={[testCommander]} />
+      </DndContext>
     );
     const commanderItems = container.querySelectorAll('.game-zone__card-item--commander');
     expect(commanderItems.length).toBe(1);
@@ -89,7 +119,9 @@ describe('<GameZone />', () => {
 
   it('handles multiple commanders in command zone', () => {
     const { container } = render(
-      <GameZone zoneName="Command Zone" cards={[testCommander, testCommander]} />
+      <DndContext>
+        <GameZone player="A" zone="commandZone" zoneName="Command Zone" cards={[testCommander, testCommander]} />
+      </DndContext>
     );
     const commanderItems = container.querySelectorAll('.game-zone__card-item--commander');
     expect(commanderItems.length).toBe(2);
@@ -97,7 +129,9 @@ describe('<GameZone />', () => {
 
   it('does not display command zone with special commander styling for other zones', () => {
     const { container } = render(
-      <GameZone zoneName="Battlefield" cards={[testCommander]} />
+      <DndContext>
+        <GameZone player="A" zone="battlefield" zoneName="Battlefield" cards={[testCommander]} />
+      </DndContext>
     );
     const list = container.querySelector('.game-zone__card-list--commanders');
     expect(list).toBeNull();
@@ -106,32 +140,26 @@ describe('<GameZone />', () => {
   });
 
   it('passes vitest-axe a11y assertions with cards', async () => {
-    const { container } = render(
-      <GameZone zoneName="Battlefield" cards={[testCard]} />
-    );
+    const { container } = renderGameZone('Battlefield', 'battlefield', [testCard]);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
 
   it('passes vitest-axe a11y assertions when empty', async () => {
-    const { container } = render(<GameZone zoneName="Exile" cards={[]} />);
+    const { container } = renderGameZone('Exile', 'exile', []);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
 
   it('passes vitest-axe a11y assertions with multiple cards', async () => {
     const cards = [testCard, testCard, testCard];
-    const { container } = render(
-      <GameZone zoneName="Command Zone" cards={cards} />
-    );
+    const { container } = renderGameZone('Command Zone', 'commandZone', cards);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
 
   it('passes vitest-axe a11y assertions with commanders', async () => {
-    const { container } = render(
-      <GameZone zoneName="Command Zone" cards={[testCommander]} />
-    );
+    const { container } = renderGameZone('Command Zone', 'commandZone', [testCommander]);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });

@@ -1256,8 +1256,8 @@ describe('dispatch — MOVE_CARD', () => {
     });
 
     expect(result.state.players.A.library).toEqual([]);
-    expect(result.state.players.A.battlefield).toEqual([card]);
-    expect(result.card).toEqual(card);
+    expect(result.state.players.A.battlefield).toEqual([{ ...card, position: { x: 0, y: 16 } }]);
+    expect(result.card).toEqual({ ...card, position: { x: 0, y: 16 } });
   });
 
   it('throws a cheat-detected error when reveal data does not match a committed hash', () => {
@@ -1307,6 +1307,83 @@ describe('dispatch — MOVE_CARD', () => {
     expect(result.state.players.A.battlefield).toHaveLength(0);
     expect(result.state.players.A.graveyard).toHaveLength(1);
     expect(result.state.players.A.graveyard[0].name).toBe('Forest');
+  });
+
+  it('uses cardId to move the correct duplicate-named card', () => {
+    let state = createInitialState();
+    const firstCopy = { ...makeCard('Island'), instanceId: 'island-1' };
+    const secondCopy = { ...makeCard('Island'), instanceId: 'island-2', tapped: true };
+    state = dispatch(state, {
+      type: 'LOAD_DECK',
+      payload: { player: 'A', cards: [firstCopy, secondCopy] },
+    }).state;
+
+    const result = dispatch(state, {
+      type: 'MOVE_CARD',
+      payload: {
+        player: 'A',
+        cardName: 'Island',
+        cardId: 'island-2',
+        fromZone: 'library',
+        toZone: 'graveyard',
+      },
+    });
+
+    expect(result.state.players.A.graveyard).toEqual([secondCopy]);
+    expect(result.state.players.A.library).toEqual([firstCopy]);
+  });
+
+  it('stores free-form battlefield coordinates on MOVE_CARD', () => {
+    let state = createInitialState();
+    const card = { ...makeCard('Sol Ring'), instanceId: 'sol-ring-1' };
+    state = dispatch(state, {
+      type: 'LOAD_DECK',
+      payload: { player: 'A', cards: [card] },
+    }).state;
+
+    const result = dispatch(state, {
+      type: 'MOVE_CARD',
+      payload: {
+        player: 'A',
+        cardName: 'Sol Ring',
+        cardId: 'sol-ring-1',
+        fromZone: 'library',
+        toZone: 'battlefield',
+        position: { x: 80, y: 120 },
+      },
+    });
+
+    expect(result.state.players.A.battlefield[0].position).toEqual({ x: 80, y: 120 });
+  });
+
+  it('updates coordinates when moving a card within the battlefield', () => {
+    const card = { ...makeCard('Sol Ring'), instanceId: 'sol-ring-1', position: { x: 24, y: 24 } };
+    const state = {
+      ...createInitialState(),
+      players: {
+        ...createInitialState().players,
+        A: {
+          ...createInitialState().players.A,
+          battlefield: [card],
+        },
+      },
+    };
+
+    const result = dispatch(state, {
+      type: 'MOVE_CARD',
+      payload: {
+        player: 'A',
+        cardName: 'Sol Ring',
+        cardId: 'sol-ring-1',
+        fromZone: 'battlefield',
+        toZone: 'battlefield',
+        position: { x: 144, y: 88 },
+      },
+    });
+
+    expect(result.state.players.A.battlefield).toEqual([
+      { ...card, position: { x: 144, y: 88 } },
+    ]);
   });
 
   it('moves a card to exile', () => {
@@ -1434,6 +1511,37 @@ describe('dispatch — CHANGE_CARD_STATE', () => {
     });
 
     expect(result.state.players.A.battlefield[0].tapped).toBe(false);
+  });
+
+  it('uses cardId to change the correct duplicate-named card state', () => {
+    const firstCopy = { ...makeCard('Soldier Token'), instanceId: 'token-1' };
+    const secondCopy = { ...makeCard('Soldier Token'), instanceId: 'token-2' };
+    const state = {
+      ...createInitialState(),
+      players: {
+        ...createInitialState().players,
+        A: {
+          ...createInitialState().players.A,
+          battlefield: [firstCopy, secondCopy],
+        },
+      },
+    };
+
+    const result = dispatch(state, {
+      type: 'CHANGE_CARD_STATE',
+      payload: {
+        player: 'A',
+        cardName: 'Soldier Token',
+        cardId: 'token-2',
+        zone: 'battlefield',
+        tapped: true,
+      },
+    });
+
+    expect(result.state.players.A.battlefield).toEqual([
+      firstCopy,
+      { ...secondCopy, tapped: true },
+    ]);
   });
 
   it('changes card state in the library zone', () => {

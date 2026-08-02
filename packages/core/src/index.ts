@@ -1,6 +1,6 @@
 // @scryglass/core — barrel export
-export { CardSchema, CardHashSchema, HiddenCardSchema, CardTypeEnum, isCard, isCardHash } from './schemas/card.js';
-export type { Card, CardHash, HiddenCard, CardType } from './schemas/card.js';
+export { CardSchema, CardHashSchema, HiddenCardSchema, CardTypeEnum, CardPositionSchema, isCard, isCardHash } from './schemas/card.js';
+export type { Card, CardHash, HiddenCard, CardType, CardPosition } from './schemas/card.js';
 
 export { ParseResultSchema, parseDeck } from './csv-parser.js';
 export type { ParseResult } from './csv-parser.js';
@@ -26,7 +26,7 @@ export { PlayerPhaseSchema, PlayerIdSchema, PlayerStateSchema, GameStateSchema, 
 export type { PlayerPhase, PlayerId, PlayerState, GameState, HistoryEntry } from './schemas/state.js';
 
 export { ActionSchema, ActionResultSchema, ScryDecisionSchema, LandTypeSchema } from './schemas/action.js';
-export type { Action, ActionResult, ScryDecision, LandType } from './schemas/action.js';
+export type { Action, ActionResult, ScryDecision, LandType, Zone } from './schemas/action.js';
 
 export { MulliganVerdictSchema } from './schemas/mulligan.js';
 export type { MulliganVerdict } from './schemas/mulligan.js';

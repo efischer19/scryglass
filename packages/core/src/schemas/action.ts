@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CardSchema, HiddenCardSchema } from './card.js';
+import { CardPositionSchema, CardSchema, HiddenCardSchema } from './card.js';
 import { GameStateSchema, PlayerIdSchema, PlayerStateSchema } from './state.js';
 
 // --- Zone Types ---
@@ -110,8 +110,10 @@ const MoveCardActionSchema = z.object({
   payload: z.object({
     player: PlayerIdSchema,
     cardName: z.string(),
+    cardId: z.string().min(1).optional(),
     fromZone: ZoneSchema,
     toZone: ZoneSchema,
+    position: CardPositionSchema.optional(),
     revealData: RevealDataSchema.optional(),
   }),
 });
@@ -121,6 +123,7 @@ const ChangeCardStateActionSchema = z.object({
   payload: z.object({
     player: PlayerIdSchema,
     cardName: z.string(),
+    cardId: z.string().min(1).optional(),
     zone: ZoneSchema,
     tapped: z.boolean().optional(),
     faceDown: z.boolean().optional(),

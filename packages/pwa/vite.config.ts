@@ -55,6 +55,13 @@ function serviceWorkerPlugin(): Plugin {
 }
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      react: 'preact/compat',
+      'react-dom': 'preact/compat',
+      'react/jsx-runtime': 'preact/jsx-runtime',
+    },
+  },
   plugins: [preact(), serviceWorkerPlugin()],
   test: {
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
