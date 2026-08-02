@@ -19,7 +19,10 @@ function makePlayerState(overrides: Partial<PlayerState> = {}): PlayerState {
   };
 }
 
-const defaultSettings: GameState['settings'] = { allowMulliganWith2or5Lands: false };
+const defaultSettings: GameState['settings'] = {
+  allowMulliganWith2or5Lands: false,
+  localMode: false,
+};
 
 function stubDispatch(state?: PlayerState): (action: Action) => ActionResult {
   return () => ({
@@ -29,6 +32,7 @@ function stubDispatch(state?: PlayerState): (action: Action) => ActionResult {
         B: state ?? makePlayerState(),
       },
       settings: defaultSettings,
+      history: [],
     },
     card: null,
   });
@@ -41,6 +45,7 @@ function makeGameState(playerState: PlayerState, player: PlayerId = 'A'): GameSt
       ? { A: playerState, B: other }
       : { A: other, B: playerState },
     settings: defaultSettings,
+    history: [],
   };
 }
 
@@ -212,6 +217,42 @@ describe('<PlayerZone />', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Hide all cards' }));
     expect(onHideAll).toHaveBeenCalled();
+  });
+
+  it('dispatches CHANGE_CARD_STATE on double click for visible zone cards', () => {
+    const onDispatch = vi.fn(() => ({
+      state: makeGameState(makePlayerState({
+        battlefield: [
+          { name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' as const, instanceId: 'sol-ring-1', tapped: false },
+        ],
+        phase: 'playing',
+      })),
+      card: null,
+    }));
+
+    renderPlayerZone(
+      makePlayerState({
+        battlefield: [
+          { name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' as const, instanceId: 'sol-ring-1', tapped: false },
+        ],
+        phase: 'playing',
+      }),
+      'playing',
+      'A',
+      onDispatch,
+    );
+
+    fireEvent.dblClick(screen.getByRole('button', { name: 'Sol Ring in Battlefield' }));
+    expect(onDispatch).toHaveBeenCalledWith({
+      type: 'CHANGE_CARD_STATE',
+      payload: {
+        player: 'A',
+        cardName: 'Sol Ring',
+        cardId: 'battlefield:c21:263:Sol Ring:0',
+        zone: 'battlefield',
+        tapped: true,
+      },
+    });
   });
 
   it('passes vitest-axe a11y assertions', async () => {

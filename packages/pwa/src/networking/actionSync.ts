@@ -24,9 +24,9 @@ export function getConflictKey(action: Action): string | null {
   switch (action.type) {
     case 'MOVE_CARD':
     case 'CHANGE_CARD_STATE':
-      return `${action.payload.player}:${action.payload.cardName}`;
+      return `${action.payload.player}:${action.payload.cardId ?? action.payload.cardName}`;
     case 'RETURN_TO_LIBRARY':
-      return `${action.payload.player}:${action.payload.card.name}`;
+      return `${action.payload.player}:${action.payload.card.instanceId ?? action.payload.card.name}`;
     default:
       return null;
   }

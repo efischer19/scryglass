@@ -213,6 +213,22 @@ function createRevealValidationError(reason: string): Error {
   return new Error(`Cheat Detected / State Desync: ${reason}`);
 }
 
+function createActionCardId(card: Card, zone: Zone, index: number): string {
+  return `${zone}:${card.setCode}:${card.collectorNumber}:${card.name}:${index}`;
+}
+
+function matchesCardReference(card: HiddenCard, zone: Zone, index: number, cardName: string, cardId?: string): boolean {
+  if (!isCard(card)) {
+    return false;
+  }
+
+  if (cardId != null) {
+    return createActionCardId(card, zone, index) === cardId || card.instanceId === cardId;
+  }
+
+  return card.name === cardName;
+}
+
 function handleShuffleLibrary(state: GameState, action: Extract<Action, { type: 'SHUFFLE_LIBRARY' }>): ActionResult {
   const { player } = action.payload;
   const playerState = requirePlayerState(state, player);
@@ -504,11 +520,11 @@ function handleTutorCard(state: GameState, action: Extract<Action, { type: 'TUTO
 }
 
 function handleMoveCard(state: GameState, action: Extract<Action, { type: 'MOVE_CARD' }>): ActionResult {
-  const { player, cardName, fromZone, toZone, revealData } = action.payload;
+  const { player, cardName, cardId, fromZone, toZone, position, revealData } = action.payload;
   const playerState = requirePlayerState(state, player);
   const fromZoneCards = playerState[fromZone];
 
-  let cardIndex = fromZoneCards.findIndex((c) => isCard(c) && c.name === cardName);
+  let cardIndex = fromZoneCards.findIndex((c, index) => matchesCardReference(c, fromZone, index, cardName, cardId));
   if (cardIndex === -1) {
     if (!isHiddenZone(fromZone) || !isPublicZone(toZone)) {
       throw new Error(
@@ -542,13 +558,41 @@ function handleMoveCard(state: GameState, action: Extract<Action, { type: 'MOVE_
         return revealData.card;
       })()
     : card;
+  const normalizedMovedCard = isCard(movedCard)
+    ? {
+        ...movedCard,
+        ...(toZone === 'battlefield'
+          ? { position: position ?? movedCard.position ?? { x: playerState.battlefield.length * 24, y: 16 } }
+          : { position: undefined }),
+      }
+    : movedCard;
+
+  if (fromZone === toZone) {
+    const updatedZoneCards = [...fromZoneCards];
+    updatedZoneCards[cardIndex] = normalizedMovedCard;
+
+    return {
+      state: {
+        ...state,
+        players: {
+          ...state.players,
+          [player]: {
+            ...playerState,
+            [fromZone]: updatedZoneCards,
+          },
+        },
+      },
+      card: normalizedMovedCard,
+    };
+  }
+
   const updatedFromZone = [
     ...fromZoneCards.slice(0, cardIndex),
     ...fromZoneCards.slice(cardIndex + 1),
   ];
 
   const toZoneCards = playerState[toZone];
-  const updatedToZone = [...toZoneCards, movedCard];
+  const updatedToZone = [...toZoneCards, normalizedMovedCard];
 
   const updates: Record<string, any> = {};
   updates[fromZone] = updatedFromZone;
@@ -565,16 +609,16 @@ function handleMoveCard(state: GameState, action: Extract<Action, { type: 'MOVE_
         },
       },
     },
-    card: movedCard,
+    card: normalizedMovedCard,
   };
 }
 
 function handleChangeCardState(state: GameState, action: Extract<Action, { type: 'CHANGE_CARD_STATE' }>): ActionResult {
-  const { player, cardName, zone, tapped, faceDown } = action.payload;
+  const { player, cardName, cardId, zone, tapped, faceDown } = action.payload;
   const playerState = requirePlayerState(state, player);
   const zoneCards = playerState[zone];
 
-  const cardIndex = zoneCards.findIndex((c) => isCard(c) && c.name === cardName);
+  const cardIndex = zoneCards.findIndex((c, index) => matchesCardReference(c, zone, index, cardName, cardId));
   if (cardIndex === -1) {
     throw new Error(
       `Cannot change card state: "${cardName}" not found in ${zone} of Player ${player}`,

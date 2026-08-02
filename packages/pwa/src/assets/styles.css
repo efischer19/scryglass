@@ -1653,6 +1653,15 @@ textarea:focus-visible,
   border-radius: var(--radius-md);
 }
 
+.game-zone--drag-over {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgb(37 99 235 / 0.2);
+}
+
+.game-zone--battlefield {
+  min-height: 320px;
+}
+
 .game-zone__title {
   font-size: var(--font-size-base);
   font-weight: 700;
@@ -1673,8 +1682,24 @@ textarea:focus-visible,
   margin-bottom: var(--space-sm);
 }
 
+.game-zone__card-list--battlefield {
+  position: relative;
+  display: block;
+  min-height: 240px;
+  margin-bottom: 0;
+}
+
 .game-zone__card-item {
   font-size: var(--font-size-sm);
+}
+
+.game-zone__card-item--battlefield {
+  position: absolute;
+  width: 96px;
+}
+
+.game-zone__card-item--dragging {
+  z-index: 2;
 }
 
 .game-zone__card-item .card-display__image {
@@ -1692,6 +1717,30 @@ textarea:focus-visible,
   color: var(--color-text-muted);
   text-align: center;
   padding: var(--space-md) 0;
+}
+
+.game-zone__battlefield-empty {
+  position: relative;
+  min-height: 240px;
+}
+
+.game-zone__card-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+
+.game-zone__card-button:disabled {
+  cursor: default;
+}
+
+.game-zone__card-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* ===================================================================
