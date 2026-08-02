@@ -48,6 +48,7 @@ describe('<PreGameSettings />', () => {
     expect(handleConfirm).toHaveBeenCalledWith({
       playerCount: 2,
       allowMulliganWith2or5Lands: false,
+      localMode: false,
     } satisfies GameSettings);
   });
 
@@ -87,6 +88,19 @@ describe('<PreGameSettings />', () => {
 
     expect(handleConfirm).toHaveBeenCalledWith(
       expect.objectContaining({ allowMulliganWith2or5Lands: true }),
+    );
+  });
+
+  it('calls onConfirm with local AI enabled', () => {
+    const handleConfirm = vi.fn();
+    render(<PreGameSettings onConfirm={handleConfirm} />);
+
+    const checkbox = screen.getByRole('checkbox', { name: /enable local ai agent/i });
+    fireEvent.click(checkbox);
+    fireEvent.click(screen.getByRole('button', { name: /start game/i }));
+
+    expect(handleConfirm).toHaveBeenCalledWith(
+      expect.objectContaining({ localMode: true }),
     );
   });
 

@@ -5,6 +5,7 @@ import { PLAYER_IDS } from '@scryglass/core';
 export interface GameSettings {
   playerCount: number;
   allowMulliganWith2or5Lands: boolean;
+  localMode: boolean;
 }
 
 interface PreGameSettingsProps {
@@ -20,10 +21,11 @@ function playerLabel(id: PlayerId): string {
 export function PreGameSettings({ onConfirm }: PreGameSettingsProps) {
   const [playerCount, setPlayerCount] = useState(2);
   const [allowMulliganWith2or5Lands, setAllowMulliganWith2or5Lands] = useState(false);
+  const [localMode, setLocalMode] = useState(false);
 
   const handleSubmit = (e: Event) => {
     e.preventDefault();
-    onConfirm({ playerCount, allowMulliganWith2or5Lands });
+    onConfirm({ playerCount, allowMulliganWith2or5Lands, localMode });
   };
 
   return (
@@ -65,6 +67,19 @@ export function PreGameSettings({ onConfirm }: PreGameSettingsProps) {
             When enabled, hands with exactly 2 or 5 lands give the player a choice to mulligan.
             When disabled, those hands must be kept.
           </p>
+        </fieldset>
+
+        <fieldset class="pre-game-settings__fieldset">
+          <legend class="pre-game-settings__legend">Opponents</legend>
+          <label class="pre-game-settings__checkbox-label">
+            <input
+              type="checkbox"
+              checked={localMode}
+              onChange={(e) => setLocalMode((e.target as HTMLInputElement).checked)}
+              aria-label="Enable Local AI agent"
+            />
+            Enable Local AI agent over localhost WebSocket
+          </label>
         </fieldset>
 
         <button class="pre-game-settings__start-btn" type="submit">
