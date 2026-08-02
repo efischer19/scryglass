@@ -7,6 +7,7 @@ import type { DroppableZone } from './playmat-dnd.js';
 import { createPlaymatCardId } from './playmat-dnd.js';
 import { CardBack, CardImage } from './CardDisplay.js';
 import { CommanderAvatar } from './CommanderAvatar.js';
+import type { MatchPresence, MatchPresenceUpdate } from '../networking/presenceSync.js';
 
 interface DraggableZoneCardProps {
   card: Card;
@@ -18,6 +19,30 @@ interface DraggableZoneCardProps {
   disabled: boolean;
   obscured: boolean;
   onToggleTapped?: (zone: DroppableZone, card: Card, cardId: string) => void;
+  remotePresence?: MatchPresence | null;
+  onPresenceChange?: (presence: MatchPresenceUpdate) => void;
+}
+
+function getBattlefieldPointerPosition(
+  player: PlayerId,
+  zone: DroppableZone,
+  clientX: number,
+  clientY: number,
+): { x: number; y: number } | undefined {
+  if (zone !== 'battlefield') {
+    return undefined;
+  }
+
+  const battlefieldSurface = document.getElementById(`zone-surface-${player}-${zone}`);
+  if (battlefieldSurface == null) {
+    return undefined;
+  }
+
+  const rect = battlefieldSurface.getBoundingClientRect();
+  return {
+    x: Math.round(Math.min(Math.max(clientX - rect.left, 0), rect.width)),
+    y: Math.round(Math.min(Math.max(clientY - rect.top, 0), rect.height)),
+  };
 }
 
 function DraggableZoneCard({
@@ -30,6 +55,8 @@ function DraggableZoneCard({
   disabled,
   obscured,
   onToggleTapped,
+  remotePresence,
+  onPresenceChange,
 }: DraggableZoneCardProps) {
   const cardId = createPlaymatCardId(card, zone, cardIndex);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -49,11 +76,17 @@ function DraggableZoneCard({
     : {
         transform: [translate, rotation].filter(Boolean).join(' ') || undefined,
       };
+  const isRemotelyActive =
+    remotePresence != null &&
+    !remotePresence.cleared &&
+    remotePresence.player === player &&
+    remotePresence.zone === zone &&
+    remotePresence.cardId === cardId;
 
   return (
     <li
       ref={setNodeRef}
-      class={`game-zone__card-item${isCommandZone ? ' game-zone__card-item--commander' : ''}${isDragging ? ' game-zone__card-item--dragging' : ''}${card.tapped ? ' game-zone__card-item--tapped' : ''}${zone === 'battlefield' ? ' game-zone__card-item--battlefield' : ''}`}
+      class={`game-zone__card-item${isCommandZone ? ' game-zone__card-item--commander' : ''}${isDragging ? ' game-zone__card-item--dragging' : ''}${card.tapped ? ' game-zone__card-item--tapped' : ''}${zone === 'battlefield' ? ' game-zone__card-item--battlefield' : ''}${isRemotelyActive ? ' game-zone__card-item--remote-active' : ''}`}
       style={style}
     >
       <button
@@ -64,6 +97,35 @@ function DraggableZoneCard({
         disabled={disabled}
         aria-label={obscured ? `Hidden card ${cardIndex + 1} in ${zoneName}` : `${card.name} in ${zoneName}`}
         onDblClick={() => onToggleTapped?.(zone, card, cardId)}
+        onPointerEnter={(event) => {
+          event.stopPropagation();
+          onPresenceChange?.({
+            player,
+            zone,
+            cardId,
+            interaction: 'hover',
+            position: getBattlefieldPointerPosition(player, zone, event.clientX, event.clientY),
+          });
+        }}
+        onPointerMove={(event) => {
+          event.stopPropagation();
+          onPresenceChange?.({
+            player,
+            zone,
+            cardId,
+            interaction: 'hover',
+            position: getBattlefieldPointerPosition(player, zone, event.clientX, event.clientY),
+          });
+        }}
+        onPointerLeave={(event) => {
+          event.stopPropagation();
+          onPresenceChange?.({
+            player,
+            zone,
+            cardId,
+            cleared: true,
+          });
+        }}
         onContextMenu={(event) => {
           event.preventDefault();
           onToggleTapped?.(zone, card, cardId);
@@ -94,6 +156,8 @@ interface GameZoneProps {
   cards: HiddenCard[];
   disabled?: boolean;
   onToggleTapped?: (zone: DroppableZone, card: Card, cardId: string) => void;
+  remotePresence?: MatchPresence | null;
+  onPresenceChange?: (presence: MatchPresenceUpdate) => void;
 }
 
 export function GameZone({
@@ -103,6 +167,8 @@ export function GameZone({
   cards,
   disabled = false,
   onToggleTapped,
+  remotePresence,
+  onPresenceChange,
 }: GameZoneProps) {
   const isCommandZone = zone === 'commandZone';
   const isBattlefield = zone === 'battlefield';
@@ -115,6 +181,14 @@ export function GameZone({
     data: { zone },
     disabled,
   });
+  const showRemoteCursor =
+    isBattlefield &&
+    remotePresence != null &&
+    !remotePresence.cleared &&
+    remotePresence.player === player &&
+    remotePresence.zone === 'battlefield' &&
+    remotePresence.position != null;
+  const remoteCursorPosition = showRemoteCursor ? remotePresence.position : null;
 
   return (
     <section
@@ -137,44 +211,133 @@ export function GameZone({
         </button>
       )}
       {cards.length > 0 ? (
-        <ul
-          id={isBattlefield ? `zone-surface-${player}-${zone}` : undefined}
-          ref={isBattlefield ? setNodeRef : undefined}
-          class={`game-zone__card-list${isCommandZone ? ' game-zone__card-list--commanders' : ''}${isBattlefield ? ' game-zone__card-list--battlefield' : ''}`}
-          aria-label={`Cards in ${zoneName}`}
-        >
-          {cards.map((card, index) => (
-            isCard(card) ? (
-              <DraggableZoneCard
-                key={`${card.name}:${card.collectorNumber}:${index}`}
-                card={card}
-                cardIndex={index}
-                player={player}
-                zone={zone}
-                zoneName={zoneName}
-                isCommandZone={isCommandZone}
-                disabled={disabled}
-                obscured={shouldObscureVisibleCards}
-                onToggleTapped={onToggleTapped}
+        isBattlefield ? (
+          <div
+            id={`zone-surface-${player}-${zone}`}
+            ref={setNodeRef}
+            class="game-zone__battlefield-surface"
+            onPointerMove={(event) => {
+              onPresenceChange?.({
+                player,
+                zone,
+                interaction: 'hover',
+                position: getBattlefieldPointerPosition(player, zone, event.clientX, event.clientY),
+              });
+            }}
+            onPointerLeave={() => {
+              onPresenceChange?.({
+                player,
+                zone,
+                cleared: true,
+              });
+            }}
+          >
+            <ul
+              class="game-zone__card-list game-zone__card-list--battlefield"
+              aria-label={`Cards in ${zoneName}`}
+            >
+              {cards.map((card, index) => (
+                isCard(card) ? (
+                  <DraggableZoneCard
+                    key={`${card.name}:${card.collectorNumber}:${index}`}
+                    card={card}
+                    cardIndex={index}
+                    player={player}
+                    zone={zone}
+                    zoneName={zoneName}
+                    isCommandZone={isCommandZone}
+                    disabled={disabled}
+                    obscured={shouldObscureVisibleCards}
+                    onToggleTapped={onToggleTapped}
+                    remotePresence={remotePresence}
+                    onPresenceChange={onPresenceChange}
+                  />
+                ) : (
+                  <HiddenZoneCard
+                    key={`${card.hash}:${index}`}
+                    cardIndex={index}
+                    zoneName={zoneName}
+                    isCommandZone={isCommandZone}
+                  />
+                )
+              ))}
+            </ul>
+            {showRemoteCursor && (
+              <div
+                class="game-zone__remote-cursor"
+                style={{
+                  left: `${remoteCursorPosition?.x ?? 0}px`,
+                  top: `${remoteCursorPosition?.y ?? 0}px`,
+                }}
+                aria-hidden="true"
               />
-            ) : (
-              <HiddenZoneCard
-                key={`${card.hash}:${index}`}
-                cardIndex={index}
-                zoneName={zoneName}
-                isCommandZone={isCommandZone}
-              />
-            )
-          ))}
-        </ul>
+            )}
+          </div>
+        ) : (
+          <ul
+            class={`game-zone__card-list${isCommandZone ? ' game-zone__card-list--commanders' : ''}`}
+            aria-label={`Cards in ${zoneName}`}
+          >
+            {cards.map((card, index) => (
+              isCard(card) ? (
+                <DraggableZoneCard
+                  key={`${card.name}:${card.collectorNumber}:${index}`}
+                  card={card}
+                  cardIndex={index}
+                  player={player}
+                  zone={zone}
+                  zoneName={zoneName}
+                  isCommandZone={isCommandZone}
+                  disabled={disabled}
+                  obscured={shouldObscureVisibleCards}
+                  onToggleTapped={onToggleTapped}
+                  remotePresence={remotePresence}
+                  onPresenceChange={onPresenceChange}
+                />
+              ) : (
+                <HiddenZoneCard
+                  key={`${card.hash}:${index}`}
+                  cardIndex={index}
+                  zoneName={zoneName}
+                  isCommandZone={isCommandZone}
+                />
+              )
+            ))}
+          </ul>
+        )
       ) : isBattlefield ? (
         <div
           id={`zone-surface-${player}-${zone}`}
           ref={setNodeRef}
-          class="game-zone__battlefield-empty"
+          class="game-zone__battlefield-surface game-zone__battlefield-empty"
           aria-label={`Cards in ${zoneName}`}
+          onPointerMove={(event) => {
+            onPresenceChange?.({
+              player,
+              zone,
+              interaction: 'hover',
+              position: getBattlefieldPointerPosition(player, zone, event.clientX, event.clientY),
+            });
+          }}
+          onPointerLeave={() => {
+            onPresenceChange?.({
+              player,
+              zone,
+              cleared: true,
+            });
+          }}
         >
           <p class="game-zone__empty-state">No cards in {zoneName}</p>
+          {showRemoteCursor && (
+            <div
+              class="game-zone__remote-cursor"
+              style={{
+                left: `${remoteCursorPosition?.x ?? 0}px`,
+                top: `${remoteCursorPosition?.y ?? 0}px`,
+              }}
+              aria-hidden="true"
+            />
+          )}
         </div>
       ) : (
         <p class="game-zone__empty-state">No cards in {zoneName}</p>

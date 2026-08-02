@@ -97,6 +97,69 @@ describe('<GameZone />', () => {
     expect(screen.getByRole('img', { name: 'Hidden card 1 in Hand' })).toBeTruthy();
   });
 
+  it('renders a remote cursor and card highlight on the battlefield', () => {
+    const { container } = render(
+      <DndContext>
+        <GameZone
+          player="A"
+          zone="battlefield"
+          zoneName="Battlefield"
+          cards={[testCard]}
+          remotePresence={{
+            player: 'A',
+            zone: 'battlefield',
+            cardId: 'battlefield:c21:263:Sol Ring:0',
+            interaction: 'drag',
+            position: { x: 48, y: 72 },
+            cleared: false,
+          }}
+        />
+      </DndContext>,
+    );
+
+    expect(container.querySelector('.game-zone__remote-cursor')).toBeTruthy();
+    expect(container.querySelector('.game-zone__card-item--remote-active')).toBeTruthy();
+  });
+
+  it('emits hover presence updates with battlefield-relative coordinates', () => {
+    const onPresenceChange = vi.fn();
+    render(
+      <DndContext>
+        <GameZone
+          player="A"
+          zone="battlefield"
+          zoneName="Battlefield"
+          cards={[testCard]}
+          onPresenceChange={onPresenceChange}
+        />
+      </DndContext>,
+    );
+
+    const surface = document.getElementById('zone-surface-A-battlefield');
+    expect(surface).toBeTruthy();
+    Object.defineProperty(surface, 'getBoundingClientRect', {
+      value: () => ({
+        left: 10,
+        top: 20,
+        width: 200,
+        height: 120,
+      }),
+    });
+
+    fireEvent.pointerMove(screen.getByRole('button', { name: 'Sol Ring in Battlefield' }), {
+      clientX: 64,
+      clientY: 52,
+    });
+
+    expect(onPresenceChange).toHaveBeenLastCalledWith({
+      player: 'A',
+      zone: 'battlefield',
+      cardId: 'battlefield:c21:263:Sol Ring:0',
+      interaction: 'hover',
+      position: { x: 54, y: 32 },
+    });
+  });
+
   it('requires an explicit peek before showing visible hand card faces', () => {
     renderGameZone('Hand', 'hand', [testCard]);
 
