@@ -133,7 +133,7 @@ Variables** and add:
 
 | Variable                       | Description                               | Example                                          |
 | :----------------------------- | :---------------------------------------- | :------------------------------------------------|
-| `AWS_ROLE_ARN`                 | ARN of the IAM deploy role                | `arn:aws:iam::123456789012:role/scrymat-deploy` |
+| `AWS_ROLE_ARN`                 | ARN of the IAM deploy role                | `arn:aws:iam::123456789012:role/scrymat-deploy`  |
 | `AWS_REGION`                   | AWS region of the S3 bucket               | `us-east-1`                                      |
 | `S3_BUCKET_NAME`               | Name of the S3 bucket                     | `scrymat-prod`                                   |
 | `CLOUDFRONT_DISTRIBUTION_ID`   | CloudFront distribution ID                | `E1234567890ABC`                                 |
