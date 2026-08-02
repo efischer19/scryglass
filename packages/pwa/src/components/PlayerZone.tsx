@@ -27,45 +27,14 @@ function playerLabel(id: PlayerId): string {
   return `Player ${id}`;
 }
 
-export function PlayerZone({ player, playerState, otherPlayerPhase, settings, gameState, onDispatch, visiblePlayer, onShowPlayer, onHideAll }: PlayerZoneProps) {
-  const [drawnCard, setDrawnCard] = useState<Card | null>(null);
-  const [showScry, setShowScry] = useState(false);
-  const [showFetchLand, setShowFetchLand] = useState(false);
-  const [showTutor, setShowTutor] = useState(false);
-  const label = playerLabel(player);
-  const disabled = playerState.phase !== 'playing' || otherPlayerPhase !== 'playing';
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
-
-  const isVisible = visiblePlayer === player;
-  const canShow = visiblePlayer === null;
-
-  const handleCardDrawn = (card: Card | null) => {
-    setDrawnCard(card);
-    // JIT image fetch stub — integration point with Ticket 17
-  };
-
-  const handleReturnToLibrary = () => {
-    if (!drawnCard) return;
-    onDispatch({
-      type: 'RETURN_TO_LIBRARY',
-      payload: { player, card: drawnCard, position: 'top' },
-    });
-    setDrawnCard(null);
-  };
-
-  const handleDispatch = (action: Action) => {
-    const result = onDispatch(action);
-    // After keeping hand, hide all cards so the phone can be passed to the other player
-    if (action.type === 'KEEP_HAND') {
-      onHideAll();
-    }
-    return result;
-  };
-
-  const handleToggleTapped = (zone: 'hand' | 'battlefield' | 'graveyard' | 'exile' | 'commandZone', card: Card, cardId: string) => {
-    handleDispatch(createToggleTappedAction(player, zone, card, cardId));
-  };
-
+function PlayerZoneContent({ player, playerState, disabled, onDispatch, handleDispatch, onToggleTapped }: {
+  player: PlayerId;
+  playerState: PlayerState;
+  disabled: boolean;
+  onDispatch: (action: Action) => ActionResult;
+  handleDispatch: (action: Action) => ActionResult;
+  onToggleTapped: (zone: 'hand' | 'battlefield' | 'graveyard' | 'exile' | 'commandZone', card: Card, cardId: string) => void;
+}) {
   const handleDragEnd = (event: DragEndEvent) => {
     const dragData = event.active.data.current;
     const dropData = event.over?.data.current;
@@ -95,6 +64,94 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, ga
       : undefined;
 
     handleDispatch(createMoveCardAction({ player, card, cardId, fromZone, toZone, position }));
+  };
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <div class="game-zones">
+        <GameZone
+          player={player}
+          zone="battlefield"
+          zoneName="Battlefield"
+          cards={playerState.battlefield}
+          disabled={disabled}
+          onToggleTapped={onToggleTapped}
+        />
+        <GameZone
+          player={player}
+          zone="hand"
+          zoneName="Hand"
+          cards={playerState.hand}
+          disabled={disabled}
+          onToggleTapped={onToggleTapped}
+        />
+        <GameZone
+          player={player}
+          zone="graveyard"
+          zoneName="Graveyard"
+          cards={playerState.graveyard}
+          disabled={disabled}
+          onToggleTapped={onToggleTapped}
+        />
+        <GameZone
+          player={player}
+          zone="exile"
+          zoneName="Exile"
+          cards={playerState.exile}
+          disabled={disabled}
+          onToggleTapped={onToggleTapped}
+        />
+        <GameZone
+          player={player}
+          zone="commandZone"
+          zoneName="Command Zone"
+          cards={playerState.commandZone}
+          disabled={disabled}
+          onToggleTapped={onToggleTapped}
+        />
+      </div>
+    </DndContext>
+  );
+}
+
+export function PlayerZone({ player, playerState, otherPlayerPhase, settings, gameState, onDispatch, visiblePlayer, onShowPlayer, onHideAll }: PlayerZoneProps) {
+  const [drawnCard, setDrawnCard] = useState<Card | null>(null);
+  const [showScry, setShowScry] = useState(false);
+  const [showFetchLand, setShowFetchLand] = useState(false);
+  const [showTutor, setShowTutor] = useState(false);
+  const label = playerLabel(player);
+  const disabled = playerState.phase !== 'playing' || otherPlayerPhase !== 'playing';
+
+  const isVisible = visiblePlayer === player;
+  const canShow = visiblePlayer === null;
+
+  const handleCardDrawn = (card: Card | null) => {
+    setDrawnCard(card);
+    // JIT image fetch stub — integration point with Ticket 17
+  };
+
+  const handleReturnToLibrary = () => {
+    if (!drawnCard) return;
+    onDispatch({
+      type: 'RETURN_TO_LIBRARY',
+      payload: { player, card: drawnCard, position: 'top' },
+    });
+    setDrawnCard(null);
+  };
+
+  const handleDispatch = (action: Action) => {
+    const result = onDispatch(action);
+    // After keeping hand, hide all cards so the phone can be passed to the other player
+    if (action.type === 'KEEP_HAND') {
+      onHideAll();
+    }
+    return result;
+  };
+
+  const handleToggleTapped = (zone: 'hand' | 'battlefield' | 'graveyard' | 'exile' | 'commandZone', card: Card, cardId: string) => {
+    handleDispatch(createToggleTappedAction(player, zone, card, cardId));
   };
 
   return (
@@ -172,50 +229,14 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, ga
           Scry
         </button>
       </div>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <div class="game-zones">
-          <GameZone
-            player={player}
-            zone="battlefield"
-            zoneName="Battlefield"
-            cards={playerState.battlefield}
-            disabled={disabled}
-            onToggleTapped={handleToggleTapped}
-          />
-          <GameZone
-            player={player}
-            zone="hand"
-            zoneName="Hand"
-            cards={playerState.hand}
-            disabled={disabled}
-            onToggleTapped={handleToggleTapped}
-          />
-          <GameZone
-            player={player}
-            zone="graveyard"
-            zoneName="Graveyard"
-            cards={playerState.graveyard}
-            disabled={disabled}
-            onToggleTapped={handleToggleTapped}
-          />
-          <GameZone
-            player={player}
-            zone="exile"
-            zoneName="Exile"
-            cards={playerState.exile}
-            disabled={disabled}
-            onToggleTapped={handleToggleTapped}
-          />
-          <GameZone
-            player={player}
-            zone="commandZone"
-            zoneName="Command Zone"
-            cards={playerState.commandZone}
-            disabled={disabled}
-            onToggleTapped={handleToggleTapped}
-          />
-        </div>
-      </DndContext>
+      <PlayerZoneContent
+        player={player}
+        playerState={playerState}
+        disabled={disabled}
+        onDispatch={onDispatch}
+        handleDispatch={handleDispatch}
+        onToggleTapped={handleToggleTapped}
+      />
       {showScry && (
         <ScryModal
           player={player}

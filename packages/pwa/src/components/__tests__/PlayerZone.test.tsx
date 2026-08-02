@@ -4,25 +4,6 @@ import { axe } from 'vitest-axe';
 import { PlayerZone } from '../PlayerZone.js';
 import type { PlayerState, PlayerPhase, Action, ActionResult, GameState, PlayerId } from '@scryglass/core';
 
-vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children }: { children: unknown }) => <>{children}</>,
-  PointerSensor: class PointerSensor {},
-  closestCenter: () => null,
-  useSensor: () => ({}),
-  useSensors: (...sensors: unknown[]) => sensors,
-  useDraggable: () => ({
-    attributes: {},
-    listeners: {},
-    setNodeRef: () => {},
-    transform: null,
-    isDragging: false,
-  }),
-  useDroppable: () => ({
-    setNodeRef: () => {},
-    isOver: false,
-  }),
-}));
-
 function makePlayerState(overrides: Partial<PlayerState> = {}): PlayerState {
   return {
     library: [],
