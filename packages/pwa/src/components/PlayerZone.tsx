@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
+import type { DragEndEvent, DragMoveEvent, DragStartEvent } from '@dnd-kit/core';
 import type { PlayerState, PlayerPhase, Action, ActionResult, Card, GameState, HiddenCard, PlayerId } from '@scryglass/core';
 import { isCard } from '@scryglass/core';
 import { CardDisplay } from './CardDisplay.js';
@@ -11,6 +11,7 @@ import { FetchLandModal } from './FetchLandModal.js';
 import { TutorModal } from './TutorModal.js';
 import { GameZone } from './GameZone.js';
 import { createMoveCardAction, createToggleTappedAction, getBattlefieldDropPosition } from './playmat-dnd.js';
+import type { MatchPresence, MatchPresenceUpdate, PresenceZone } from '../networking/presenceSync.js';
 
 interface PlayerZoneProps {
   player: PlayerId;
@@ -22,23 +23,100 @@ interface PlayerZoneProps {
   visiblePlayer: PlayerId | null;
   onShowPlayer: (player: PlayerId) => void;
   onHideAll: () => void;
+  remotePresence?: MatchPresence | null;
+  onPresenceChange?: (presence: MatchPresenceUpdate) => void;
 }
 
 function playerLabel(id: PlayerId): string {
   return `Player ${id}`;
 }
 
-function PlayerZoneContent({ player, playerState, disabled, onDispatch, handleDispatch, onToggleTapped }: {
+function PlayerZoneContent({
+  player,
+  playerState,
+  disabled,
+  handleDispatch,
+  onToggleTapped,
+  remotePresence,
+  onPresenceChange,
+}: {
   player: PlayerId;
   playerState: PlayerState;
   disabled: boolean;
-  onDispatch: (action: Action) => ActionResult;
   handleDispatch: (action: Action) => ActionResult;
   onToggleTapped: (zone: 'hand' | 'battlefield' | 'graveyard' | 'exile' | 'commandZone', card: Card, cardId: string) => void;
+  remotePresence: MatchPresence | null;
+  onPresenceChange: (presence: MatchPresenceUpdate) => void;
 }) {
+  const broadcastDragPresence = (
+    zone: PresenceZone,
+    card: Card,
+    cardId: string,
+    delta: { x: number; y: number } = { x: 0, y: 0 },
+    translatedRect?: Pick<DOMRect, 'left' | 'top'> | null,
+  ) => {
+    const battlefieldSurface = zone === 'battlefield'
+      ? document.getElementById(`zone-surface-${player}-battlefield`)
+      : null;
+    const position = zone === 'battlefield' && battlefieldSurface != null
+      ? getBattlefieldDropPosition({
+          card,
+          fromZone: zone,
+          containerRect: battlefieldSurface.getBoundingClientRect(),
+          delta,
+          translatedRect,
+        })
+      : undefined;
+
+    onPresenceChange({
+      player,
+      zone,
+      cardId,
+      interaction: 'drag',
+      position,
+    });
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const dragData = event.active.data.current;
+    if (dragData == null) {
+      return;
+    }
+
+    broadcastDragPresence(
+      dragData.fromZone as PresenceZone,
+      dragData.card as Card,
+      dragData.cardId as string,
+    );
+  };
+
+  const handleDragMove = (event: DragMoveEvent) => {
+    const dragData = event.active.data.current;
+    if (dragData == null) {
+      return;
+    }
+
+    broadcastDragPresence(
+      dragData.fromZone as PresenceZone,
+      dragData.card as Card,
+      dragData.cardId as string,
+      event.delta,
+      event.active.rect.current.translated,
+    );
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const dragData = event.active.data.current;
     const dropData = event.over?.data.current;
+
+    if (dragData != null) {
+      onPresenceChange({
+        player,
+        zone: dragData.fromZone as PresenceZone,
+        cardId: dragData.cardId as string,
+        cleared: true,
+      });
+    }
 
     if (dragData == null || dropData == null) {
       return;
@@ -70,7 +148,13 @@ function PlayerZoneContent({ player, playerState, disabled, onDispatch, handleDi
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
+      onDragEnd={handleDragEnd}
+    >
       <div class="game-zones">
         <GameZone
           player={player}
@@ -79,6 +163,8 @@ function PlayerZoneContent({ player, playerState, disabled, onDispatch, handleDi
           cards={playerState.battlefield}
           disabled={disabled}
           onToggleTapped={onToggleTapped}
+          remotePresence={remotePresence}
+          onPresenceChange={onPresenceChange}
         />
         <GameZone
           player={player}
@@ -87,6 +173,8 @@ function PlayerZoneContent({ player, playerState, disabled, onDispatch, handleDi
           cards={playerState.hand}
           disabled={disabled}
           onToggleTapped={onToggleTapped}
+          remotePresence={remotePresence}
+          onPresenceChange={onPresenceChange}
         />
         <GameZone
           player={player}
@@ -95,6 +183,8 @@ function PlayerZoneContent({ player, playerState, disabled, onDispatch, handleDi
           cards={playerState.graveyard}
           disabled={disabled}
           onToggleTapped={onToggleTapped}
+          remotePresence={remotePresence}
+          onPresenceChange={onPresenceChange}
         />
         <GameZone
           player={player}
@@ -103,6 +193,8 @@ function PlayerZoneContent({ player, playerState, disabled, onDispatch, handleDi
           cards={playerState.exile}
           disabled={disabled}
           onToggleTapped={onToggleTapped}
+          remotePresence={remotePresence}
+          onPresenceChange={onPresenceChange}
         />
         <GameZone
           player={player}
@@ -111,13 +203,27 @@ function PlayerZoneContent({ player, playerState, disabled, onDispatch, handleDi
           cards={playerState.commandZone}
           disabled={disabled}
           onToggleTapped={onToggleTapped}
+          remotePresence={remotePresence}
+          onPresenceChange={onPresenceChange}
         />
       </div>
     </DndContext>
   );
 }
 
-export function PlayerZone({ player, playerState, otherPlayerPhase, settings, gameState, onDispatch, visiblePlayer, onShowPlayer, onHideAll }: PlayerZoneProps) {
+export function PlayerZone({
+  player,
+  playerState,
+  otherPlayerPhase,
+  settings,
+  gameState,
+  onDispatch,
+  visiblePlayer,
+  onShowPlayer,
+  onHideAll,
+  remotePresence = null,
+  onPresenceChange = () => {},
+}: PlayerZoneProps) {
   const [drawnCard, setDrawnCard] = useState<HiddenCard | null>(null);
   const [showScry, setShowScry] = useState(false);
   const [showFetchLand, setShowFetchLand] = useState(false);
@@ -234,9 +340,10 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, ga
         player={player}
         playerState={playerState}
         disabled={disabled}
-        onDispatch={onDispatch}
         handleDispatch={handleDispatch}
         onToggleTapped={handleToggleTapped}
+        remotePresence={remotePresence}
+        onPresenceChange={onPresenceChange}
       />
       {showScry && (
         <ScryModal

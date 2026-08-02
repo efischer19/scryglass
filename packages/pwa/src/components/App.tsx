@@ -14,6 +14,15 @@ import type { GameSettings } from './PreGameSettings.js';
 import { RemoteMatchLobby } from './RemoteMatchLobby.js';
 import { useWebRtcMatch } from '../networking/useWebRtcMatch.js';
 import { createActionSyncMiddleware } from '../networking/actionSync.js';
+import {
+  createPresenceMessage,
+  parsePresenceMessage,
+  type MatchPresence,
+  type MatchPresenceUpdate,
+} from '../networking/presenceSync.js';
+
+const PRESENCE_THROTTLE_MS = 60;
+const REMOTE_PRESENCE_TTL_MS = 1_500;
 
 export function App() {
   const [gameSettings, setGameSettings] = useState<GameSettings | null>(null);
@@ -24,10 +33,33 @@ export function App() {
   const [drawCounts, setDrawCounts] = useState<Partial<Record<PlayerId, number>>>({});
   const [visiblePlayer, setVisiblePlayer] = useState<PlayerId | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [remotePresence, setRemotePresence] = useState<MatchPresence | null>(null);
   const stateRef = useRef(state);
   const remoteSenderRef = useRef<((message: string) => void) | null>(null);
   const actionSyncRef = useRef<ReturnType<typeof createActionSyncMiddleware> | null>(null);
   const previousRemoteStatusRef = useRef<string>('idle');
+  const pendingPresenceMessageRef = useRef<string | null>(null);
+  const presenceFlushTimeoutRef = useRef<number | null>(null);
+  const lastPresenceSentAtRef = useRef(0);
+
+  const clearPresenceFlushTimeout = useCallback(() => {
+    if (presenceFlushTimeoutRef.current !== null) {
+      window.clearTimeout(presenceFlushTimeoutRef.current);
+      presenceFlushTimeoutRef.current = null;
+    }
+  }, []);
+
+  const flushPresenceMessage = useCallback(() => {
+    clearPresenceFlushTimeout();
+    const pendingMessage = pendingPresenceMessageRef.current;
+    pendingPresenceMessageRef.current = null;
+    if (pendingMessage == null || remoteSenderRef.current == null) {
+      return;
+    }
+
+    remoteSenderRef.current(pendingMessage);
+    lastPresenceSentAtRef.current = Date.now();
+  }, [clearPresenceFlushTimeout]);
 
   const replaceState = useCallback((nextState: GameState) => {
     stateRef.current = nextState;
@@ -52,6 +84,12 @@ export function App() {
   }
 
   const handleRemoteMatchMessage = useCallback((message: string) => {
+    const presence = parsePresenceMessage(message);
+    if (presence) {
+      setRemotePresence(presence.cleared ? null : presence);
+      return;
+    }
+
     actionSyncRef.current?.handleIncomingMessage(message);
   }, []);
 
@@ -82,6 +120,34 @@ export function App() {
     previousRemoteStatusRef.current = remoteStatus;
   }, [remoteRole, remoteStatus]);
 
+  useEffect(() => {
+    if (remoteStatus === 'connected') {
+      return;
+    }
+
+    clearPresenceFlushTimeout();
+    pendingPresenceMessageRef.current = null;
+    setRemotePresence(null);
+  }, [clearPresenceFlushTimeout, remoteStatus]);
+
+  useEffect(() => {
+    if (remotePresence == null) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setRemotePresence((current) => current === remotePresence ? null : current);
+    }, REMOTE_PRESENCE_TTL_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [remotePresence]);
+
+  useEffect(() => () => {
+    clearPresenceFlushTimeout();
+  }, [clearPresenceFlushTimeout]);
+
   const playerCount = gameSettings?.playerCount ?? 2;
   const activePlayers = PLAYER_IDS.slice(0, playerCount);
 
@@ -89,13 +155,42 @@ export function App() {
     actionSyncRef.current!.dispatchLocal(action)
   ), []);
 
+  const handlePresenceChange = useCallback((presence: MatchPresenceUpdate) => {
+    if (remoteSenderRef.current == null) {
+      return;
+    }
+
+    pendingPresenceMessageRef.current = createPresenceMessage(presence);
+
+    if (presence.cleared) {
+      flushPresenceMessage();
+      return;
+    }
+
+    const elapsed = Date.now() - lastPresenceSentAtRef.current;
+    if (elapsed >= PRESENCE_THROTTLE_MS) {
+      flushPresenceMessage();
+      return;
+    }
+
+    if (presenceFlushTimeoutRef.current === null) {
+      presenceFlushTimeoutRef.current = window.setTimeout(
+        flushPresenceMessage,
+        PRESENCE_THROTTLE_MS - elapsed,
+      );
+    }
+  }, [flushPresenceMessage]);
+
   const resetToInput = () => {
     actionSyncRef.current?.reset();
+    clearPresenceFlushTimeout();
+    pendingPresenceMessageRef.current = null;
     setGameSettings(null);
     setPlayerLoadingPhase('A');
     setDecks({});
     setDrawCounts({});
     setVisiblePlayer(null);
+    setRemotePresence(null);
   };
 
   const handleSettingsConfirm = (settings: GameSettings) => {
@@ -111,6 +206,7 @@ export function App() {
 
   const startGame = (allDecks: Record<PlayerId, Card[]>, settings: GameSettings) => {
     actionSyncRef.current?.reset();
+    setRemotePresence(null);
     const players = PLAYER_IDS.slice(0, settings.playerCount);
     let currentState = createInitialState(settings.playerCount, {
       allowMulliganWith2or5Lands: settings.allowMulliganWith2or5Lands,
@@ -301,6 +397,8 @@ export function App() {
               visiblePlayer={visiblePlayer}
               onShowPlayer={setVisiblePlayer}
               onHideAll={() => setVisiblePlayer(null)}
+              remotePresence={remotePresence}
+              onPresenceChange={handlePresenceChange}
             />
           );
         })}
