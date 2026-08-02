@@ -100,6 +100,11 @@ const TutorCardActionSchema = z.object({
   }),
 });
 
+const RevealDataSchema = z.object({
+  card: CardSchema,
+  salt: z.string(),
+});
+
 const MoveCardActionSchema = z.object({
   type: z.literal('MOVE_CARD'),
   payload: z.object({
@@ -107,6 +112,7 @@ const MoveCardActionSchema = z.object({
     cardName: z.string(),
     fromZone: ZoneSchema,
     toZone: ZoneSchema,
+    revealData: RevealDataSchema.optional(),
   }),
 });
 

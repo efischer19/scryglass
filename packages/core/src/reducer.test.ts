@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createInitialState, dispatch } from './reducer.js';
+import { createCardCommitment } from './commit-reveal.js';
 import { GameStateSchema } from './schemas/state.js';
 import type { GameState } from './schemas/state.js';
 import type { Card } from './schemas/card.js';
@@ -1203,6 +1204,66 @@ describe('dispatch — MOVE_CARD', () => {
     expect(result.state.players.A.library).toHaveLength(2);
     expect(result.state.players.A.battlefield).toHaveLength(1);
     expect(result.state.players.A.battlefield[0].name).toBe('Forest');
+  });
+
+  it('reveals and validates a hashed card when moving from a hidden zone to a public zone', () => {
+    const state = createInitialState();
+    const card = makeCard('Forest');
+    const { cardHash, salt } = createCardCommitment(card, 'reveal-salt');
+    const remoteState: GameState = {
+      ...state,
+      players: {
+        ...state.players,
+        A: {
+          ...state.players.A,
+          library: [cardHash],
+        },
+      },
+    };
+
+    const result = dispatch(remoteState, {
+      type: 'MOVE_CARD',
+      payload: {
+        player: 'A',
+        cardName: 'Forest',
+        fromZone: 'library',
+        toZone: 'battlefield',
+        revealData: { card, salt },
+      },
+    });
+
+    expect(result.state.players.A.library).toEqual([]);
+    expect(result.state.players.A.battlefield).toEqual([card]);
+    expect(result.card).toEqual(card);
+  });
+
+  it('throws a cheat-detected error when reveal data does not match a committed hash', () => {
+    const state = createInitialState();
+    const card = makeCard('Forest');
+    const { cardHash } = createCardCommitment(card, 'real-salt');
+    const remoteState: GameState = {
+      ...state,
+      players: {
+        ...state.players,
+        A: {
+          ...state.players.A,
+          library: [cardHash],
+        },
+      },
+    };
+
+    expect(() => {
+      dispatch(remoteState, {
+        type: 'MOVE_CARD',
+        payload: {
+          player: 'A',
+          cardName: 'Forest',
+          fromZone: 'library',
+          toZone: 'battlefield',
+          revealData: { card, salt: 'wrong-salt' },
+        },
+      });
+    }).toThrow(/Cheat Detected \/ State Desync/);
   });
 
   it('moves a card from battlefield to graveyard', () => {
