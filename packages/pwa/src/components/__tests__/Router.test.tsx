@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, act } from '@testing-library/preact';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { act, render, screen } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
-import { Router, navigate } from '../Router.js';
+import { Router, navigate, navigateHome, navigateToMatch } from '../Router.js';
 
 beforeEach(() => {
+  window.history.replaceState({}, '', '/');
   window.location.hash = '';
 });
 
@@ -47,6 +48,19 @@ describe('<Router />', () => {
     expect(screen.getByText('Editor View')).toBeTruthy();
     expect(screen.queryByText('Input View')).toBeNull();
     expect(screen.queryByText('App View')).toBeNull();
+  });
+
+  it('renders the match view for /match/:roomCode paths', () => {
+    window.history.replaceState({}, '', '/match/ROOM123');
+    render(
+      <Router
+        inputView={<p>Input View</p>}
+        editorView={<p>Editor View</p>}
+        appView={<p>App View</p>}
+        matchView={(roomCode) => <p>Match View {roomCode}</p>}
+      />,
+    );
+    expect(screen.getByText('Match View ROOM123')).toBeTruthy();
   });
 
   it('defaults to input view for invalid hashes', () => {
@@ -115,6 +129,26 @@ describe('<Router />', () => {
     expect(document.title).toBe('Game — Scryglass');
   });
 
+  it('updates to the match view when pathname changes', async () => {
+    const { container } = render(
+      <Router
+        inputView={<p>Input View</p>}
+        editorView={<p>Editor View</p>}
+        appView={<p>App View</p>}
+        matchView={(roomCode) => <p>Match View {roomCode}</p>}
+      />,
+    );
+
+    await act(async () => {
+      navigateToMatch('ROOM999');
+    });
+
+    expect(screen.getByText('Match View ROOM999')).toBeTruthy();
+    expect(document.title).toBe('Match ROOM999 — Scryglass');
+    const liveRegion = container.querySelector('[aria-live="assertive"]');
+    expect(liveRegion?.textContent).toBe('Navigated to Match ROOM999');
+  });
+
   it.each([
     ['#/input', 'Deck Input — Scryglass'],
     ['#/editor', 'Deck Editor — Scryglass'],
@@ -147,20 +181,21 @@ describe('<Router />', () => {
   });
 });
 
-describe('navigate()', () => {
+describe('navigation helpers', () => {
   it('sets window.location.hash', () => {
     navigate('#/app');
     expect(window.location.hash).toBe('#/app');
   });
 
-  it('navigates to input view', () => {
-    navigate('#/app');
-    navigate('#/input');
-    expect(window.location.hash).toBe('#/input');
+  it('navigates to a match route', () => {
+    navigateToMatch('ROOM123');
+    expect(window.location.pathname).toBe('/match/ROOM123');
   });
 
-  it('navigates to editor view', () => {
-    navigate('#/editor');
-    expect(window.location.hash).toBe('#/editor');
+  it('returns home to the input route', () => {
+    navigateToMatch('ROOM123');
+    navigateHome();
+    expect(window.location.pathname).toBe('/');
+    expect(window.location.hash).toBe('#/input');
   });
 });
