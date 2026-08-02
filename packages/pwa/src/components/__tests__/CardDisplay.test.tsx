@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { CardDisplay } from '../CardDisplay.js';
-import type { Card } from '@scryglass/core';
+import type { Card, CardHash } from '@scryglass/core';
 
 /* ------------------------------------------------------------------ */
 /*  Module mock for useCardImage                                      */
@@ -23,6 +23,10 @@ const testCard: Card = {
   setCode: 'lea',
   collectorNumber: '161',
   cardType: 'nonland',
+};
+
+const testCardHash: CardHash = {
+  hash: 'a'.repeat(64),
 };
 
 /* ------------------------------------------------------------------ */
@@ -73,6 +77,14 @@ describe('<CardDisplay />', () => {
     const img = screen.getByRole('img', { name: 'Lightning Bolt' });
     expect(img).toBeTruthy();
     expect(img.getAttribute('src')).toBe('blob:mock/1');
+  });
+
+  it('renders a generic card back for hidden card hashes', () => {
+    mockUseCardImage.mockClear();
+    render(<CardDisplay player="A" card={testCardHash} />);
+
+    expect(screen.getByRole('img', { name: 'Hidden card' })).toBeTruthy();
+    expect(mockUseCardImage).not.toHaveBeenCalled();
   });
 
   it('renders card name text on error (graceful degradation)', () => {

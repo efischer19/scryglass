@@ -1,7 +1,8 @@
 import { useState } from 'preact/hooks';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
-import type { PlayerState, PlayerPhase, Action, ActionResult, Card, GameState, PlayerId } from '@scryglass/core';
+import type { PlayerState, PlayerPhase, Action, ActionResult, Card, GameState, HiddenCard, PlayerId } from '@scryglass/core';
+import { isCard } from '@scryglass/core';
 import { CardDisplay } from './CardDisplay.js';
 import { MulliganHand } from './MulliganHand.js';
 import { DrawButton } from './DrawButton.js';
@@ -117,7 +118,7 @@ function PlayerZoneContent({ player, playerState, disabled, onDispatch, handleDi
 }
 
 export function PlayerZone({ player, playerState, otherPlayerPhase, settings, gameState, onDispatch, visiblePlayer, onShowPlayer, onHideAll }: PlayerZoneProps) {
-  const [drawnCard, setDrawnCard] = useState<Card | null>(null);
+  const [drawnCard, setDrawnCard] = useState<HiddenCard | null>(null);
   const [showScry, setShowScry] = useState(false);
   const [showFetchLand, setShowFetchLand] = useState(false);
   const [showTutor, setShowTutor] = useState(false);
@@ -127,13 +128,13 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, ga
   const isVisible = visiblePlayer === player;
   const canShow = visiblePlayer === null;
 
-  const handleCardDrawn = (card: Card | null) => {
+  const handleCardDrawn = (card: HiddenCard | null) => {
     setDrawnCard(card);
     // JIT image fetch stub — integration point with Ticket 17
   };
 
   const handleReturnToLibrary = () => {
-    if (!drawnCard) return;
+    if (!drawnCard || !isCard(drawnCard)) return;
     onDispatch({
       type: 'RETURN_TO_LIBRARY',
       payload: { player, card: drawnCard, position: 'top' },
@@ -267,7 +268,7 @@ export function PlayerZone({ player, playerState, otherPlayerPhase, settings, ga
           player={player}
           card={drawnCard}
           onDismiss={() => setDrawnCard(null)}
-          onReturnToLibrary={handleReturnToLibrary}
+          onReturnToLibrary={drawnCard != null && isCard(drawnCard) ? handleReturnToLibrary : undefined}
         />
       )}
     </section>

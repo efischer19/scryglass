@@ -1,10 +1,11 @@
+import { useState } from 'preact/hooks';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import type { Card, HiddenCard, PlayerId } from '@scryglass/core';
 import { isCard } from '@scryglass/core';
 import type { JSX } from 'preact';
 import type { DroppableZone } from './playmat-dnd.js';
 import { createPlaymatCardId } from './playmat-dnd.js';
-import { CardImage } from './CardDisplay.js';
+import { CardBack, CardImage } from './CardDisplay.js';
 import { CommanderAvatar } from './CommanderAvatar.js';
 
 interface DraggableZoneCardProps {
@@ -15,6 +16,7 @@ interface DraggableZoneCardProps {
   zoneName: string;
   isCommandZone: boolean;
   disabled: boolean;
+  obscured: boolean;
   onToggleTapped?: (zone: DroppableZone, card: Card, cardId: string) => void;
 }
 
@@ -26,6 +28,7 @@ function DraggableZoneCard({
   zoneName,
   isCommandZone,
   disabled,
+  obscured,
   onToggleTapped,
 }: DraggableZoneCardProps) {
   const cardId = createPlaymatCardId(card, zone, cardIndex);
@@ -59,15 +62,27 @@ function DraggableZoneCard({
         class="game-zone__card-button"
         type="button"
         disabled={disabled}
-        aria-label={`${card.name} in ${zoneName}`}
+        aria-label={obscured ? `Hidden card ${cardIndex + 1} in ${zoneName}` : `${card.name} in ${zoneName}`}
         onDblClick={() => onToggleTapped?.(zone, card, cardId)}
         onContextMenu={(event) => {
           event.preventDefault();
           onToggleTapped?.(zone, card, cardId);
         }}
       >
-        {isCommandZone ? <CommanderAvatar card={card} /> : <CardImage card={card} />}
+        {isCommandZone ? <CommanderAvatar card={card} /> : <CardImage card={card} obscured={obscured} hiddenLabel={`Hidden card ${cardIndex + 1} in ${zoneName}`} />}
       </button>
+    </li>
+  );
+}
+
+function HiddenZoneCard(
+  { cardIndex, zoneName, isCommandZone }: { cardIndex: number; zoneName: string; isCommandZone: boolean },
+) {
+  return (
+    <li class={`game-zone__card-item${isCommandZone ? ' game-zone__card-item--commander' : ''}`}>
+      <div class="game-zone__card-button">
+        <CardBack label={`Hidden card ${cardIndex + 1} in ${zoneName}`} />
+      </div>
     </li>
   );
 }
@@ -91,7 +106,10 @@ export function GameZone({
 }: GameZoneProps) {
   const isCommandZone = zone === 'commandZone';
   const isBattlefield = zone === 'battlefield';
-  const visibleCards = cards.filter(isCard);
+  const isPrivateHand = zone === 'hand';
+  const [handPeekVisible, setHandPeekVisible] = useState(false);
+  const canPeekAtHand = isPrivateHand && cards.some(isCard);
+  const shouldObscureVisibleCards = isPrivateHand && !handPeekVisible;
   const { setNodeRef, isOver } = useDroppable({
     id: `zone:${player}:${zone}`,
     data: { zone },
@@ -108,25 +126,45 @@ export function GameZone({
       <p class="game-zone__card-count">
         {cards.length} card{cards.length !== 1 ? 's' : ''}
       </p>
-      {visibleCards.length > 0 ? (
+      {canPeekAtHand && (
+        <button
+          class="action-btn game-zone__peek-toggle"
+          type="button"
+          aria-pressed={handPeekVisible}
+          onClick={() => setHandPeekVisible((visible) => !visible)}
+        >
+          {handPeekVisible ? `Hide ${zoneName}` : `Peek at ${zoneName}`}
+        </button>
+      )}
+      {cards.length > 0 ? (
         <ul
           id={isBattlefield ? `zone-surface-${player}-${zone}` : undefined}
           ref={isBattlefield ? setNodeRef : undefined}
           class={`game-zone__card-list${isCommandZone ? ' game-zone__card-list--commanders' : ''}${isBattlefield ? ' game-zone__card-list--battlefield' : ''}`}
           aria-label={`Cards in ${zoneName}`}
         >
-          {visibleCards.map((card, index) => (
-            <DraggableZoneCard
-              key={`${card.name}:${card.collectorNumber}:${index}`}
-              card={card}
-              cardIndex={index}
-              player={player}
-              zone={zone}
-              zoneName={zoneName}
-              isCommandZone={isCommandZone}
-              disabled={disabled}
-              onToggleTapped={onToggleTapped}
-            />
+          {cards.map((card, index) => (
+            isCard(card) ? (
+              <DraggableZoneCard
+                key={`${card.name}:${card.collectorNumber}:${index}`}
+                card={card}
+                cardIndex={index}
+                player={player}
+                zone={zone}
+                zoneName={zoneName}
+                isCommandZone={isCommandZone}
+                disabled={disabled}
+                obscured={shouldObscureVisibleCards}
+                onToggleTapped={onToggleTapped}
+              />
+            ) : (
+              <HiddenZoneCard
+                key={`${card.hash}:${index}`}
+                cardIndex={index}
+                zoneName={zoneName}
+                isCommandZone={isCommandZone}
+              />
+            )
           ))}
         </ul>
       ) : isBattlefield ? (

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/preact';
+import { render, screen, fireEvent } from '@testing-library/preact';
 import { DndContext } from '@dnd-kit/core';
 import { axe } from 'vitest-axe';
 import { GameZone } from '../GameZone.js';
-import type { Card } from '@scryglass/core';
+import type { Card, CardHash, HiddenCard } from '@scryglass/core';
 
 vi.mock('@dnd-kit/core', () => ({
   DndContext: ({ children }: { children: unknown }) => <>{children}</>,
@@ -27,6 +27,14 @@ vi.mock('../CommanderAvatar', () => ({
   ),
 }));
 
+vi.mock('../../scryfall/useCardImage', () => ({
+  useCardImage: () => ({
+    status: 'loaded',
+    imageUrl: 'blob:mock/1',
+    collectorNumber: '263',
+  }),
+}));
+
 const testCard: Card = {
   name: 'Sol Ring',
   setCode: 'c21',
@@ -41,8 +49,12 @@ const testCommander: Card = {
   cardType: 'commander',
 };
 
+const hiddenCard: CardHash = {
+  hash: 'b'.repeat(64),
+};
+
 describe('<GameZone />', () => {
-  function renderGameZone(zoneName: string, zone: 'hand' | 'battlefield' | 'graveyard' | 'exile' | 'commandZone', cards: Card[]) {
+  function renderGameZone(zoneName: string, zone: 'hand' | 'battlefield' | 'graveyard' | 'exile' | 'commandZone', cards: HiddenCard[]) {
     return render(
       <DndContext>
         <GameZone player="A" zone={zone} zoneName={zoneName} cards={cards} />
@@ -77,6 +89,24 @@ describe('<GameZone />', () => {
     const { container } = renderGameZone('Battlefield', 'battlefield', cards);
     const listItems = container.querySelectorAll('.game-zone__card-item');
     expect(listItems.length).toBe(3);
+  });
+
+  it('renders hidden card hashes as generic card backs', () => {
+    renderGameZone('Hand', 'hand', [hiddenCard]);
+
+    expect(screen.getByRole('img', { name: 'Hidden card 1 in Hand' })).toBeTruthy();
+  });
+
+  it('requires an explicit peek before showing visible hand card faces', () => {
+    renderGameZone('Hand', 'hand', [testCard]);
+
+    expect(screen.getByRole('img', { name: 'Hidden card 1 in Hand' })).toBeTruthy();
+    expect(screen.queryByRole('img', { name: 'Sol Ring' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Peek at Hand' }));
+
+    expect(screen.getByRole('img', { name: 'Sol Ring' })).toBeTruthy();
+    expect(screen.queryByRole('img', { name: 'Hidden card 1 in Hand' })).toBeNull();
   });
 
   it('uses a semantic section element with aria-label', () => {
