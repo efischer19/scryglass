@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { createInitialState, dispatch, PLAYER_IDS } from '@scryglass/core';
 import type { Action, Card, ConvertResult, GameState, PlayerId } from '@scryglass/core';
 import { Header } from './Header.js';
@@ -27,6 +27,7 @@ export function App() {
   const stateRef = useRef(state);
   const remoteSenderRef = useRef<((message: string) => void) | null>(null);
   const actionSyncRef = useRef<ReturnType<typeof createActionSyncMiddleware> | null>(null);
+  const previousRemoteStatusRef = useRef<string>('idle');
 
   const replaceState = useCallback((nextState: GameState) => {
     stateRef.current = nextState;
@@ -69,6 +70,17 @@ export function App() {
   });
 
   remoteSenderRef.current = remoteStatus === 'connected' ? sendMessage : null;
+
+  useEffect(() => {
+    if (remoteStatus === 'connected' && remoteRole === 'host' && previousRemoteStatusRef.current !== 'connected') {
+      actionSyncRef.current?.broadcast({
+        type: 'SYNC_STATE',
+        payload: stateRef.current,
+      });
+    }
+
+    previousRemoteStatusRef.current = remoteStatus;
+  }, [remoteRole, remoteStatus]);
 
   const playerCount = gameSettings?.playerCount ?? 2;
   const activePlayers = PLAYER_IDS.slice(0, playerCount);

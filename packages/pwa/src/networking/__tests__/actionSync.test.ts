@@ -107,6 +107,25 @@ describe('createActionSyncMiddleware', () => {
     expect(harness.broadcast).not.toHaveBeenCalled();
   });
 
+  it('broadcasts sync snapshots without mutating local state first', () => {
+    const harness = createMiddlewareHarness(() => 9_001);
+    const beforeState = harness.getState();
+
+    harness.middleware.broadcast({
+      type: 'SYNC_STATE',
+      payload: beforeState,
+    });
+
+    expect(harness.getState()).toEqual(beforeState);
+    expect(harness.broadcast).toHaveBeenCalledTimes(1);
+    expect(parseRemoteActionEnvelope(harness.broadcast.mock.calls[0][0])).toEqual({
+      kind: 'action',
+      action: { type: 'SYNC_STATE', payload: beforeState },
+      sentAt: 9_001,
+      sequence: 0,
+    });
+  });
+
   it('ignores older remote collisions for the same card', () => {
     const harness = createMiddlewareHarness(() => 2_000);
     const card = makeCard('Lightning Greaves');
@@ -208,5 +227,27 @@ describe('createActionSyncMiddleware', () => {
     expect(remoteResult?.card).toEqual(card);
     expect(harness.getState().players.A.battlefield).toEqual([]);
     expect(harness.getState().players.A.exile).toEqual([card]);
+  });
+
+  it('replaces the current state when a remote sync snapshot arrives', () => {
+    const harness = createMiddlewareHarness();
+    const snapshot = dispatch(createInitialState(), {
+      type: 'LOAD_DECK',
+      payload: { player: 'B', cards: [makeCard('Rhystic Study')] },
+    }).state;
+
+    const result = harness.middleware.handleIncomingMessage(JSON.stringify({
+      kind: 'action',
+      action: {
+        type: 'SYNC_STATE',
+        payload: snapshot,
+      } satisfies Action,
+      sentAt: 1_500,
+      sequence: 4,
+    }));
+
+    expect(result?.state).toEqual(snapshot);
+    expect(harness.getState()).toEqual(snapshot);
+    expect(harness.broadcast).not.toHaveBeenCalled();
   });
 });

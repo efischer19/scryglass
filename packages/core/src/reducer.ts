@@ -46,11 +46,29 @@ export function createInitialState(
   };
 }
 
+function requirePlayerState(
+  state: GameState,
+  player: PlayerId,
+): NonNullable<GameState['players'][PlayerId]> {
+  const playerState = state.players[player];
+  if (!playerState) {
+    throw new Error(`Player ${player} is not part of this game state`);
+  }
+
+  return playerState;
+}
+
 /**
  * Build a human-readable history entry for a dispatched action.
  */
-function buildHistoryEntry(state: GameState, action: Action, result: ActionResult): HistoryEntry {
+function buildHistoryEntry(
+  state: GameState,
+  action: Exclude<Action, { type: 'SYNC_STATE' }>,
+  result: ActionResult,
+): HistoryEntry {
   const player = action.payload.player;
+  const previousPlayerState = requirePlayerState(state, player);
+  const nextPlayerState = requirePlayerState(result.state, player);
   let description = '';
   let cardDetails: HistoryCardDetail[] | undefined;
 
@@ -73,21 +91,21 @@ function buildHistoryEntry(state: GameState, action: Action, result: ActionResul
       break;
     case 'DEAL_OPENING_HAND':
       description = `Player ${player} was dealt an opening hand`;
-      cardDetails = result.state.players[player].hand.map((card) => ({
+      cardDetails = nextPlayerState.hand.map((card) => ({
         card,
         destination: 'opening hand',
       }));
       break;
     case 'MULLIGAN':
       description = `Player ${player} took a mulligan`;
-      cardDetails = result.state.players[player].hand.map((card) => ({
+      cardDetails = nextPlayerState.hand.map((card) => ({
         card,
         destination: 'mulligan hand',
       }));
       break;
     case 'KEEP_HAND':
       description = `Player ${player} kept their hand`;
-      cardDetails = state.players[player].hand.map((card) => ({
+      cardDetails = previousPlayerState.hand.map((card) => ({
         card,
         destination: 'kept hand',
       }));
@@ -96,7 +114,7 @@ function buildHistoryEntry(state: GameState, action: Action, result: ActionResul
       const count = action.payload.decisions.length;
       description = `Player ${player} resolved scry (${count} card${count !== 1 ? 's' : ''})`;
       cardDetails = action.payload.decisions.map((decision) => ({
-        card: state.players[player].library[decision.cardIndex],
+        card: previousPlayerState.library[decision.cardIndex],
         destination: decision.destination,
       }));
       break;
@@ -152,6 +170,7 @@ function buildHistoryEntry(state: GameState, action: Action, result: ActionResul
 
 function handleLoadDeck(state: GameState, action: Extract<Action, { type: 'LOAD_DECK' }>): ActionResult {
   const { player, cards, mode = 'local' } = action.payload;
+  const playerState = requirePlayerState(state, player);
   const library = mode === 'remote'
     ? createCardCommitments(cards).map(({ cardHash }) => cardHash)
     : [...cards];
@@ -161,7 +180,7 @@ function handleLoadDeck(state: GameState, action: Extract<Action, { type: 'LOAD_
       players: {
         ...state.players,
         [player]: {
-          ...state.players[player],
+          ...playerState,
           library,
           phase: 'mulligan' as const,
         },
@@ -196,14 +215,15 @@ function createRevealValidationError(reason: string): Error {
 
 function handleShuffleLibrary(state: GameState, action: Extract<Action, { type: 'SHUFFLE_LIBRARY' }>): ActionResult {
   const { player } = action.payload;
+  const playerState = requirePlayerState(state, player);
   return {
     state: {
       ...state,
       players: {
         ...state.players,
         [player]: {
-          ...state.players[player],
-          library: shuffle(state.players[player].library),
+          ...playerState,
+          library: shuffle(playerState.library),
         },
       },
     },
@@ -213,7 +233,8 @@ function handleShuffleLibrary(state: GameState, action: Extract<Action, { type: 
 
 function handleReturnToLibrary(state: GameState, action: Extract<Action, { type: 'RETURN_TO_LIBRARY' }>): ActionResult {
   const { player, card, position } = action.payload;
-  const library = [...state.players[player].library];
+  const playerState = requirePlayerState(state, player);
+  const library = [...playerState.library];
 
   switch (position) {
     case 'top':
@@ -235,7 +256,7 @@ function handleReturnToLibrary(state: GameState, action: Extract<Action, { type:
       players: {
         ...state.players,
         [player]: {
-          ...state.players[player],
+          ...playerState,
           library,
         },
       },
@@ -245,9 +266,10 @@ function handleReturnToLibrary(state: GameState, action: Extract<Action, { type:
 }
 
 function requireMulliganPhase(state: GameState, player: PlayerId, actionType: string): void {
-  if (state.players[player].phase !== 'mulligan') {
+  const playerState = requirePlayerState(state, player);
+  if (playerState.phase !== 'mulligan') {
     throw new Error(
-      `Cannot ${actionType}: Player ${player} is in '${state.players[player].phase}' phase, but must be in 'mulligan' phase`,
+      `Cannot ${actionType}: Player ${player} is in '${playerState.phase}' phase, but must be in 'mulligan' phase`,
     );
   }
 }
@@ -256,7 +278,8 @@ function handleDealOpeningHand(state: GameState, action: Extract<Action, { type:
   const { player } = action.payload;
   requireMulliganPhase(state, player, 'DEAL_OPENING_HAND');
 
-  const library = state.players[player].library;
+  const playerState = requirePlayerState(state, player);
+  const library = playerState.library;
   const dealCount = Math.min(7, library.length);
 
   return {
@@ -265,7 +288,7 @@ function handleDealOpeningHand(state: GameState, action: Extract<Action, { type:
       players: {
         ...state.players,
         [player]: {
-          ...state.players[player],
+          ...playerState,
           hand: library.slice(0, dealCount),
           library: library.slice(dealCount),
         },
@@ -279,7 +302,8 @@ function handleMulligan(state: GameState, action: Extract<Action, { type: 'MULLI
   const { player } = action.payload;
   requireMulliganPhase(state, player, 'MULLIGAN');
 
-  const combined = [...state.players[player].hand, ...state.players[player].library];
+  const playerState = requirePlayerState(state, player);
+  const combined = [...playerState.hand, ...playerState.library];
   const shuffled = shuffle(combined);
   const dealCount = Math.min(7, shuffled.length);
 
@@ -289,10 +313,10 @@ function handleMulligan(state: GameState, action: Extract<Action, { type: 'MULLI
       players: {
         ...state.players,
         [player]: {
-          ...state.players[player],
+          ...playerState,
           library: shuffled.slice(dealCount),
           hand: shuffled.slice(0, dealCount),
-          mulliganCount: state.players[player].mulliganCount + 1,
+          mulliganCount: playerState.mulliganCount + 1,
         },
       },
     },
@@ -303,6 +327,7 @@ function handleMulligan(state: GameState, action: Extract<Action, { type: 'MULLI
 function handleKeepHand(state: GameState, action: Extract<Action, { type: 'KEEP_HAND' }>): ActionResult {
   const { player } = action.payload;
   requireMulliganPhase(state, player, 'KEEP_HAND');
+  const playerState = requirePlayerState(state, player);
 
   return {
     state: {
@@ -310,7 +335,7 @@ function handleKeepHand(state: GameState, action: Extract<Action, { type: 'KEEP_
       players: {
         ...state.players,
         [player]: {
-          ...state.players[player],
+          ...playerState,
           phase: 'playing' as const,
         },
       },
@@ -321,7 +346,8 @@ function handleKeepHand(state: GameState, action: Extract<Action, { type: 'KEEP_
 
 function handleScryResolve(state: GameState, action: Extract<Action, { type: 'SCRY_RESOLVE' }>): ActionResult {
   const { player, decisions } = action.payload;
-  const library = state.players[player].library;
+  const playerState = requirePlayerState(state, player);
+  const library = playerState.library;
 
   if (decisions.length === 0) {
     throw new Error('SCRY_RESOLVE: decisions array must not be empty');
@@ -372,7 +398,7 @@ function handleScryResolve(state: GameState, action: Extract<Action, { type: 'SC
       players: {
         ...state.players,
         [player]: {
-          ...state.players[player],
+          ...playerState,
           library: newLibrary,
         },
       },
@@ -390,7 +416,8 @@ function handleScryResolve(state: GameState, action: Extract<Action, { type: 'SC
  */
 function handleDrawCard(state: GameState, action: Extract<Action, { type: 'DRAW_CARD' }>): ActionResult {
   const { player } = action.payload;
-  const library = state.players[player].library;
+  const playerState = requirePlayerState(state, player);
+  const library = playerState.library;
 
   if (library.length === 0) {
     throw new Error(
@@ -405,7 +432,7 @@ function handleDrawCard(state: GameState, action: Extract<Action, { type: 'DRAW_
       players: {
         ...state.players,
         [player]: {
-          ...state.players[player],
+          ...playerState,
           library: rest,
         },
       },
@@ -416,7 +443,8 @@ function handleDrawCard(state: GameState, action: Extract<Action, { type: 'DRAW_
 
 function handleFetchBasicLand(state: GameState, action: Extract<Action, { type: 'FETCH_BASIC_LAND' }>): ActionResult {
   const { player, landType } = action.payload;
-  const library = state.players[player].library;
+  const playerState = requirePlayerState(state, player);
+  const library = playerState.library;
 
   const landIndex = library.findIndex(card => isCard(card) && isBasicLandOfType(card, landType));
 
@@ -434,7 +462,7 @@ function handleFetchBasicLand(state: GameState, action: Extract<Action, { type: 
       players: {
         ...state.players,
         [player]: {
-          ...state.players[player],
+          ...playerState,
           library: shuffled,
         },
       },
@@ -445,7 +473,8 @@ function handleFetchBasicLand(state: GameState, action: Extract<Action, { type: 
 
 function handleTutorCard(state: GameState, action: Extract<Action, { type: 'TUTOR_CARD' }>): ActionResult {
   const { player, cardName } = action.payload;
-  const library = state.players[player].library;
+  const playerState = requirePlayerState(state, player);
+  const library = playerState.library;
 
   const cardIndex = library.findIndex(
     card => isCard(card) && card.name.toLowerCase() === cardName.toLowerCase(),
@@ -465,7 +494,7 @@ function handleTutorCard(state: GameState, action: Extract<Action, { type: 'TUTO
       players: {
         ...state.players,
         [player]: {
-          ...state.players[player],
+          ...playerState,
           library: shuffled,
         },
       },
@@ -476,12 +505,8 @@ function handleTutorCard(state: GameState, action: Extract<Action, { type: 'TUTO
 
 function handleMoveCard(state: GameState, action: Extract<Action, { type: 'MOVE_CARD' }>): ActionResult {
   const { player, cardName, fromZone, toZone, revealData } = action.payload;
-  const playerState = state.players[player];
-  const fromZoneCards = playerState[fromZone as keyof GameState['players'][PlayerId]];
-
-  if (!Array.isArray(fromZoneCards)) {
-    throw new Error(`Zone "${fromZone}" is not a valid zone for this operation`);
-  }
+  const playerState = requirePlayerState(state, player);
+  const fromZoneCards = playerState[fromZone];
 
   let cardIndex = fromZoneCards.findIndex((c) => isCard(c) && c.name === cardName);
   if (cardIndex === -1) {
@@ -522,11 +547,7 @@ function handleMoveCard(state: GameState, action: Extract<Action, { type: 'MOVE_
     ...fromZoneCards.slice(cardIndex + 1),
   ];
 
-  const toZoneCards = playerState[toZone as keyof GameState['players'][PlayerId]];
-  if (!Array.isArray(toZoneCards)) {
-    throw new Error(`Zone "${toZone}" is not a valid zone for this operation`);
-  }
-
+  const toZoneCards = playerState[toZone];
   const updatedToZone = [...toZoneCards, movedCard];
 
   const updates: Record<string, any> = {};
@@ -550,12 +571,8 @@ function handleMoveCard(state: GameState, action: Extract<Action, { type: 'MOVE_
 
 function handleChangeCardState(state: GameState, action: Extract<Action, { type: 'CHANGE_CARD_STATE' }>): ActionResult {
   const { player, cardName, zone, tapped, faceDown } = action.payload;
-  const playerState = state.players[player];
-  const zoneCards = playerState[zone as keyof GameState['players'][PlayerId]];
-
-  if (!Array.isArray(zoneCards)) {
-    throw new Error(`Zone "${zone}" is not a valid zone for this operation`);
-  }
+  const playerState = requirePlayerState(state, player);
+  const zoneCards = playerState[zone];
 
   const cardIndex = zoneCards.findIndex((c) => isCard(c) && c.name === cardName);
   if (cardIndex === -1) {
@@ -591,6 +608,13 @@ function handleChangeCardState(state: GameState, action: Extract<Action, { type:
         },
       },
     },
+    card: null,
+  };
+}
+
+function handleSyncState(_state: GameState, action: Extract<Action, { type: 'SYNC_STATE' }>): ActionResult {
+  return {
+    state: action.payload,
     card: null,
   };
 }
@@ -636,6 +660,8 @@ export function dispatch(state: GameState, action: Action): ActionResult {
     case 'CHANGE_CARD_STATE':
       result = handleChangeCardState(state, parsed);
       break;
+    case 'SYNC_STATE':
+      return handleSyncState(state, parsed);
   }
 
   const entry = buildHistoryEntry(state, parsed, result);

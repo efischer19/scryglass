@@ -82,16 +82,25 @@ export function createActionSyncMiddleware(options: CreateActionSyncMiddlewareOp
     return result;
   }
 
-  return {
-    dispatchLocal(action: Action): ActionResult {
-      const envelope: RemoteActionEnvelope = {
-        kind: 'action',
-        action,
-        sentAt: now(),
-        sequence: nextSequence,
-      };
-      nextSequence += 1;
+  function createEnvelope(action: Action, sentAt = now()): RemoteActionEnvelope {
+    const envelope: RemoteActionEnvelope = {
+      kind: 'action',
+      action,
+      sentAt,
+      sequence: nextSequence,
+    };
+    nextSequence += 1;
+    return envelope;
+  }
 
+  return {
+    broadcast(action: Action): void {
+      const envelope = createEnvelope(action);
+      options.broadcast?.(JSON.stringify(envelope));
+    },
+
+    dispatchLocal(action: Action): ActionResult {
+      const envelope = createEnvelope(action);
       const result = applyAction(action, envelope.sentAt, 'local');
       options.broadcast?.(JSON.stringify(envelope));
       return result;

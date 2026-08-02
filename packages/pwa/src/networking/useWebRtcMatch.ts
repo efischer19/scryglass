@@ -9,6 +9,7 @@ import {
 
 interface UseWebRtcMatchOptions {
   signalingBaseUrl?: string;
+  reconnectDelayMs?: number;
   onMessage?: (message: string) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
@@ -26,13 +27,23 @@ function getErrorMessage(error: unknown): string {
 
 export function useWebRtcMatch(options: UseWebRtcMatchOptions = {}) {
   const managerRef = useRef<WebRtcDataChannelManager | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
+  const startConnectionRef = useRef<(options: StartConnectionOptions) => void>(() => {});
   const [status, setStatus] = useState<ConnectionStatus>('idle');
   const [roomCode, setRoomCode] = useState('');
   const [role, setRole] = useState<ConnectionRole | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
 
+  const clearReconnectTimeout = useCallback(() => {
+    if (reconnectTimeoutRef.current !== null) {
+      window.clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+  }, []);
+
   const clearManager = useCallback((resetSession: boolean) => {
+    clearReconnectTimeout();
     const manager = managerRef.current;
     managerRef.current = null;
     manager?.disconnect();
@@ -44,7 +55,7 @@ export function useWebRtcMatch(options: UseWebRtcMatchOptions = {}) {
       setError(null);
       setLastMessage(null);
     }
-  }, []);
+  }, [clearReconnectTimeout]);
 
   const startConnection = useCallback(({ role: nextRole, roomCode: nextRoomCode }: StartConnectionOptions) => {
     clearManager(false);
@@ -81,6 +92,14 @@ export function useWebRtcMatch(options: UseWebRtcMatchOptions = {}) {
 
         setStatus((currentStatus) => currentStatus === 'error' ? currentStatus : 'disconnected');
         options.onDisconnect?.();
+        clearReconnectTimeout();
+        reconnectTimeoutRef.current = window.setTimeout(() => {
+          if (managerRef.current !== manager) {
+            return;
+          }
+
+          startConnectionRef.current({ role: nextRole, roomCode: nextRoomCode });
+        }, options.reconnectDelayMs ?? 1_000);
       },
       onError: (connectionError) => {
         if (managerRef.current !== manager) {
@@ -104,7 +123,9 @@ export function useWebRtcMatch(options: UseWebRtcMatchOptions = {}) {
       setError(getErrorMessage(connectionError));
       setStatus('error');
     });
-  }, [clearManager, options]);
+  }, [clearManager, clearReconnectTimeout, options]);
+
+  startConnectionRef.current = startConnection;
 
   const hostMatch = useCallback(() => {
     const nextRoomCode = generateRoomCode();
