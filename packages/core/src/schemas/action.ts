@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CardSchema, HiddenCardSchema } from './card.js';
-import { GameStateSchema, PlayerIdSchema } from './state.js';
+import { GameStateSchema, PlayerIdSchema, PlayerStateSchema } from './state.js';
 
 // --- Zone Types ---
 export const ZoneSchema = z.enum([
@@ -127,6 +127,15 @@ const ChangeCardStateActionSchema = z.object({
   }),
 });
 
+const GameStateSnapshotSchema = GameStateSchema.extend({
+  players: z.partialRecord(PlayerIdSchema, PlayerStateSchema),
+});
+
+const SyncStateActionSchema = z.object({
+  type: z.literal('SYNC_STATE'),
+  payload: GameStateSnapshotSchema.transform((state) => state as z.infer<typeof GameStateSchema>),
+});
+
 export const ActionSchema = z.discriminatedUnion('type', [
   LoadDeckActionSchema,
   ShuffleLibraryActionSchema,
@@ -140,6 +149,7 @@ export const ActionSchema = z.discriminatedUnion('type', [
   TutorCardActionSchema,
   MoveCardActionSchema,
   ChangeCardStateActionSchema,
+  SyncStateActionSchema,
 ]);
 export type Action = z.infer<typeof ActionSchema>;
 

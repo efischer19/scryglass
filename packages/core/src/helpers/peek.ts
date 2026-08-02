@@ -8,7 +8,7 @@ import type { HiddenCard } from '../schemas/card.js';
  * library is empty or `n` is zero/negative.
  */
 export function peekTop(state: GameState, player: PlayerId, n: number): HiddenCard[] {
-  const library = state.players[player].library;
+  const library = state.players[player]?.library ?? [];
   const clamped = Math.max(0, Math.min(n, library.length));
   return library.slice(0, clamped);
 }

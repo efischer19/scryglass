@@ -194,6 +194,29 @@ describe('dispatch — SHUFFLE_LIBRARY', () => {
   });
 });
 
+describe('dispatch — SYNC_STATE', () => {
+  it('replaces the local state with the incoming snapshot without appending history', () => {
+    const localState = dispatch(createInitialState(), {
+      type: 'LOAD_DECK',
+      payload: { player: 'A', cards: makeCards(3) },
+    }).state;
+    const snapshot = dispatch(createInitialState(), {
+      type: 'LOAD_DECK',
+      payload: { player: 'B', cards: [makeCard('Sync Card')] },
+    }).state;
+
+    const result = dispatch(localState, {
+      type: 'SYNC_STATE',
+      payload: snapshot,
+    });
+
+    expect(result.card).toBeNull();
+    expect(result.state).toEqual(snapshot);
+    expect(result.state.history).toEqual(snapshot.history);
+    expect(result.state.history).toHaveLength(1);
+  });
+});
+
 describe('dispatch — DRAW_CARD', () => {
   it('removes and returns the top card (index 0)', () => {
     const cards = makeCards(3);
