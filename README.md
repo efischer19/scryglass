@@ -9,8 +9,8 @@
 
 ---
 
-Scrymat (formerly Scryglass) is a **free, open-source Progressive Web App
-(PWA)** for MTG goldfishing, couch play, and casual remote games. It runs
+Scrymat is a **free, open-source Progressive Web App (PWA)** for MTG
+goldfishing, couch play, and casual remote games. It runs
 entirely in your browser, works offline after first load, and is designed for
 use on a phone lying flat on a game store table.
 
@@ -64,11 +64,11 @@ use on a phone lying flat on a game store table.
 
 ## 💭 Why Scrymat?
 
-Scrymat started life as Scryglass, a simple answer to the frustration that
-shuffling takes too long. I originally built it so I could play Magic with my
-kids. Previously, I was spending half of our "playtime" physically manipulating
-our cards. I wanted a way to let the computer handle the mechanics of the
-library so we could focus on actually playing the game together.
+Scrymat began as a simple answer to the frustration that shuffling takes too
+long. I originally built it so I could play Magic with my kids. Previously, I
+was spending half of our "playtime" physically manipulating our cards. I wanted
+a way to let the computer handle the mechanics of the library so we could focus
+on actually playing the game together.
 
 The pivot to Scrymat keeps that original goal, then pushes further into shared
 remote play:

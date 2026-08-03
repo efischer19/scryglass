@@ -1,9 +1,8 @@
 # Scrymat Documentation
 
-Welcome to the official documentation for **Scrymat** — the renamed and
-expanded successor to Scryglass. Scrymat is a free, open-source Progressive Web
-App (PWA) for goldfishing, pass-and-play, and lightweight synchronized remote
-Magic: The Gathering sessions.
+Welcome to the official documentation for **Scrymat**. Scrymat is a free,
+open-source Progressive Web App (PWA) for goldfishing, pass-and-play, and
+lightweight synchronized remote Magic: The Gathering sessions.
 
 ## Overview
 
