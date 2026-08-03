@@ -2,7 +2,7 @@ import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { GameHistory, toHistoryExportText } from '../GameHistory.js';
-import type { HistoryEntry } from '@scryglass/core';
+import type { HistoryEntry } from '@scrymat/core';
 
 function makeEntry(overrides: Partial<HistoryEntry> = {}): HistoryEntry {
   return {

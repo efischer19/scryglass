@@ -14,7 +14,7 @@ tags:
 
 * **Problem:** ADR-005 defined a reducer that only tracks ordered libraries plus a handful of setup-era actions (`DRAW_CARD`, `TUTOR_CARD`, `SCRY_RESOLVE`, `MULLIGAN`). The Scrymat pivot replaces that narrow shuffler with a synchronized virtual playmat where players move cards between private and public zones for the entire game. We need a state engine that can represent the full table without hard-coding Magic rules.
 * **Constraints:**
-  * The `@scryglass/core` package must remain platform-agnostic, pure, and JSON-serializable so the same reducer can drive the PWA, local tooling, and future AI agents.
+  * The `@scrymat/core` package must remain platform-agnostic, pure, and JSON-serializable so the same reducer can drive the PWA, local tooling, and future AI agents.
   * The product philosophy is the "Dumb Table": no enforced turn structure, no stack resolution logic, and no state-based action engine. Players must be able to perform take-backs, house rules, and edge-case board rewinds manually.
   * Local solo play, pass-and-play, and remote matches must share the same underlying state model. Networking and hidden-information obfuscation are adapters around the reducer, not responsibilities of the reducer itself.
   * Hidden zones must be representable in a way that later ADRs can obfuscate for remote peers while still allowing the owning player to see real card data locally.

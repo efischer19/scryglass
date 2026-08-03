@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { DeckEditor } from '../DeckEditor.js';
 import type { ScryfallLookupFn } from '../DeckEditor.js';
-import type { ConvertResult, Card } from '@scryglass/core';
+import type { ConvertResult, Card } from '@scrymat/core';
 
 function makeResolvedResult(): ConvertResult {
   return {

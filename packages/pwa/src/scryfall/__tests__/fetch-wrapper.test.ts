@@ -78,7 +78,7 @@ describe('fetchCardImage', () => {
       expect.objectContaining({
         headers: {
           'User-Agent':
-            'Scryglass/0.1 (+https://github.com/efischer19/scryglass)',
+            'Scrymat/0.1 (+https://github.com/efischer19/scrymat)',
         },
       }),
     );

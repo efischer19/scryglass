@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { DrawButton } from '../DrawButton.js';
-import type { Action, ActionResult, GameState } from '@scryglass/core';
+import type { Action, ActionResult, GameState } from '@scrymat/core';
 
 const defaultSettings: GameState['settings'] = { allowMulliganWith2or5Lands: false };
 

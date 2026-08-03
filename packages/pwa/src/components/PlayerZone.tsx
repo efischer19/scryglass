@@ -1,8 +1,16 @@
 import { useState } from 'preact/hooks';
-import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
-import type { DragEndEvent, DragMoveEvent, DragStartEvent } from '@dnd-kit/core';
-import type { PlayerState, PlayerPhase, Action, ActionResult, Card, GameState, HiddenCard, PlayerId } from '@scryglass/core';
-import { isCard } from '@scryglass/core';
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  type Announcements,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import type { DragCancelEvent, DragEndEvent, DragMoveEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
+import type { PlayerState, PlayerPhase, Action, ActionResult, Card, GameState, HiddenCard, PlayerId } from '@scrymat/core';
+import { isCard } from '@scrymat/core';
 import { CardDisplay } from './CardDisplay.js';
 import { MulliganHand } from './MulliganHand.js';
 import { DrawButton } from './DrawButton.js';
@@ -10,7 +18,13 @@ import { ScryModal } from './ScryModal.js';
 import { FetchLandModal } from './FetchLandModal.js';
 import { TutorModal } from './TutorModal.js';
 import { GameZone } from './GameZone.js';
-import { createMoveCardAction, createToggleTappedAction, getBattlefieldDropPosition } from './playmat-dnd.js';
+import {
+  createMoveCardAction,
+  createToggleTappedAction,
+  getBattlefieldDropPosition,
+  getZoneLabel,
+  playmatKeyboardCoordinateGetter,
+} from './playmat-dnd.js';
 import type { MatchPresence, MatchPresenceUpdate, PresenceZone } from '../networking/presenceSync.js';
 
 interface PlayerZoneProps {
@@ -31,6 +45,8 @@ function playerLabel(id: PlayerId): string {
   return `Player ${id}`;
 }
 
+const DRAG_INSTRUCTIONS = 'Press space to pick up a card, use the arrow keys to move it between zones, press space again to drop it, or press Escape to cancel.';
+
 function PlayerZoneContent({
   player,
   playerState,
@@ -48,6 +64,12 @@ function PlayerZoneContent({
   remotePresence: MatchPresence | null;
   onPresenceChange: (presence: MatchPresenceUpdate) => void;
 }) {
+  const [dragAnnouncement, setDragAnnouncement] = useState('');
+  const dragHelpId = `player-zone-${player.toLowerCase()}-drag-help`;
+
+  const describeDraggedCard = (card: Card | undefined, zoneName: string) =>
+    `${card?.name ?? 'Card'} from ${zoneName}`;
+
   const broadcastDragPresence = (
     zone: PresenceZone,
     card: Card,
@@ -83,10 +105,29 @@ function PlayerZoneContent({
       return;
     }
 
+    setDragAnnouncement(
+      `Picked up ${describeDraggedCard(
+        dragData.card as Card | undefined,
+        getZoneLabel(dragData.fromZone as PresenceZone),
+      )}. ${DRAG_INSTRUCTIONS}`,
+    );
+
     broadcastDragPresence(
       dragData.fromZone as PresenceZone,
       dragData.card as Card,
       dragData.cardId as string,
+    );
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const dragData = event.active.data.current;
+    const dropData = event.over?.data.current;
+    if (dragData == null || dropData == null) {
+      return;
+    }
+
+    setDragAnnouncement(
+      `Moving ${dragData.card?.name ?? 'card'} over ${getZoneLabel(dropData.zone as PresenceZone)}.`,
     );
   };
 
@@ -119,6 +160,11 @@ function PlayerZoneContent({
     }
 
     if (dragData == null || dropData == null) {
+      if (dragData != null) {
+        setDragAnnouncement(
+          `Cancelled moving ${dragData.card?.name ?? 'card'} from ${getZoneLabel(dragData.fromZone as PresenceZone)}.`,
+        );
+      }
       return;
     }
 
@@ -128,6 +174,7 @@ function PlayerZoneContent({
     const cardId = dragData.cardId as string;
 
     if (fromZone === toZone && toZone !== 'battlefield') {
+      setDragAnnouncement(`Returned ${card.name} to ${getZoneLabel(toZone)}.`);
       return;
     }
 
@@ -143,71 +190,154 @@ function PlayerZoneContent({
       : undefined;
 
     handleDispatch(createMoveCardAction({ player, card, cardId, fromZone, toZone, position }));
+    setDragAnnouncement(
+      fromZone === toZone && toZone === 'battlefield'
+        ? `Repositioned ${card.name} within ${getZoneLabel(toZone)}.`
+        : `Moved ${card.name} from ${getZoneLabel(fromZone)} to ${getZoneLabel(toZone)}.`,
+    );
   };
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const handleDragCancel = (event: DragCancelEvent) => {
+    const dragData = event.active.data.current;
+    if (dragData == null) {
+      return;
+    }
+
+    setDragAnnouncement(
+      `Cancelled moving ${dragData.card?.name ?? 'card'} from ${getZoneLabel(dragData.fromZone as PresenceZone)}.`,
+    );
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: playmatKeyboardCoordinateGetter }),
+  );
+  const announcements: Announcements = {
+    onDragStart: ({ active }) => {
+      const dragData = active.data.current;
+      if (dragData == null) {
+        return undefined;
+      }
+
+      return `Picked up ${describeDraggedCard(
+        dragData.card as Card | undefined,
+        getZoneLabel(dragData.fromZone as PresenceZone),
+      )}.`;
+    },
+    onDragOver: ({ active, over }) => {
+      const dragData = active.data.current;
+      const dropData = over?.data.current;
+      if (dragData == null || dropData == null) {
+        return undefined;
+      }
+
+      return `Moving ${dragData.card?.name ?? 'card'} over ${getZoneLabel(dropData.zone as PresenceZone)}.`;
+    },
+    onDragEnd: ({ active, over }) => {
+      const dragData = active.data.current;
+      const dropData = over?.data.current;
+      if (dragData == null || dropData == null) {
+        return undefined;
+      }
+
+      const fromZone = dragData.fromZone as PresenceZone;
+      const toZone = dropData.zone as PresenceZone;
+      return fromZone === toZone && toZone === 'battlefield'
+        ? `Repositioned ${dragData.card?.name ?? 'card'} within ${getZoneLabel(toZone)}.`
+        : `Moved ${dragData.card?.name ?? 'card'} from ${getZoneLabel(fromZone)} to ${getZoneLabel(toZone)}.`;
+    },
+    onDragCancel: ({ active }) => {
+      const dragData = active.data.current;
+      if (dragData == null) {
+        return undefined;
+      }
+
+      return `Cancelled moving ${dragData.card?.name ?? 'card'} from ${getZoneLabel(dragData.fromZone as PresenceZone)}.`;
+    },
+  };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragMove={handleDragMove}
-      onDragEnd={handleDragEnd}
-    >
-      <div class="game-zones">
-        <GameZone
-          player={player}
-          zone="battlefield"
-          zoneName="Battlefield"
-          cards={playerState.battlefield}
-          disabled={disabled}
-          onToggleTapped={onToggleTapped}
-          remotePresence={remotePresence}
-          onPresenceChange={onPresenceChange}
-        />
-        <GameZone
-          player={player}
-          zone="hand"
-          zoneName="Hand"
-          cards={playerState.hand}
-          disabled={disabled}
-          onToggleTapped={onToggleTapped}
-          remotePresence={remotePresence}
-          onPresenceChange={onPresenceChange}
-        />
-        <GameZone
-          player={player}
-          zone="graveyard"
-          zoneName="Graveyard"
-          cards={playerState.graveyard}
-          disabled={disabled}
-          onToggleTapped={onToggleTapped}
-          remotePresence={remotePresence}
-          onPresenceChange={onPresenceChange}
-        />
-        <GameZone
-          player={player}
-          zone="exile"
-          zoneName="Exile"
-          cards={playerState.exile}
-          disabled={disabled}
-          onToggleTapped={onToggleTapped}
-          remotePresence={remotePresence}
-          onPresenceChange={onPresenceChange}
-        />
-        <GameZone
-          player={player}
-          zone="commandZone"
-          zoneName="Command Zone"
-          cards={playerState.commandZone}
-          disabled={disabled}
-          onToggleTapped={onToggleTapped}
-          remotePresence={remotePresence}
-          onPresenceChange={onPresenceChange}
-        />
+    <>
+      <p class="sr-only" id={dragHelpId}>
+        {DRAG_INSTRUCTIONS}
+      </p>
+      <div class="sr-only" role="status" aria-live="assertive" aria-atomic="true">
+        {dragAnnouncement}
       </div>
-    </DndContext>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        accessibility={{
+          announcements,
+          screenReaderInstructions: {
+            draggable: DRAG_INSTRUCTIONS,
+          },
+        }}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragMove={handleDragMove}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        <div class="game-zones">
+          <GameZone
+            player={player}
+            zone="battlefield"
+            zoneName="Battlefield"
+            cards={playerState.battlefield}
+            disabled={disabled}
+            onToggleTapped={onToggleTapped}
+            remotePresence={remotePresence}
+            onPresenceChange={onPresenceChange}
+            dragHelpId={dragHelpId}
+          />
+          <GameZone
+            player={player}
+            zone="hand"
+            zoneName="Hand"
+            cards={playerState.hand}
+            disabled={disabled}
+            onToggleTapped={onToggleTapped}
+            remotePresence={remotePresence}
+            onPresenceChange={onPresenceChange}
+            dragHelpId={dragHelpId}
+          />
+          <GameZone
+            player={player}
+            zone="graveyard"
+            zoneName="Graveyard"
+            cards={playerState.graveyard}
+            disabled={disabled}
+            onToggleTapped={onToggleTapped}
+            remotePresence={remotePresence}
+            onPresenceChange={onPresenceChange}
+            dragHelpId={dragHelpId}
+          />
+          <GameZone
+            player={player}
+            zone="exile"
+            zoneName="Exile"
+            cards={playerState.exile}
+            disabled={disabled}
+            onToggleTapped={onToggleTapped}
+            remotePresence={remotePresence}
+            onPresenceChange={onPresenceChange}
+            dragHelpId={dragHelpId}
+          />
+          <GameZone
+            player={player}
+            zone="commandZone"
+            zoneName="Command Zone"
+            cards={playerState.commandZone}
+            disabled={disabled}
+            onToggleTapped={onToggleTapped}
+            remotePresence={remotePresence}
+            onPresenceChange={onPresenceChange}
+            dragHelpId={dragHelpId}
+          />
+        </div>
+      </DndContext>
+    </>
   );
 }
 

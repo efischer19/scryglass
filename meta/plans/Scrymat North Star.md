@@ -2,7 +2,7 @@
 
 ## **1\. The Vision**
 
-**Scrymat** (formerly Scryglass) is pivoting from a localized, single-player deck utility into a lightweight, synchronized virtual playmat designed for asynchronous and peer-to-peer (P2P) card play. Scrymat acts as a shared-state sandbox that provides the table, the cards, and the zones, while relying entirely on the players to provide the rules.
+**Scrymat** is pivoting from a localized, single-player deck utility into a lightweight, synchronized virtual playmat designed for asynchronous and peer-to-peer (P2P) card play. Scrymat acts as a shared-state sandbox that provides the table, the cards, and the zones, while relying entirely on the players to provide the rules.
 
 ## **2\. Core Philosophy: The "Dumb Table"**
 
@@ -33,7 +33,7 @@ Scrymat operates without a centralized, authoritative game server to dictate the
 
 The pivot to remote play must not degrade Scrymat's utility as a local tool for goldfishing or "pass-and-play" couch gaming.
 
-* **Networking as Middleware:** The @scryglass/core reducer remains completely ignorant of the network. Local matches bypass WebRTC and Commit-Reveal hashing entirely.
+* **Networking as Middleware:** The @scrymat/core reducer remains completely ignorant of the network. Local matches bypass WebRTC and Commit-Reveal hashing entirely.
 * **UI Obfuscation:** The Playmat UI strictly renders opponent's hidden state as generic \<CardBack/\> components. For local same-screen play, the UI provides manual "Peek / Hide" toggles so a device can be handed back and forth safely.
 
 ## **6\. AI Agent Extensibility**

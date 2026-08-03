@@ -1,18 +1,17 @@
 # Scrymat Documentation
 
-Welcome to the official documentation for **Scrymat** — the renamed and
-expanded successor to Scryglass. Scrymat is a free, open-source Progressive Web
-App (PWA) for goldfishing, pass-and-play, and lightweight synchronized remote
-Magic: The Gathering sessions.
+Welcome to the official documentation for **Scrymat**. Scrymat is a free,
+open-source Progressive Web App (PWA) for goldfishing, pass-and-play, and
+lightweight synchronized remote Magic: The Gathering sessions.
 
 ## Overview
 
 Scrymat is built as a **Preact + Vite monorepo** consisting of two packages:
 
-- **`@scryglass/core`** — Pure game logic: deck parsing, deterministic shared
+- **`@scrymat/core`** — Pure game logic: deck parsing, deterministic shared
   shuffling, zone-based state management, setup flows, and card movement. No
   DOM or browser dependencies.
-- **`@scryglass/pwa`** — Preact + Vite frontend: UI rendering, Scryfall API
+- **`@scrymat/pwa`** — Preact + Vite frontend: UI rendering, Scryfall API
   integration, IndexedDB caching, Service Worker, and WebRTC match sync.
 
 ## Pivot Highlights
@@ -27,7 +26,7 @@ Scrymat is built as a **Preact + Vite monorepo** consisting of two packages:
 ## Getting Started
 
 1. **Install dependencies:** `npm install` from the repository root.
-2. **Build:** `npm run build` (compiles `@scryglass/core` then builds `@scryglass/pwa` with Vite).
+2. **Build:** `npm run build` (compiles `@scrymat/core` then builds `@scrymat/pwa` with Vite).
 3. **Run the dev server:** `npm run dev --workspace=packages/pwa` then open `http://localhost:5173`.
 
 !!! note
@@ -39,11 +38,11 @@ Scrymat is built as a **Preact + Vite monorepo** consisting of two packages:
 ```text
 repository-root/
 ├── packages/
-│   ├── core/             # @scryglass/core — game logic library
+│   ├── core/             # @scrymat/core — game logic library
 │   │   ├── src/
 │   │   ├── package.json
 │   │   └── tsconfig.json
-│   └── pwa/              # @scryglass/pwa — Preact + Vite frontend
+│   └── pwa/              # @scrymat/pwa — Preact + Vite frontend
 │       ├── src/
 │       ├── package.json
 │       └── tsconfig.json
@@ -71,7 +70,7 @@ For information on contributing to this project, see the
 ## Getting Help
 
 - Check the documentation pages listed in the navigation
-- Review the [Architecture Decision Records](https://github.com/efischer19/scryglass/tree/main/meta/adr)
+- Review the [Architecture Decision Records](https://github.com/efischer19/scrymat/tree/main/meta/adr)
   for context on past decisions
-- [Open an issue](https://github.com/efischer19/scryglass/issues)
+- [Open an issue](https://github.com/efischer19/scrymat/issues)
   if you find a bug or want to suggest a feature

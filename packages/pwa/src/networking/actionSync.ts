@@ -1,4 +1,4 @@
-import type { Action, ActionResult, GameState } from '@scryglass/core';
+import type { Action, ActionResult, GameState } from '@scrymat/core';
 
 export interface RemoteActionEnvelope {
   kind: 'action';

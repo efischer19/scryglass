@@ -1,4 +1,4 @@
-// @scryglass/core — barrel export
+// @scrymat/core — barrel export
 export { CardSchema, CardHashSchema, HiddenCardSchema, CardTypeEnum, CardPositionSchema, isCard, isCardHash } from './schemas/card.js';
 export type { Card, CardHash, HiddenCard, CardType, CardPosition } from './schemas/card.js';
 

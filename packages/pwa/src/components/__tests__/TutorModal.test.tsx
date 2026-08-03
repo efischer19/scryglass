@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { TutorModal } from '../TutorModal.js';
-import type { Action, ActionResult, Card } from '@scryglass/core';
+import type { Action, ActionResult, Card } from '@scrymat/core';
 
 function makeCard(name: string, cardType: Card['cardType'] = 'nonland'): Card {
   return { name, setCode: 'TST', collectorNumber: '1', cardType };

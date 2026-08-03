@@ -1,6 +1,6 @@
-# 🔮 [Scrymat](https://scryglass.cards)
+# 🔮 Scrymat
 
-[![CI](https://github.com/efischer19/scryglass/actions/workflows/ci.yml/badge.svg)](https://github.com/efischer19/scryglass/actions/workflows/ci.yml)
+[![CI](https://github.com/efischer19/scrymat/actions/workflows/ci.yml/badge.svg)](https://github.com/efischer19/scrymat/actions/workflows/ci.yml)
 [![License: GPL](https://img.shields.io/badge/License-GPL-blue.svg)](./LICENSE.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](./packages/core/tsconfig.json)
 [![PWA Ready](https://img.shields.io/badge/PWA-ready-brightgreen)](./packages/pwa/public/manifest.json)
@@ -9,35 +9,48 @@
 
 ---
 
-Scrymat (formerly Scryglass) is a **free, open-source Progressive Web App
-(PWA)** that is evolving from a deck-shuffling utility into a lightweight,
-synchronized virtual playmat for MTG goldfishing, couch play, and casual remote
-games. It runs entirely in your browser, works offline after first load, and is
-designed for use on a phone lying flat on a game store table.
+Scrymat is a **free, open-source Progressive Web App (PWA)** for MTG
+goldfishing, couch play, and casual remote games. It runs
+entirely in your browser, works offline after first load, and is designed for
+use on a phone lying flat on a game store table.
 
 > [!NOTE]
-> The public repo, package names, and current deployment URLs still use the
-> legacy `scryglass` identifier while the rename is in progress.
+> The production TLD and some AWS infrastructure may still use the legacy
+> `scryglass` identifier until the final DNS and deploy cutover is complete.
 
 ## 🚀 Quick Start (Play Tonight!)
 
 **No installation. No account. Just open and play.**
 
-1. Visit the app at [`scryglass.cards`](https://scryglass.cards)
-2. Paste your deck list (Scrymat CSV format, or import from Moxfield/Archidekt/MTGO)
-3. All players load their decks → automatic shuffle → opening hands dealt
-4. Play! Draw, scry, tutor, and fetch — Scrymat handles the table state for you
+### Local / pass-and-play
+
+1. Open the deployed app (today that is still [`scryglass.cards`](https://scryglass.cards)).
+2. Paste your deck list (Scrymat format, or import from Moxfield/Archidekt/MTGO).
+3. Load each deck, deal opening hands, and start moving cards around the table.
+
+### Remote Host / Join
+
+1. One player clicks **Generate Room Code** to host a match.
+2. Share the room code or `/match/:roomCode` invite URL with the guest.
+3. The guest enters the code, Scrymat completes the WebRTC handshake, and both
+   browsers connect peer-to-peer.
+4. Once connected, the host can resync the guest with a full `GameState`
+   snapshot after reconnects or divergence.
 
 ## ✨ Features
 
 - **🃏 Shared virtual playmat** — The Scrymat pivot expands the state engine from
   library-only actions to generic card movement across public and private zones
   ([ADR-012](./meta/adr/ADR-012-expand_state_engine_to_full_playmat.md))
+- **🪑 Dumb Table philosophy** — Scrymat gives you zones, cards, and movement,
+  but it does **not** enforce turn structure or comprehensive Magic rules. You
+  stay in control of takes-backs, shortcuts, and house rules.
 - **🤝 Peer-to-peer remote play** — WebRTC data channels plus stateless signaling
   synchronize matches without a central game server
   ([ADR-014](./meta/adr/ADR-014-webrtc_data_channels_and_stateless_signaling.md))
 - **🔐 Hidden-information protection** — Commit-reveal hashing keeps opponents from
-  trivially peeking at concealed cards during remote games
+  trivially peeking at concealed cards during remote games. Hidden cards stay
+  committed until you intentionally reveal them.
 - **🎲 Deterministic shared shuffling** — Seeded PRNG support lets every client
   derive the same deck order for a match
   ([ADR-013](./meta/adr/ADR-013-deterministic_seeded_prng_for_shared_shuffling.md))
@@ -51,11 +64,11 @@ designed for use on a phone lying flat on a game store table.
 
 ## 💭 Why Scrymat?
 
-Scrymat started life as Scryglass, a simple answer to the frustration that
-shuffling takes too long. I originally built it so I could play Magic with my
-kids. Previously, I was spending half of our "playtime" physically manipulating
-our cards. I wanted a way to let the computer handle the mechanics of the
-library so we could focus on actually playing the game together.
+Scrymat began as a simple answer to the frustration that shuffling takes too
+long. I originally built it so I could play Magic with my kids. Previously, I
+was spending half of our "playtime" physically manipulating our cards. I wanted
+a way to let the computer handle the mechanics of the library so we could focus
+on actually playing the game together.
 
 The pivot to Scrymat keeps that original goal, then pushes further into shared
 remote play:
@@ -65,6 +78,19 @@ remote play:
 - **Frictionless Goldfishing**: Test your latest brews instantly. Just paste your Moxfield link and start drawing hands without needing to sleeve up a single card.
 - **Remote Table Presence**: Share a synchronized tabletop over the web without a
   full rules engine or webcam rig.
+
+## 🤝 Trust Model
+
+Scrymat is designed for **trusted casual play**, not for adversarial tournament
+enforcement:
+
+- **The table is dumb by design.** Scrymat tracks where cards are, not whether a
+  play was legal.
+- **Private information uses commit-reveal.** Remote peers receive commitments
+  for hidden cards first, then the real card only when it becomes public.
+- **Reconnects prefer snapshots over logs.** When peers reconnect, the host can
+  send the guest the current serialized `GameState` so both sides converge
+  quickly.
 
 ---
 
@@ -98,21 +124,21 @@ Scrymat is built as a monorepo with strict separation of concerns:
 
 | Package | Purpose | Browser Dependencies |
 | :------ | :------ | :------------------- |
-| **`@scryglass/core`** | Pure game logic: deck parsing, shared shuffling, zone-based state management, mulligan/setup flows, and card movement | ❌ None — runs in Node.js and browsers |
-| **`@scryglass/pwa`** | Preact + Vite frontend: UI rendering, Scryfall API integration, IndexedDB caching, Service Worker, and WebRTC match sync | ✅ Browser APIs required |
+| **`@scrymat/core`** | Pure game logic: deck parsing, shared shuffling, zone-based state management, mulligan/setup flows, and card movement | ❌ None — runs in Node.js and browsers |
+| **`@scrymat/pwa`** | Preact + Vite frontend: UI rendering, Scryfall API integration, IndexedDB caching, Service Worker, and WebRTC match sync | ✅ Browser APIs required |
 
-The `@scryglass/core` module uses a strict **JSON-in/JSON-out action-reducer pattern** with Zod schema validation, making it suitable for consumption by AI agents, CLI tools, or any TypeScript/JavaScript consumer.
+The `@scrymat/core` module uses a strict **JSON-in/JSON-out action-reducer pattern** with Zod schema validation, making it suitable for consumption by AI agents, CLI tools, or any TypeScript/JavaScript consumer.
 
 ## Monorepo Structure
 
 ```text
 repository-root/
 ├── packages/
-│   ├── core/             # @scryglass/core — game logic library
+│   ├── core/             # @scrymat/core — game logic library
 │   │   ├── src/
 │   │   ├── package.json
 │   │   └── tsconfig.json
-│   └── pwa/              # @scryglass/pwa — Preact + Vite frontend
+│   └── pwa/              # @scrymat/pwa — Preact + Vite frontend
 │       ├── src/
 │       ├── package.json
 │       └── tsconfig.json
@@ -147,6 +173,13 @@ The repository includes a GitHub Actions workflow (`.github/workflows/deploy-aws
 | `CLOUDFRONT_DOMAIN`          | *(optional)* Domain for post-deploy smoke test |
 
 The workflow runs automatically on push to `main` and can be triggered manually via `workflow_dispatch`. See [docs-src/deployment.md](./docs-src/deployment.md) for the full step-by-step setup guide, including the IAM policy JSON and CloudFront configuration.
+
+> [!IMPORTANT]
+> Final Scrymat cutover still requires **manual infrastructure follow-up**:
+> rename or redeploy the AWS bucket / CloudFront resources as desired, update
+> GitHub Actions variables if those names change, rotate any environment-specific
+> tokens tied to the legacy identifier, and repoint the public TLD when the new
+> deployment is ready.
 
 ---
 

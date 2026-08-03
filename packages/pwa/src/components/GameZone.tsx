@@ -1,7 +1,7 @@
 import { useState } from 'preact/hooks';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import type { Card, HiddenCard, PlayerId } from '@scryglass/core';
-import { isCard } from '@scryglass/core';
+import type { Card, HiddenCard, PlayerId } from '@scrymat/core';
+import { isCard } from '@scrymat/core';
 import type { JSX } from 'preact';
 import type { DroppableZone } from './playmat-dnd.js';
 import { createPlaymatCardId } from './playmat-dnd.js';
@@ -21,6 +21,7 @@ interface DraggableZoneCardProps {
   onToggleTapped?: (zone: DroppableZone, card: Card, cardId: string) => void;
   remotePresence?: MatchPresence | null;
   onPresenceChange?: (presence: MatchPresenceUpdate) => void;
+  dragHelpId?: string;
 }
 
 function getBattlefieldPointerPosition(
@@ -57,6 +58,7 @@ function DraggableZoneCard({
   onToggleTapped,
   remotePresence,
   onPresenceChange,
+  dragHelpId,
 }: DraggableZoneCardProps) {
   const cardId = createPlaymatCardId(card, zone, cardIndex);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -95,6 +97,7 @@ function DraggableZoneCard({
         class="game-zone__card-button"
         type="button"
         disabled={disabled}
+        aria-describedby={dragHelpId}
         aria-label={obscured ? `Hidden card ${cardIndex + 1} in ${zoneName}` : `${card.name} in ${zoneName}`}
         onDblClick={() => onToggleTapped?.(zone, card, cardId)}
         onPointerEnter={(event) => {
@@ -158,6 +161,7 @@ interface GameZoneProps {
   onToggleTapped?: (zone: DroppableZone, card: Card, cardId: string) => void;
   remotePresence?: MatchPresence | null;
   onPresenceChange?: (presence: MatchPresenceUpdate) => void;
+  dragHelpId?: string;
 }
 
 export function GameZone({
@@ -169,6 +173,7 @@ export function GameZone({
   onToggleTapped,
   remotePresence,
   onPresenceChange,
+  dragHelpId,
 }: GameZoneProps) {
   const isCommandZone = zone === 'commandZone';
   const isBattlefield = zone === 'battlefield';
@@ -251,6 +256,7 @@ export function GameZone({
                     onToggleTapped={onToggleTapped}
                     remotePresence={remotePresence}
                     onPresenceChange={onPresenceChange}
+                    dragHelpId={dragHelpId}
                   />
                 ) : (
                   <HiddenZoneCard
@@ -293,6 +299,7 @@ export function GameZone({
                   onToggleTapped={onToggleTapped}
                   remotePresence={remotePresence}
                   onPresenceChange={onPresenceChange}
+                  dragHelpId={dragHelpId}
                 />
               ) : (
                 <HiddenZoneCard

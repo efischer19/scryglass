@@ -1,4 +1,4 @@
-import { createInitialState, type Card, dispatch } from '@scryglass/core';
+import { createInitialState, type Card, dispatch } from '@scrymat/core';
 import { describe, expect, it } from 'vitest';
 import { dispatchLocalAgentMessage } from '../localAgentSync.js';
 

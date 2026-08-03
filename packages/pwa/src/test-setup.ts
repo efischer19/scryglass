@@ -7,8 +7,20 @@ expect.extend({ toHaveNoViolations });
 // Mock @dnd-kit/core for all tests
 vi.mock('@dnd-kit/core', () => ({
   DndContext: ({ children }: { children: unknown }) => children,
+  KeyboardSensor: class KeyboardSensor {},
   PointerSensor: class PointerSensor {},
+  KeyboardCode: {
+    Space: 'Space',
+    Down: 'ArrowDown',
+    Right: 'ArrowRight',
+    Left: 'ArrowLeft',
+    Up: 'ArrowUp',
+    Esc: 'Escape',
+    Enter: 'Enter',
+    Tab: 'Tab',
+  },
   closestCenter: () => null,
+  defaultKeyboardCoordinateGetter: () => ({ x: 0, y: 0 }),
   useSensor: () => ({}),
   useSensors: (...sensors: unknown[]) => sensors,
   useDraggable: () => ({

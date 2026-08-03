@@ -1,7 +1,7 @@
 {
-  "name": "Scryglass",
-  "short_name": "Scryglass",
-  "description": "Virtual shuffler and library manager for Magic: The Gathering",
+  "name": "Scrymat",
+  "short_name": "Scrymat",
+  "description": "Shared virtual playmat for Magic: The Gathering",
   "start_url": ".",
   "display": "standalone",
   "orientation": "any",

@@ -61,7 +61,7 @@ export function Router({ inputView, editorView, appView, matchView }: RouterProp
   useEffect(() => {
     const label = getRouteLabel(route);
     setAnnouncement(`Navigated to ${label}`);
-    document.title = `${label} — Scryglass`;
+    document.title = `${label} — Scrymat`;
 
     const main = document.getElementById('main-content');
     if (main) {

@@ -1,6 +1,6 @@
 import goodRaw from '../../../../examples/decklists/good.txt?raw';
 import evilRaw from '../../../../examples/decklists/evil.txt?raw';
-import { parseDeck } from '@scryglass/core';
+import { parseDeck } from '@scrymat/core';
 
 export const GOOD_DECK_NAME = 'Good';
 export const GOOD_DECK_TEXT = goodRaw;

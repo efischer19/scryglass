@@ -1,4 +1,4 @@
-import { ActionSchema, dispatch, type ActionResult, type GameState } from '@scryglass/core';
+import { ActionSchema, dispatch, type ActionResult, type GameState } from '@scrymat/core';
 
 export function dispatchLocalAgentMessage(state: GameState, message: string): ActionResult | null {
   let parsed: unknown;

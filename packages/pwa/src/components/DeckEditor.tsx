@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'preact/hooks';
-import { parseDeck } from '@scryglass/core';
-import type { ConvertResult, UnresolvedCard, Card, CardType, ParseResult } from '@scryglass/core';
+import { parseDeck } from '@scrymat/core';
+import type { ConvertResult, UnresolvedCard, Card, CardType, ParseResult } from '@scrymat/core';
 
 /** Scryfall lookup function signature — injectable for testability. */
 export type ScryfallLookupFn = (

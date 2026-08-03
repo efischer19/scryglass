@@ -1,4 +1,4 @@
-import type { PlayerId } from '@scryglass/core';
+import type { PlayerId } from '@scrymat/core';
 
 export type PresenceZone = 'hand' | 'battlefield' | 'graveyard' | 'exile' | 'commandZone';
 export type PresenceInteraction = 'hover' | 'drag';

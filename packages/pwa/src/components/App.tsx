@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { createInitialState, dispatch, PLAYER_IDS } from '@scryglass/core';
-import type { Action, Card, ConvertResult, GameState, PlayerId } from '@scryglass/core';
+import { createInitialState, dispatch, PLAYER_IDS } from '@scrymat/core';
+import type { Action, Card, ConvertResult, GameState, PlayerId } from '@scrymat/core';
 import { Header } from './Header.js';
 import { PlayerZone } from './PlayerZone.js';
 import { Router, navigate, navigateHome, navigateToMatch } from './Router.js';
@@ -129,16 +129,24 @@ export function App() {
 
   remoteSenderRef.current = remoteStatus === 'connected' ? sendMessage : null;
 
+  const broadcastHostSnapshot = useCallback((snapshot: GameState) => {
+    if (remoteStatus !== 'connected' || remoteRole !== 'host') {
+      return;
+    }
+
+    actionSyncRef.current?.broadcast({
+      type: 'SYNC_STATE',
+      payload: snapshot,
+    });
+  }, [remoteRole, remoteStatus]);
+
   useEffect(() => {
     if (remoteStatus === 'connected' && remoteRole === 'host' && previousRemoteStatusRef.current !== 'connected') {
-      actionSyncRef.current?.broadcast({
-        type: 'SYNC_STATE',
-        payload: stateRef.current,
-      });
+      broadcastHostSnapshot(stateRef.current);
     }
 
     previousRemoteStatusRef.current = remoteStatus;
-  }, [remoteRole, remoteStatus]);
+  }, [broadcastHostSnapshot, remoteRole, remoteStatus]);
 
   useEffect(() => {
     if (remoteStatus === 'connected') {
@@ -258,6 +266,7 @@ export function App() {
       currentState = shuffled.state;
     }
     replaceState(currentState);
+    broadcastHostSnapshot(currentState);
     setEditorResult(null);
     const initialCounts: Partial<Record<PlayerId, number>> = {};
     for (const player of players) {

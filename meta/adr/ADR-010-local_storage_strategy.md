@@ -17,7 +17,7 @@ tags:
   * Decklists are text-based semicolon-delimited strings ([ADR-006](./ADR-006-deck_import_format.md)). A typical 100-card deck is under 5 KB of raw text.
   * [ADR-003](./ADR-003-scryfall_api_integration.md) already commits to IndexedDB for Scryfall image blob caching. The decklist storage strategy must define its relationship to that existing database.
   * All domain schemas must be defined with Zod and validated at boundaries ([ADR-008](./ADR-008-typescript_and_zod.md)).
-  * Per [ADR-007](./ADR-007-monorepo_structure.md), pure data schemas belong in `@scryglass/core`, while browser API access belongs in `@scryglass/pwa`.
+  * Per [ADR-007](./ADR-007-monorepo_structure.md), pure data schemas belong in `@scrymat/core`, while browser API access belongs in `@scrymat/pwa`.
   * The development philosophy mandates simplicity, YAGNI, and minimal dependencies ([DEVELOPMENT_PHILOSOPHY.md](../DEVELOPMENT_PHILOSOPHY.md)).
 
 ## Decision
@@ -30,7 +30,7 @@ All decklists are stored under a single `localStorage` key: `scryglass:decklists
 
 ### Data schema
 
-Each saved deck is a JSON object conforming to the following Zod schema (defined in `@scryglass/core`):
+Each saved deck is a JSON object conforming to the following Zod schema (defined in `@scrymat/core`):
 
 ```typescript
 import { z } from 'zod';
@@ -60,7 +60,7 @@ When decklists are loaded from `localStorage`, the JSON is parsed and validated 
 
 ### Storage implementation
 
-The storage read/write functions live in `@scryglass/pwa` because they depend on the `localStorage` browser API. The Zod schema definitions live in `@scryglass/core` because they are pure data definitions with no browser dependency.
+The storage read/write functions live in `@scrymat/pwa` because they depend on the `localStorage` browser API. The Zod schema definitions live in `@scrymat/core` because they are pure data definitions with no browser dependency.
 
 ### Relationship to Scryfall IndexedDB cache (ADR-003)
 
@@ -134,6 +134,6 @@ The save function wraps `localStorage.setItem()` in a `try/catch` and returns a 
 
 ## Consequences
 
-* **Positive:** The persistence layer is trivially simple — a single `localStorage` key, validated with Zod on read, with graceful quota error handling. Zero external dependencies. Decklists and the Scryfall image cache are fully independent, with no shared infrastructure or coupled failure modes. The schema is defined in `@scryglass/core` with Zod, making it available for validation by both the PWA and future consumers (agents, CLI tools).
+* **Positive:** The persistence layer is trivially simple — a single `localStorage` key, validated with Zod on read, with graceful quota error handling. Zero external dependencies. Decklists and the Scryfall image cache are fully independent, with no shared infrastructure or coupled failure modes. The schema is defined in `@scrymat/core` with Zod, making it available for validation by both the PWA and future consumers (agents, CLI tools).
 * **Negative:** If a future requirement adds large binary attachments to decklists (e.g., thumbnail images), `localStorage`'s 5 MB limit could become a constraint. This would require migrating to IndexedDB, which is a manageable migration (read from `localStorage`, write to IndexedDB, delete from `localStorage`).
-* **Future Implications:** The `SavedDeckSchema` is the contract for stored decklists. As the schema evolves (e.g., adding a `format` field for Commander vs. Standard), Zod's `.safeParse()` with schema versioning handles backward compatibility — old data that doesn't match the new schema is gracefully discarded or migrated. If storage needs outgrow `localStorage`, a future ADR can supersede this one and migrate to IndexedDB without changing the schema layer in `@scryglass/core`.
+* **Future Implications:** The `SavedDeckSchema` is the contract for stored decklists. As the schema evolves (e.g., adding a `format` field for Commander vs. Standard), Zod's `.safeParse()` with schema versioning handles backward compatibility — old data that doesn't match the new schema is gracefully discarded or migrated. If storage needs outgrow `localStorage`, a future ADR can supersede this one and migrate to IndexedDB without changing the schema layer in `@scrymat/core`.

@@ -1,4 +1,4 @@
-// @scryglass/pwa — application entry point
+// @scrymat/pwa — application entry point
 import { render } from 'preact';
 import { App } from './components/App.js';
 import { registerServiceWorker } from './register-sw.js';

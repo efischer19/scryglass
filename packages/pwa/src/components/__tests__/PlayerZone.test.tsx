@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { PlayerZone } from '../PlayerZone.js';
-import type { PlayerState, PlayerPhase, Action, ActionResult, GameState, PlayerId } from '@scryglass/core';
+import type { PlayerState, PlayerPhase, Action, ActionResult, GameState, PlayerId } from '@scrymat/core';
 
 function makePlayerState(overrides: Partial<PlayerState> = {}): PlayerState {
   return {
@@ -253,6 +253,23 @@ describe('<PlayerZone />', () => {
         tapped: true,
       },
     });
+  });
+
+  it('describes draggable cards with keyboard drag instructions', () => {
+    renderPlayerZone(
+      makePlayerState({
+        hand: [
+          { name: 'Sol Ring', setCode: 'c21', collectorNumber: '263', cardType: 'nonland' as const, instanceId: 'sol-ring-1' },
+        ],
+        phase: 'playing',
+      }),
+      'playing',
+    );
+
+    const cardButton = screen.getByRole('button', { name: 'Hidden card 1 in Hand' });
+    const helpId = cardButton.getAttribute('aria-describedby');
+    expect(helpId).toMatch(/player-zone-a-drag-help/);
+    expect(document.getElementById(helpId ?? '')?.textContent).toContain('Press space to pick up a card');
   });
 
   it('passes vitest-axe a11y assertions', async () => {

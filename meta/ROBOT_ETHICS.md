@@ -15,7 +15,7 @@ and respect we show to the data sources we rely on.
 
 All automated network requests made by this project **must** use a descriptive `User-Agent` string that clearly identifies the project and provides a way to get more information. This promotes transparency and allows server administrators to understand the source of the traffic they receive.
 
-* **Example `User-Agent`:** `scrymat/0.1 (+https://github.com/efischer19/scryglass)`
+* **Example `User-Agent`:** `scrymat/0.1 (+https://github.com/efischer19/scrymat)`
 
 ### 2.2. We Respect Server Load
 

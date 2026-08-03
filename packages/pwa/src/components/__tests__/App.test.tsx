@@ -48,7 +48,7 @@ describe('<App />', () => {
 
   it('renders the Header and remote match lobby on the input view', () => {
     render(<App />);
-    expect(screen.getByText('Scryglass')).toBeTruthy();
+    expect(screen.getByText('Scrymat')).toBeTruthy();
     expect(screen.getByText('Remote Match')).toBeTruthy();
     expect(screen.getByRole('button', { name: /generate room code/i })).toBeTruthy();
   });

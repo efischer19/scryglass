@@ -10,12 +10,12 @@ tags:
 
 ## Context
 
-* **Problem:** The `@scryglass/pwa` package (see [ADR-007](./ADR-007-monorepo_structure.md)) needs a UI layer to render the two-player pod, modals (Tutor, Scry, Fetch), the mulligan phase, and card images. Since the project now uses TypeScript with a build step (see [ADR-008](./ADR-008-typescript_and_zod.md)), the original "no build step" constraint is removed, opening up bundled framework options.
-* **Constraints:** The PWA must deploy as static files to S3. It must load fast on spotty game-store WiFi. All game logic lives in `@scryglass/core` — the UI layer only dispatches actions and renders state. Accessibility (a11y) must be a first-class concern from the start.
+* **Problem:** The `@scrymat/pwa` package (see [ADR-007](./ADR-007-monorepo_structure.md)) needs a UI layer to render the two-player pod, modals (Tutor, Scry, Fetch), the mulligan phase, and card images. Since the project now uses TypeScript with a build step (see [ADR-008](./ADR-008-typescript_and_zod.md)), the original "no build step" constraint is removed, opening up bundled framework options.
+* **Constraints:** The PWA must deploy as static files to S3. It must load fast on spotty game-store WiFi. All game logic lives in `@scrymat/core` — the UI layer only dispatches actions and renders state. Accessibility (a11y) must be a first-class concern from the start.
 
 ## Decision
 
-We will use **Preact + Vite** (Option 1) for the `@scryglass/pwa` frontend application. The maintainer confirmed this choice — a build step is already required for TypeScript, and Preact's 3KB footprint with React-compatible API provides the best balance of developer experience and production performance.
+We will use **Preact + Vite** (Option 1) for the `@scrymat/pwa` frontend application. The maintainer confirmed this choice — a build step is already required for TypeScript, and Preact's 3KB footprint with React-compatible API provides the best balance of developer experience and production performance.
 
 ## Considered Options
 
@@ -37,6 +37,6 @@ We will use **Preact + Vite** (Option 1) for the `@scryglass/pwa` frontend appli
 
 ## Consequences
 
-* **If Option 1 (Preact + Vite):** The PWA gets a component model, JSX, and a mature testing story. Vite handles TypeScript, bundling, and dev server. The build output is static files deployable to S3. `@scryglass/core` is imported as a workspace dependency.
+* **If Option 1 (Preact + Vite):** The PWA gets a component model, JSX, and a mature testing story. Vite handles TypeScript, bundling, and dev server. The build output is static files deployable to S3. `@scrymat/core` is imported as a workspace dependency.
 * **If Option 2 (Vanilla TS):** No framework overhead, but significantly more boilerplate for UI interactions. DOM testing requires `jsdom` or `happy-dom` with manual setup.
-* **Future Implications:** This decision only affects `@scryglass/pwa`. The `@scryglass/core` package is framework-agnostic regardless of this choice.
+* **Future Implications:** This decision only affects `@scrymat/pwa`. The `@scrymat/core` package is framework-agnostic regardless of this choice.

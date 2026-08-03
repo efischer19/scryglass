@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
-import { countLands, getMulliganVerdict, isCard } from '@scryglass/core';
-import type { PlayerState, Action, GameState, PlayerId } from '@scryglass/core';
+import { countLands, getMulliganVerdict, isCard } from '@scrymat/core';
+import type { PlayerState, Action, GameState, PlayerId } from '@scrymat/core';
 import { CardImage } from './CardDisplay.js';
 
 interface MulliganHandProps {

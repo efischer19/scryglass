@@ -1,5 +1,5 @@
-import { SavedDeckListSchema } from '@scryglass/core';
-import type { SavedDeck } from '@scryglass/core';
+import { SavedDeckListSchema } from '@scrymat/core';
+import type { SavedDeck } from '@scrymat/core';
 
 const STORAGE_KEY = 'scryglass:decklists';
 const AUTOSAVE_KEY = '__autosave__';

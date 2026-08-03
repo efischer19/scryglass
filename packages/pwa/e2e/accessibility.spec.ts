@@ -127,6 +127,12 @@ async function waitForFocusInDialog(page: import('@playwright/test').Page) {
   });
 }
 
+async function getZoneCardCount(zone: import('@playwright/test').Locator): Promise<number> {
+  const text = await zone.locator('.game-zone__card-count').textContent();
+  const match = text?.match(/(\d+)\s+card/);
+  return match ? parseInt(match[1], 10) : 0;
+}
+
 test.describe('modal accessibility — focus trap & Escape', () => {
   test.beforeEach(async ({ page }) => {
     await loadBothDecks(page);
@@ -224,5 +230,39 @@ test.describe('modal accessibility — focus trap & Escape', () => {
     // Escape should close the modal
     await page.keyboard.press('Escape');
     await expect(modal).not.toBeVisible();
+  });
+});
+
+test.describe('keyboard drag-and-drop accessibility', () => {
+  test.beforeEach(async ({ page }) => {
+    await loadBothDecks(page);
+    await keepBothHands(page);
+  });
+
+  test('cards can move from hand to battlefield with keyboard controls and announce the drop', async ({ page }) => {
+    const playerAZone = page.locator('section[aria-label="Player A\'s zone"]');
+    const handZone = playerAZone.locator('section[aria-label="Hand zone"]');
+    const battlefieldZone = playerAZone.locator('section[aria-label="Battlefield zone"]');
+    const liveRegion = playerAZone.locator('.sr-only[aria-live="assertive"]').first();
+
+    await showPlayerCards(page, 'A');
+    await handZone.getByRole('button', { name: 'Peek at Hand' }).click();
+
+    const handCountBefore = await getZoneCardCount(handZone);
+    const battlefieldCountBefore = await getZoneCardCount(battlefieldZone);
+    const firstHandCard = handZone.locator('.game-zone__card-button').first();
+
+    await firstHandCard.focus();
+    await expect(firstHandCard).toBeFocused();
+    await expect(firstHandCard).toHaveAttribute('aria-describedby', /drag-help/i);
+
+    await page.keyboard.press('Space');
+
+    await page.keyboard.press('ArrowLeft');
+    await expect(liveRegion).toContainText('Battlefield');
+
+    await page.keyboard.press('Space');
+    expect(await getZoneCardCount(handZone)).toBe(handCountBefore - 1);
+    expect(await getZoneCardCount(battlefieldZone)).toBe(battlefieldCountBefore + 1);
   });
 });

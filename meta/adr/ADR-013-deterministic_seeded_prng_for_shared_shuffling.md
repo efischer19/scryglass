@@ -14,7 +14,7 @@ tags:
 
 * **Problem:** ADR-004 chose Fisher-Yates plus `crypto.getRandomValues()` for fair local shuffling. That works when one client owns the only game state, but Scrymat remote matches require two peers to independently derive the exact same deck order without shipping the full hidden library over the network. We need shuffling that is both deterministic from a shared seed and still auditable for fairness.
 * **Constraints:**
-  * The shuffle logic still lives in `@scryglass/core`, so it must remain platform-agnostic and deterministic in both browser and Node.js test environments.
+  * The shuffle logic still lives in `@scrymat/core`, so it must remain platform-agnostic and deterministic in both browser and Node.js test environments.
   * Repeated shuffles in the same match must produce fresh results, not reuse the same permutation forever.
   * Index generation must remain unbiased; modulo bias is still unacceptable.
   * Local-only matches should keep the same shuffle implementation path so behavior stays consistent between offline and remote modes.
