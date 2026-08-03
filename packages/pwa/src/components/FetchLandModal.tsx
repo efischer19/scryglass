@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
-import type { Action, ActionResult, HiddenCard, LandType, PlayerId } from '@scryglass/core';
-import { getBasicLandCounts, BASIC_LAND_TYPES } from '@scryglass/core';
+import type { Action, ActionResult, HiddenCard, LandType, PlayerId } from '@scrymat/core';
+import { getBasicLandCounts, BASIC_LAND_TYPES } from '@scrymat/core';
 import { ConfirmationGate } from './ConfirmationGate.js';
 import { CardDisplay } from './CardDisplay.js';
 

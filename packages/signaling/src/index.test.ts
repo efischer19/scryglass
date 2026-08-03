@@ -46,7 +46,7 @@ function request(pathname: string, init?: RequestInit): Request {
   return new Request(`https://example.com${pathname}`, init);
 }
 
-describe('@scryglass/signaling', () => {
+describe('@scrymat/signaling', () => {
   it('stores offers with a strict five-minute TTL and returns them over GET', async () => {
     const env = createEnv();
 

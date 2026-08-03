@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-describe('@scryglass/core', () => {
+describe('@scrymat/core', () => {
   it('should be importable', async () => {
     const core = await import('./index.js');
     expect(core).toBeDefined();
@@ -47,7 +47,7 @@ describe('@scryglass/core', () => {
   });
 });
 
-describe('@scryglass/core — agent-ready architecture', () => {
+describe('@scrymat/core — agent-ready architecture', () => {
   /**
    * Recursively collect all .ts source files (excluding tests and declarations)
    * from the core package.

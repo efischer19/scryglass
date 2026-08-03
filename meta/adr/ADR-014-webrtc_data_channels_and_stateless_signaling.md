@@ -13,7 +13,7 @@ tags:
 
 * **Problem:** Scrymat needs remote shared-state play without introducing a centralized authoritative game server. Peers must exchange actions, hidden-state commitments, reveal payloads, and recovery snapshots with low enough latency to feel like a shared table. They also need a practical way to find each other through NATs and browsers.
 * **Constraints:**
-  * The core reducer from `@scryglass/core` must remain network-agnostic and pure. Transport logic belongs in `@scryglass/pwa` or a future dedicated networking package.
+  * The core reducer from `@scrymat/core` must remain network-agnostic and pure. Transport logic belongs in `@scrymat/pwa` or a future dedicated networking package.
   * The system should store no persistent match state on a backend. A small helper service is acceptable only for connection bootstrapping.
   * Local matches must continue to work with zero network dependency.
   * Hidden cards cannot be sent as plaintext to the remote peer until the owning player intentionally reveals them.

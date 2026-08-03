@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Card } from '@scryglass/core';
+import type { Card } from '@scrymat/core';
 import {
   createPlaymatCardId,
   createMoveCardAction,

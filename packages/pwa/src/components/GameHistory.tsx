@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import type { Card, HiddenCard, HistoryEntry } from '@scryglass/core';
-import { isCard } from '@scryglass/core';
+import type { Card, HiddenCard, HistoryEntry } from '@scrymat/core';
+import { isCard } from '@scrymat/core';
 import { CardImage } from './CardDisplay.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 

@@ -6,7 +6,7 @@ import { Header } from '../Header.js';
 describe('<Header />', () => {
   it('renders the app name', () => {
     render(<Header onLoadDecks={() => {}} />);
-    expect(screen.getByText('Scryglass')).toBeTruthy();
+    expect(screen.getByText('Scrymat')).toBeTruthy();
   });
 
   it('renders a "Load Decks" button', () => {

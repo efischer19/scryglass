@@ -1,5 +1,5 @@
-import type { HiddenCard, PlayerId } from '@scryglass/core';
-import { isCard, isCardHash } from '@scryglass/core';
+import type { HiddenCard, PlayerId } from '@scrymat/core';
+import { isCard, isCardHash } from '@scrymat/core';
 import { useCardImage } from '../scryfall/useCardImage';
 
 interface CardDisplayProps {
@@ -16,7 +16,7 @@ export function CardBack({ label = 'Hidden card' }: { label?: string }) {
         ✦
       </span>
       <span class="card-display__card-back-title" aria-hidden="true">
-        Scryglass
+        Scrymat
       </span>
     </div>
   );

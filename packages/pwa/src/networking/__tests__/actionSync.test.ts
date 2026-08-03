@@ -1,4 +1,4 @@
-import { createInitialState, dispatch, type Action, type Card } from '@scryglass/core';
+import { createInitialState, dispatch, type Action, type Card } from '@scrymat/core';
 import { describe, expect, it, vi } from 'vitest';
 import {
   createActionSyncMiddleware,

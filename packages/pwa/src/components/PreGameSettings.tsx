@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
-import type { PlayerId } from '@scryglass/core';
-import { PLAYER_IDS } from '@scryglass/core';
+import type { PlayerId } from '@scrymat/core';
+import { PLAYER_IDS } from '@scrymat/core';
 
 export interface GameSettings {
   playerCount: number;

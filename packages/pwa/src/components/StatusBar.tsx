@@ -1,4 +1,4 @@
-import type { PlayerId } from '@scryglass/core';
+import type { PlayerId } from '@scrymat/core';
 
 interface DeckSelectionStatusProps {
   mode: 'deck-selection';

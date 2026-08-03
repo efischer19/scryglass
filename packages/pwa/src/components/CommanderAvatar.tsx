@@ -1,4 +1,4 @@
-import type { Card } from '@scryglass/core';
+import type { Card } from '@scrymat/core';
 import { useCommanderAvatar } from '../scryfall/useCommanderAvatar';
 
 interface CommanderAvatarProps {

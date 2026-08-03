@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
-import type { Action, ActionResult, Card, HiddenCard, ScryDecision, PlayerId } from '@scryglass/core';
-import { peekTop, isCard } from '@scryglass/core';
-import type { GameState } from '@scryglass/core';
+import type { Action, ActionResult, Card, HiddenCard, ScryDecision, PlayerId } from '@scrymat/core';
+import { peekTop, isCard } from '@scrymat/core';
+import type { GameState } from '@scrymat/core';
 import { ConfirmationGate } from './ConfirmationGate.js';
 import { CardDisplay, CardImage } from './CardDisplay.js';
 

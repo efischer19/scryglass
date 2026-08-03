@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { MulliganHand } from '../MulliganHand.js';
-import type { PlayerState, Action, GameState } from '@scryglass/core';
+import type { PlayerState, Action, GameState } from '@scrymat/core';
 
 /* ------------------------------------------------------------------ */
 /*  Module mock for useCardImage                                      */

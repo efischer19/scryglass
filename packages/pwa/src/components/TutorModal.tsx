@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
-import type { Action, ActionResult, Card, HiddenCard, PlayerId } from '@scryglass/core';
-import { searchLibrary } from '@scryglass/core';
+import type { Action, ActionResult, Card, HiddenCard, PlayerId } from '@scrymat/core';
+import { searchLibrary } from '@scrymat/core';
 import { ConfirmationGate } from './ConfirmationGate.js';
 import { CardDisplay } from './CardDisplay.js';
 

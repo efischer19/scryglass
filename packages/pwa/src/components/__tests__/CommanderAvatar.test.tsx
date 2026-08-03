@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/preact';
 import { CommanderAvatar } from '../CommanderAvatar';
-import type { Card } from '@scryglass/core';
+import type { Card } from '@scrymat/core';
 
 vi.mock('../../scryfall/useCommanderAvatar', () => ({
   useCommanderAvatar: vi.fn(),

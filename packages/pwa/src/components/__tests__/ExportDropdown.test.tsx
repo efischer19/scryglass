@@ -2,7 +2,7 @@ import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { ExportDropdown } from '../ExportDropdown.js';
-import type { Card } from '@scryglass/core';
+import type { Card } from '@scrymat/core';
 
 const CARDS: Card[] = [
   { name: 'Island', setCode: 'ltr', collectorNumber: '715', cardType: 'land' },

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { ScryModal } from '../ScryModal.js';
-import type { Action, ActionResult, GameState, Card } from '@scryglass/core';
+import type { Action, ActionResult, GameState, Card } from '@scrymat/core';
 
 /* ------------------------------------------------------------------ */
 /*  Module mock for useCardImage                                      */

@@ -5,7 +5,7 @@ the GitHub Actions workflow in `.github/workflows/deploy-aws.yml`.
 
 By the end of this guide you will have a production deployment that:
 
-- Builds both `@scryglass/core` and `@scryglass/pwa` in CI
+- Builds both `@scrymat/core` and `@scrymat/pwa` in CI
 - Uploads the Vite build output to an S3 bucket
 - Serves the site through CloudFront with proper cache headers
 - Deploys automatically on every push to `main`
@@ -161,8 +161,8 @@ The workflow (`.github/workflows/deploy-aws.yml`) runs these steps:
 
 1. **Checkout** the repository.
 2. **Install dependencies** with `npm ci` (npm workspaces resolve both packages).
-3. **Build** with `npm run build` (compiles `@scryglass/core` then builds
-   `@scryglass/pwa` with Vite, producing `packages/pwa/dist/`).
+3. **Build** with `npm run build` (compiles `@scrymat/core` then builds
+   `@scrymat/pwa` with Vite, producing `packages/pwa/dist/`).
 4. **Configure AWS credentials** via GitHub OIDC (no stored secrets needed).
 5. **Sync to S3** with differentiated cache headers:
    - `dist/assets/*` (Vite's hashed files) → `Cache-Control: public,

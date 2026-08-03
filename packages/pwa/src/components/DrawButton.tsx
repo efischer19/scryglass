@@ -1,5 +1,5 @@
 import { useState, useRef } from 'preact/hooks';
-import type { Action, ActionResult, HiddenCard, PlayerId } from '@scryglass/core';
+import type { Action, ActionResult, HiddenCard, PlayerId } from '@scrymat/core';
 import { ConfirmationGate } from './ConfirmationGate.js';
 
 interface DrawButtonProps {

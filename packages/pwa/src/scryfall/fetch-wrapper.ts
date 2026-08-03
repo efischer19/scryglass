@@ -17,7 +17,7 @@ interface QueueEntry {
   reject: (reason: unknown) => void;
 }
 
-const USER_AGENT = 'Scryglass/0.1 (+https://github.com/efischer19/scryglass)';
+const USER_AGENT = 'Scrymat/0.1 (+https://github.com/efischer19/scrymat)';
 const MIN_INTERVAL_MS = 100;
 const MAX_BACKOFF_MS = 32_000;
 const INITIAL_BACKOFF_MS = 1_000;

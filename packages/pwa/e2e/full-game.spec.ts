@@ -22,6 +22,12 @@ async function getLibrarySize(zone: Locator): Promise<number> {
   return match ? parseInt(match[1], 10) : 0;
 }
 
+async function getZoneCardCount(zone: Locator): Promise<number> {
+  const text = await zone.locator('.game-zone__card-count').textContent();
+  const match = text?.match(/(\d+)\s+card/);
+  return match ? parseInt(match[1], 10) : 0;
+}
+
 /**
  * State-integrity assertions run after every game action.
  *
@@ -404,6 +410,56 @@ test('full 2-player, 10-turn game simulation', async ({ page }) => {
 
     await assertStateIntegrity(page, playerAZone, playerBZone, expectedLibA, expectedLibB);
   }
+
+  // Drag-and-drop zone transitions on the new playmat UI
+  // -----------------------------------------------------------------------
+  await showPlayerCards(page, 'A');
+  const handZone = playerAZone.locator('section[aria-label="Hand zone"]');
+  const battlefieldZone = playerAZone.locator('section[aria-label="Battlefield zone"]');
+  const battlefieldSurface = playerAZone.locator('#zone-surface-A-battlefield');
+  const graveyardZone = playerAZone.locator('section[aria-label="Graveyard zone"]');
+
+  await handZone.getByRole('button', { name: 'Peek at Hand' }).click();
+
+  const handCountBeforeMove = await getZoneCardCount(handZone);
+  const battlefieldCountBeforeMove = await getZoneCardCount(battlefieldZone);
+  const handCard = handZone.locator('.game-zone__card-button').first();
+  const movedCardLabel = await handCard.getAttribute('aria-label');
+
+  const dragLiveRegion = playerAZone.locator('.sr-only[aria-live="assertive"]').first();
+
+  await handCard.focus();
+  await page.keyboard.press('Space');
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('Space');
+  await expect(dragLiveRegion).toContainText('Battlefield');
+  expect(await getZoneCardCount(handZone)).toBe(handCountBeforeMove - 1);
+  expect(await getZoneCardCount(battlefieldZone)).toBe(battlefieldCountBeforeMove + 1);
+
+  logger.log({
+    turn: 11,
+    player: 'A',
+    action: {
+      type: 'MOVE_CARD',
+      payload: {
+        player: 'A',
+        fromZone: 'hand',
+        toZone: 'battlefield',
+        cardName: movedCardLabel ?? 'Dragged card',
+      },
+    },
+    result: {
+      handCount: await getZoneCardCount(handZone),
+      battlefieldCount: await getZoneCardCount(battlefieldZone),
+    },
+  });
+
+  await expect(battlefieldZone.locator('.game-zone__card-count')).toContainText(
+    `${battlefieldCountBeforeMove + 1} card`,
+  );
+  await expect(graveyardZone.locator('.game-zone__card-count')).toContainText('0 cards');
+
+  await hideAllCards(page);
 
   // ── Screenshot 07: Final board state after ~10 turns ───────────────────
   await captureScreenshot(page, 'full-07-final-board.png');

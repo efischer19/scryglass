@@ -8,7 +8,7 @@ interface HeaderProps {
 export function Header({ onLoadDecks, onNewGame }: HeaderProps) {
   return (
     <header class="app-header">
-      <h1 class="app-header__title">Scryglass</h1>
+      <h1 class="app-header__title">Scrymat</h1>
       <div class="app-header__actions">
         {onNewGame && (
           <button

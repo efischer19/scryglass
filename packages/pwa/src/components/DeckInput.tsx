@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'preact/hooks';
-import { parseDeck, convertMoxfield, convertArchidekt, convertMtgoArena } from '@scryglass/core';
-import type { ParseResult, Action, Card, SavedDeck, ConvertResult, PlayerId } from '@scryglass/core';
+import { parseDeck, convertMoxfield, convertArchidekt, convertMtgoArena } from '@scrymat/core';
+import type { ParseResult, Action, Card, SavedDeck, ConvertResult, PlayerId } from '@scrymat/core';
 import { ExportDropdown } from './ExportDropdown.js';
 import { parseCommandersFromScryglassText } from '../utils/deck-parse.js';
 import {

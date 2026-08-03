@@ -15,7 +15,7 @@ tags:
 * **Constraints:**
   * The PWA is deployed as static files to S3 ([ADR-007](./ADR-007-monorepo_structure.md)), which has **no server-side rewrite rules**. Any routing strategy that requires `index.html` to be served for arbitrary paths (e.g., `/app`, `/input`) would need S3-specific redirect rules or a CloudFront function — complexity we want to avoid.
   * The UI is built with Preact + Vite ([ADR-002](./ADR-002-ui_framework_choice.md)). The routing solution must integrate cleanly with Preact's component model and Vite's build pipeline.
-  * All game state mutations flow through `dispatch(state, action)` in `@scryglass/core` ([ADR-005](./ADR-005-client_state_management.md)). The `LOAD_DECK` action is the trigger that transitions the application from the input view to the shuffler view.
+  * All game state mutations flow through `dispatch(state, action)` in `@scrymat/core` ([ADR-005](./ADR-005-client_state_management.md)). The `LOAD_DECK` action is the trigger that transitions the application from the input view to the shuffler view.
   * The development philosophy ([DEVELOPMENT_PHILOSOPHY.md](../DEVELOPMENT_PHILOSOPHY.md)) mandates simplicity, YAGNI, and a static-first approach.
 
 ## Decision
@@ -31,7 +31,7 @@ A lightweight `<Router>` Preact component will read `window.location.hash`, rend
 
 When the user submits a valid deck list:
 
-1. The input view dispatches the `LOAD_DECK` action to `@scryglass/core`.
+1. The input view dispatches the `LOAD_DECK` action to `@scrymat/core`.
 2. If the action succeeds (returns a new `GameState` with the loaded deck), the PWA sets `window.location.hash = '#/app'`.
 3. The `hashchange` listener triggers a re-render, swapping the input view for the shuffler view.
 4. Focus is programmatically moved to the shuffler view's main heading or primary interactive element.

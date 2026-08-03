@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/preact';
 import { DndContext } from '@dnd-kit/core';
 import { axe } from 'vitest-axe';
 import { GameZone } from '../GameZone.js';
-import type { Card, CardHash, HiddenCard } from '@scryglass/core';
+import type { Card, CardHash, HiddenCard } from '@scrymat/core';
 
 vi.mock('@dnd-kit/core', () => ({
   DndContext: ({ children }: { children: unknown }) => <>{children}</>,

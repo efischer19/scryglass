@@ -30,7 +30,7 @@ are several incredibly valuable ways you can contribute:
 
 This is the most helpful way to contribute. If you find a bug, have an idea for
 a feature, or think something could be improved, please
-**[open an issue](https://github.com/efischer19/scryglass/issues)**!
+**[open an issue](https://github.com/efischer19/scrymat/issues)**!
 Clear issues are the starting point for the entire AI workflow.
 
 ### 💬 Provide Feedback
@@ -78,5 +78,5 @@ Before committing any code:
 ## Code of Conduct
 
 All participants are expected to follow our
-[Code of Conduct](https://github.com/efischer19/scryglass/blob/main/CODE_OF_CONDUCT.md).
+[Code of Conduct](https://github.com/efischer19/scrymat/blob/main/CODE_OF_CONDUCT.md).
 Please be respectful and considerate in all your interactions.

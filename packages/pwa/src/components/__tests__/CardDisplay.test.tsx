@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/preact';
 import { axe } from 'vitest-axe';
 import { CardDisplay } from '../CardDisplay.js';
-import type { Card, CardHash } from '@scryglass/core';
+import type { Card, CardHash } from '@scrymat/core';
 
 /* ------------------------------------------------------------------ */
 /*  Module mock for useCardImage                                      */

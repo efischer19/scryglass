@@ -1,4 +1,4 @@
-import type { Card } from '@scryglass/core';
+import type { Card } from '@scrymat/core';
 
 export function parseCommandersFromScryglassText(input: string): Card[] {
   const commanders: Card[] = [];

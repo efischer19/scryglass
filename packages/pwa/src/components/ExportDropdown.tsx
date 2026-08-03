@@ -4,8 +4,8 @@ import {
   exportMtgoArena,
   exportScryglass,
   isCard,
-} from '@scryglass/core';
-import type { Card, HiddenCard } from '@scryglass/core';
+} from '@scrymat/core';
+import type { Card, HiddenCard } from '@scrymat/core';
 import { useState } from 'preact/hooks';
 import { copyToClipboard } from '../utils/clipboard.js';
 

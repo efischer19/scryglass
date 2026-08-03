@@ -33,7 +33,7 @@ Scrymat operates without a centralized, authoritative game server to dictate the
 
 The pivot to remote play must not degrade Scrymat's utility as a local tool for goldfishing or "pass-and-play" couch gaming.
 
-* **Networking as Middleware:** The @scryglass/core reducer remains completely ignorant of the network. Local matches bypass WebRTC and Commit-Reveal hashing entirely.
+* **Networking as Middleware:** The @scrymat/core reducer remains completely ignorant of the network. Local matches bypass WebRTC and Commit-Reveal hashing entirely.
 * **UI Obfuscation:** The Playmat UI strictly renders opponent's hidden state as generic \<CardBack/\> components. For local same-screen play, the UI provides manual "Peek / Hide" toggles so a device can be handed back and forth safely.
 
 ## **6\. AI Agent Extensibility**

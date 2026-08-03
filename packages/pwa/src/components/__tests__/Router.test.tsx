@@ -126,7 +126,7 @@ describe('<Router />', () => {
     });
 
     expect(liveRegion?.textContent).toBe('Navigated to Game');
-    expect(document.title).toBe('Game — Scryglass');
+    expect(document.title).toBe('Game — Scrymat');
   });
 
   it('updates to the match view when pathname changes', async () => {
@@ -144,15 +144,15 @@ describe('<Router />', () => {
     });
 
     expect(screen.getByText('Match View ROOM999')).toBeTruthy();
-    expect(document.title).toBe('Match ROOM999 — Scryglass');
+    expect(document.title).toBe('Match ROOM999 — Scrymat');
     const liveRegion = container.querySelector('[aria-live="assertive"]');
     expect(liveRegion?.textContent).toBe('Navigated to Match ROOM999');
   });
 
   it.each([
-    ['#/input', 'Deck Input — Scryglass'],
-    ['#/editor', 'Deck Editor — Scryglass'],
-    ['#/app', 'Game — Scryglass'],
+    ['#/input', 'Deck Input — Scrymat'],
+    ['#/editor', 'Deck Editor — Scrymat'],
+    ['#/app', 'Game — Scrymat'],
   ] as const)(
     'sets document.title to "%s" for route %s',
     (hash, expectedTitle) => {
