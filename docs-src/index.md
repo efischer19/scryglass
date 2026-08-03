@@ -1,13 +1,28 @@
-# scryglass Documentation
+# Scrymat Documentation
 
-Welcome to the official documentation for **scryglass** — a free, open-source Progressive Web App (PWA) for goldfishing and casual play of Magic: The Gathering decks offline, at the table, no account required.
+Welcome to the official documentation for **Scrymat** — the renamed and
+expanded successor to Scryglass. Scrymat is a free, open-source Progressive Web
+App (PWA) for goldfishing, pass-and-play, and lightweight synchronized remote
+Magic: The Gathering sessions.
 
 ## Overview
 
-scryglass is built as a **Preact + Vite monorepo** consisting of two packages:
+Scrymat is built as a **Preact + Vite monorepo** consisting of two packages:
 
-- **`@scryglass/core`** — Pure game logic: deck parsing, cryptographic shuffle, state management, mulligan rules, and library manipulation. No DOM or browser dependencies.
-- **`@scryglass/pwa`** — Preact + Vite frontend: UI rendering, Scryfall API integration, IndexedDB caching, and Service Worker.
+- **`@scryglass/core`** — Pure game logic: deck parsing, deterministic shared
+  shuffling, zone-based state management, setup flows, and card movement. No
+  DOM or browser dependencies.
+- **`@scryglass/pwa`** — Preact + Vite frontend: UI rendering, Scryfall API
+  integration, IndexedDB caching, Service Worker, and WebRTC match sync.
+
+## Pivot Highlights
+
+- **Shared playmat state** for moving cards through public and private zones
+- **Deterministic shared shuffling** for remote match setup
+- **WebRTC match synchronization** with stateless signaling
+- **Commit-reveal hidden information** for safer remote play
+- **Offline-first local play** that still works for solo goldfishing and couch
+  play
 
 ## Getting Started
 
@@ -15,10 +30,14 @@ scryglass is built as a **Preact + Vite monorepo** consisting of two packages:
 2. **Build:** `npm run build` (compiles `@scryglass/core` then builds `@scryglass/pwa` with Vite).
 3. **Run the dev server:** `npm run dev --workspace=packages/pwa` then open `http://localhost:5173`.
 
+!!! note
+    The repository, package names, and deployed URLs still use the legacy
+    `scryglass` identifier while the Scrymat rename is rolling out.
+
 ## Project Structure
 
 ```text
-scryglass/
+repository-root/
 ├── packages/
 │   ├── core/             # @scryglass/core — game logic library
 │   │   ├── src/

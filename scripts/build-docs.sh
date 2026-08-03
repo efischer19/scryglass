@@ -4,7 +4,7 @@ set -e
 # Build Documentation Script
 # Generates the static documentation site using MkDocs
 
-echo "📚 Building scryglass Documentation"
+echo "📚 Building Scrymat Documentation"
 echo "========================================================"
 
 # Change to repository root
